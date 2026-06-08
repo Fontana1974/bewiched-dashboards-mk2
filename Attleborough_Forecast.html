@@ -82,9 +82,9 @@
     </div>
   </div>
 
-  <div class="section-title">Sales by category — holiday-mix forecast</div>
+  <div class="section-title">Sales mix &amp; capture vs the estate</div>
   <div class="grid2">
-    <div class="panel"><div class="chart-box" style="height:340px"><canvas id="catbar"></canvas></div></div>
+    <div class="panel"><div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Capture % ranked vs the estate (21 stores)</div><table id="peertbl"><thead><tr><th>Category</th><th>Attleborough</th><th>Rank</th><th>Estate avg</th><th>Best in estate</th></tr></thead><tbody></tbody></table><div class="mini" style="margin-top:8px">Capture = share of transactions including the category (last ~5 wks). Value green = above estate average; rank chip green = top third, red = bottom third.</div></div>
     <div class="panel">
       <table id="cattbl"><thead><tr><th>Category</th><th>Current mix</th><th>Holiday tilt</th><th>Capture %</th></tr></thead><tbody></tbody></table>
       <div class="note" style="margin-top:10px"><strong>Mix holds through the holidays.</strong> In the mature drive-thru/destination stores last summer the split barely moved from term into the school holidays — cold drinks + milkshakes were ~37% of sales in term vs ~35% in holidays (milkshakes flat, cold easing ~2pp as the early-summer heat passed). The cold-drink peak is <strong>weather-led (Jun–Jul), not the school calendar</strong>; total volume rose ~5%. So £ grows across all categories with only a small holiday tilt. <strong>Capture %</strong> = the share of transactions that include the category (attach rate, recent weeks) — a truer read of penetration than £. Bakery capture is strong here at ~25%; food ~19%.</div>
@@ -194,15 +194,9 @@ document.getElementById("foot").innerHTML="Generated "+new Date().toLocaleString
   const BAK=[763,769,776,782,782,788,854,860,867,867,874,881,801];
   const WK=[6100,6150,6200,6250,6250,6300,6350,6400,6450,6450,6500,6550,6400];
   const ROWS=[["Hot drinks",40.4,0.8,58.7],["Cold drinks",21.0,-1.8,28.5],["Milkshakes",8.7,-0.1,11.2],["Food",13.9,0.3,19.3],["Bakery",12.5,0.9,25.4],["Other & retail",3.5,-0.2,13.8]];
-  const OTH=WK.map((s,i)=>s-(HOT[i]+COLD[i]+SHK[i]+FOOD[i]+BAK[i]));
-  const ds=(l,d,c)=>({label:l,data:d,backgroundColor:c,stack:"s"});
-  new Chart(document.getElementById("catbar"),{type:"bar",
-    data:{labels:L,datasets:[ds("Hot drinks",HOT,"#7a5240"),ds("Cold drinks",COLD,"#2d6fb3"),ds("Milkshakes",SHK,"#c08a2d"),ds("Food",FOOD,"#1f8a4c"),ds("Bakery",BAK,"#b8860b"),ds("Other & retail",OTH,"#c9b89a")]},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index"},
-      plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:10}}},
-        title:{display:true,text:"Forecast weekly sales by category (£)",align:"start",color:"#5b3a29",font:{size:13,weight:"bold"}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+": £"+Math.round(c.parsed.y).toLocaleString("en-GB")}}},
-      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>"£"+(v/1000)+"k"},grid:{color:"#eee"}}}}});
+  const PEER=[["Hot drinks",58.7,14,21,61.4,"Wellingborough 71.8%"],["Cold drinks",28.5,6,21,23.7,"Billing 36.9%"],["Milkshakes",11.2,13,21,13.1,"Rushden 25.4%"],["Food",19.3,2,21,14.0,"Fletton Quays 23.8%"],["Bakery",25.4,1,21,17.5,"Top of estate"]];
+  document.querySelector("#peertbl tbody").innerHTML=PEER.map(r=>{const top=r[2]<=r[3]/3,bot=r[2]>r[3]*2/3;const rc=top?["#e6f4ec","#1f8a4c"]:bot?["#fbeae8","#c0392b"]:["#f7f0dd","#b8860b"];const vc=r[1]>=r[4]?"#1f8a4c":"#c0392b";
+    return "<tr><td>"+r[0]+"</td><td style=\"font-weight:700;color:"+vc+"\">"+r[1].toFixed(1)+"%</td><td><span style=\"display:inline-block;padding:2px 7px;border-radius:6px;font-weight:700;font-size:12px;background:"+rc[0]+";color:"+rc[1]+"\">"+r[2]+"/"+r[3]+"</span></td><td>"+r[4].toFixed(1)+"%</td><td style=\"text-align:left;font-size:11.5px;color:#8a7a6d\">"+r[5]+"</td></tr>";}).join("");
   const gb=n=>"£"+Math.round(n).toLocaleString("en-GB");
   const DESC={"Hot drinks":"lattes, cappuccinos, americanos, flat whites, hot choc, tea","Cold drinks":"iced lattes, frozen lemonade, iced matcha, frappés, cold brew","Milkshakes":"Oreo, Biscoff, vanilla, chocolate, strawberry shakes","Food":"croques, ciabattas, baps, wraps, salads, meal deals","Bakery":"traybakes, croissants, brownies, cookies, cakes","Other & retail":"bottled & soft drinks, beans, sundries"};
   document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{const s=r[2]>0?"#1f8a4c":r[2]<0?"#c0392b":"#8a7a6d";
