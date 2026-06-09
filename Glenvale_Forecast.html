@@ -135,7 +135,7 @@
   <div class="focusmod red">
     <h2>🎯 Focus areas — week of 9 Jun</h2>
     <ul>
-      <li><b>Flying:</b> +31% YoY and £67.3 CPH vs £65 — outstanding year-2 growth; protect the momentum.</li>
+      <li><b>Mixed week:</b> +31% YoY (best in the estate) but CPH dipped to £60.6 vs £65 last week — pull hours back to sales.</li>
       <li><b>Watch wastage:</b> crept to 3.3% (three weeks now over the 3% target) — tighten the egg pot &amp; bacon bap par.</li>
       <li><b>Capture:</b> cold drinks 30% (4th of 21) is a real strength; bakery 14% (17th) is the upside.</li>
     </ul>
@@ -160,7 +160,7 @@
   <script>
   (function(){
     /* Per-tab health for the previous complete week. Generator resets these each Monday. */
-    const TAB_STATUS={sales:"green",waste:"red",mix:"green",f1:"green",sentiment:"green"};
+    const TAB_STATUS={sales:"red",waste:"red",mix:"green",f1:"green",sentiment:"green"};
     document.querySelectorAll(".tab-btn").forEach(b=>{
       const s=TAB_STATUS[b.dataset.tab]; if(!s) return;
       const d=document.createElement("span");
@@ -173,19 +173,19 @@
 
   <!-- ===== TAB 1: Sales & Hours ===== -->
   <section class="tab-panel active" id="tab-sales">
-    <div class="actbox">
-      <div><div class="ab-lbl">Last week actual sales · w/c 1 Jun</div><div class="ab-val">£18,830</div></div>
+    <div class="actbox red">
+      <div><div class="ab-lbl">Last week actual sales · w/c 8 Jun</div><div class="ab-val">£17,341</div></div>
       <div class="ab-stats">
-        <div><span>vs forecast</span><b class="pos">+4.0%</b><small>fcst £18,100</small></div>
+        <div><span>vs forecast</span><b class="neg">−5.0%</b><small>fcst £18,250</small></div>
         <div><span>Estate rank</span><b class="pos">3 / 21</b><small>by sales £</small></div>
         <div><span>YoY</span><b class="pos">+31.0%</b><small>vs £13.2k last yr</small></div>
-        <div><span>CPH</span><b class="pos">£67.3</b><small>target £65 · met</small></div>
+        <div><span>CPH</span><b class="neg">£60.6</b><small>target £65 · missed</small></div>
       </div>
     </div>
     <div class="cards">
       <div class="card"><div class="lbl">Last 13 wks avg sales</div><div class="val">£17,503</div><div class="meta">/ wk · live BigQuery</div></div>
       <div class="card"><div class="lbl">YoY growth</div><div class="val" style="color:var(--green)">+31.0%</div><div class="meta">w/c 1 Jun vs 2025 · yr-2 ramp</div></div>
-      <div class="card"><div class="lbl">CPH — target vs actual</div><div class="val">£65</div><div class="meta">last wk actual <b style="color:var(--green)">£67.3</b> · +£2.3/hr (w/c 1 Jun)</div></div>
+      <div class="card"><div class="lbl">CPH — target vs actual</div><div class="val">£65</div><div class="meta">last wk actual <b style="color:var(--red)">£60.6</b> · −£4.4/hr (w/c 8 Jun)</div></div>
       <div class="card"><div class="lbl">Estate rank (sales)</div><div class="val" style="color:var(--green)">3 / 21</div><div class="meta">behind Rushden &amp; Northampton DT</div></div>
     </div>
 
@@ -205,10 +205,10 @@
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
-        <div class="mini" style="margin-top:8px">Hours = forecast sales ÷ £65 CPH (flat). Last week the store actually ran £67.3 CPH — just ahead of target.</div>
+        <div class="mini" style="margin-top:8px">Hours = forecast sales ÷ £65 CPH (flat). Last week the store actually ran £60.6 CPH — below target.</div>
       </div>
     </div>
-    <div class="focus green"><span class="ar">→</span>Focus this week: £18,830 vs £18,100 forecast (+4.0%) — ahead of plan; hold £65+ CPH.</div>
+    <div class="focus green"><span class="ar">→</span>Focus this week: £17,341 vs £18,250 forecast (−5.0%) — behind plan; CPH dipped to £60.6, tighten hours to sales.</div>
     <div class="section-title">🧮 Schedule builder — hourly staffing</div>
     <div class="panel">
       <div style="display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
@@ -233,7 +233,7 @@
     (function(){
       const HMT=parse("6:7,7:166,8:218,9:186,10:227,11:246,12:247,13:221,14:172,15:182,16:132,17:110,18:98,19:71,20:36,21:0");
       const HFS=parse("6:3,7:96,8:181,9:291,10:401,11:345,12:375,13:274,14:262,15:231,16:169,17:102,18:52,19:47,20:22,21:1");
-      const CPHD=65, ACT_CPH=67.25, ACT_WK="w/c 1 Jun";
+      const CPHD=65, ACT_CPH=60.63, ACT_WK="w/c 8 Jun";
       let dp="MT", md="ceil";
       const cph=document.getElementById("sbCph");
       const gbp=n=>"£"+Math.round(n).toLocaleString("en-GB");
@@ -270,7 +270,7 @@
     </script>
   </section>
 
-    <div class="focus green"><span class="ar">→</span>Focus this week: £18,830 at £65 needs ~290 hrs — you ran ~280 (£67/hr); efficient, keep service levels up.</div>
+    <div class="focus green"><span class="ar">→</span>Focus this week: £17,341 at £65 needs ~267 hrs — you ran ~286 (£60.6/hr); trim ~19 hrs to hit the £65 target.</div>
 
   <!-- ===== TAB 2: Wastage ===== -->
   <section class="tab-panel" id="tab-waste">
