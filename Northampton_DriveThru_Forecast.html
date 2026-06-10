@@ -313,16 +313,274 @@
 
   <!-- ===== TAB 4: Op's Excellence (F1) ===== -->
   <section class="tab-panel" id="tab-f1">
-    <div class="section-title">🏁 F1 Operational Excellence</div>
-    <div class="note" style="margin-top:8px;background:var(--amberbg);border-color:#ece0c0;color:#7a5b12"><strong>⏳ F1 data refreshes at Monday's 9:30am auto-pull.</strong> This store's Qualifying &amp; Race history lives in the F1 audit sheet, which this build could not reach from the current browser session. Monday's scheduled refresh pulls it in full (queue times, hospitality, championship points, finishing positions) and this tab populates like the other dashboards.</div>
-    <div class="focus amber"><span class="ar">→</span>Focus this week: F1 scores land at Monday's refresh — Area Coach to review queue speed &amp; hospitality then.</div>
+    <div class="section-title">🏁 F1 Operational Excellence — Qualifying &amp; Race</div>
+    <div class="cards">
+      <div class="card"><div class="lbl">Latest Quali rank</div><div class="val" style="color:var(--green)">2 / 21</div><div class="meta">W/C 8 Jun · sharp recovery</div></div>
+      <div class="card"><div class="lbl">Latest Quali queue avg</div><div class="val" style="color:var(--green)">134s ▼</div><div class="meta">down from 207s</div></div>
+      <div class="card"><div class="lbl">Latest Race result</div><div class="val" style="color:var(--red)">P20 · 3 pts</div><div class="meta">W/C 6 Jun · off weekend</div></div>
+      <div class="card"><div class="lbl">Race consistency</div><div class="val" style="color:var(--amber)">Volatile</div><div class="meta">queue swings 145s → 312s</div></div>
+    </div>
+
+    <div class="note green" style="margin-top:16px"><strong>How F1 works.</strong> Every store is audited unannounced through the week. <strong>Qualifying (Mon–Thu)</strong> is a lighter check — queue speed plus hospitality (Hello, Goodbye, How-Are-You, Working the Queue) — and sets the grid for the weekend. <strong>Race (Fri–Sun)</strong> is the full audit (adds tables to brand, cleared within 3 mins, section/break-cover plan, visible team, dishwasher area) with the start handicapped by the Qualifying result. <em>Lower</em> queue seconds and <em>higher</em> championship points are better.</div>
+
+    <div class="focus green"><span class="ar">→</span>Focus this week: Qualifying just jumped to P2 (queue 134s) — bottle that and bring it to the Race weekend.</div>
+    <div class="section-title">Qualifying trend — a sharp recovery to P2</div>
+    <div class="grid2">
+      <div class="panel"><div class="chart-box" style="height:320px"><canvas id="quali"></canvas></div></div>
+      <div class="panel">
+        <table id="qualitbl">
+          <thead><tr><th>Audit (W/C)</th><th>Queue avg</th><th>Hospitality</th><th>Quali rank</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="note green" style="margin-top:10px"><strong>The Qualifying story is recovery.</strong> Through April–May hospitality was the drag — Hello and Goodbye repeatedly scoring low (ranks 15–22). The last two audits flipped it: <strong>100% hospitality on 3 Jun and a P2 finish on 8 Jun</strong> with queue down to 134s. The welcome is clearly fixable here — the job is to make the last fortnight the new normal.</div>
+      </div>
+    </div>
+
+    <div class="focus amber"><span class="ar">→</span>Focus this week: hold the hospitality gains — keep Hello &amp; Goodbye at 100% every Qualifying.</div>
+    <div class="section-title">Race results — Fri–Sun full audit · the inconsistency to fix</div>
+    <div class="grid2">
+      <div class="panel"><div class="chart-box" style="height:300px"><canvas id="race"></canvas></div></div>
+      <div class="panel">
+        <table id="racetbl">
+          <thead><tr><th>Race (W/C)</th><th>Total score</th><th>Champ. pts</th><th>Finish</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="note red" style="margin-top:10px"><strong>Race weekends are the weak spot — and it's queue speed.</strong> NDT swings between strong weekends (P4 on 17 Apr, P8 twice, queue ~145s) and poor ones (P15s and <strong>P20 on 6 Jun</strong>, queue 211–312s). The pattern tracks weekend queue times almost exactly: when the drive-thru flows it finishes top-8; when it backs up it drops to the tail. Peak-hour deployment and a queue-buster at the window is the lever.</div>
+      </div>
+    </div>
+
+    <div class="focus red"><span class="ar">→</span>Focus this week: P20 last weekend on a 211s queue — staff the window for flow at Fri–Sun peaks.</div>
+    <footer style="margin-top:18px">F1 data: live <a class="srclink" href="https://docs.google.com/spreadsheets/d/1YFqpR9_ftlQEbfwc5ZVMjtS5tFO0j-7ccwB8rwG56wQ/edit?gid=522976149#gid=522976149" target="_blank" rel="noopener">Bewiched F1 audit sheet ↗</a> · Qualifying (to W/C 8 Jun) &amp; The Race (to W/C 6 Jun) tabs · audit window 8 Apr → 8 Jun 2026. Scores are unannounced auditor visits; every audited Northampton Drive Thru row is shown.</footer>
+    <div class="section-title" style="margin-top:26px">🏆 Constructors’ Championship — since 25 Apr</div>
+    <div class="note" style="margin-top:8px"><strong>How it works.</strong> Each Area Coach is an F1 <strong>constructor</strong>; their stores are the <strong>drivers</strong>, and every Race weekend each store banks championship points by finishing position. To keep it fair across teams of different sizes, <strong>constructors are ranked by average points per store</strong>, while the <strong>drivers’ leaderboard ranks individual stores by total points</strong>. Competitor benchmark audits (Costa, Nero, Starbucks, Coffee#1) are excluded; window from 25 Apr 2026.</div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="panel">
+        <div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:10px">Constructors’ standings <span style="font-weight:400;color:#9a8a7c;font-size:11px">· by avg pts/store</span></div>
+<div style="display:grid;grid-template-columns:30px 1fr 78px;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:transparent;margin-bottom:6px">
+     <div style="font-weight:800;font-size:15px;color:#5b3a29;text-align:center">1</div>
+     <div>
+       <div style="font-weight:700;font-size:13.5px;color:#3f2d22">Ian</div>
+       <div style="height:9px;background:#efe7dd;border-radius:5px;margin-top:5px;overflow:hidden"><div style="height:100%;width:100%;background:#5b3a29;border-radius:5px"></div></div>
+       <div style="font-size:10.5px;color:#9a8a7c;margin-top:3px">278 pts total · 3 stores</div>
+     </div>
+     <div style="text-align:right"><div style="font-weight:800;font-size:18px;color:#3f2d22">92.7</div><div style="font-size:9.5px;color:#9a8a7c;margin-top:-2px">pts/store</div></div>
+   </div><div style="display:grid;grid-template-columns:30px 1fr 78px;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:#fff7e9;box-shadow:inset 0 0 0 1.5px #e7c873;margin-bottom:6px">
+     <div style="font-weight:800;font-size:15px;color:#5b3a29;text-align:center">2</div>
+     <div>
+       <div style="font-weight:700;font-size:13.5px;color:#3f2d22">Rich <span style="font-size:10.5px;font-weight:700;color:#b8860b">◄ this store’s constructor</span></div>
+       <div style="height:9px;background:#efe7dd;border-radius:5px;margin-top:5px;overflow:hidden"><div style="height:100%;width:93%;background:#b8860b;border-radius:5px"></div></div>
+       <div style="font-size:10.5px;color:#9a8a7c;margin-top:3px">778 pts total · 9 stores</div>
+     </div>
+     <div style="text-align:right"><div style="font-weight:800;font-size:18px;color:#b8860b">86.4</div><div style="font-size:9.5px;color:#9a8a7c;margin-top:-2px">pts/store</div></div>
+   </div><div style="display:grid;grid-template-columns:30px 1fr 78px;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:transparent;margin-bottom:6px">
+     <div style="font-weight:800;font-size:15px;color:#5b3a29;text-align:center">3</div>
+     <div>
+       <div style="font-weight:700;font-size:13.5px;color:#3f2d22">Jon</div>
+       <div style="height:9px;background:#efe7dd;border-radius:5px;margin-top:5px;overflow:hidden"><div style="height:100%;width:83%;background:#5b3a29;border-radius:5px"></div></div>
+       <div style="font-size:10.5px;color:#9a8a7c;margin-top:3px">689 pts total · 9 stores</div>
+     </div>
+     <div style="text-align:right"><div style="font-weight:800;font-size:18px;color:#3f2d22">76.6</div><div style="font-size:9.5px;color:#9a8a7c;margin-top:-2px">pts/store</div></div>
+   </div>
+      </div>
+      <div class="panel">
+        <div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Drivers’ leaderboard <span style="font-weight:400;color:#9a8a7c;font-size:11px">· all 21 stores, by total pts</span></div>
+        <div style="max-height:360px;overflow-y:auto">
+        <table style="font-size:12px">
+          <thead><tr><th style="text-align:center">#</th><th>Store (driver)</th><th>Coach</th><th style="text-align:right">Pts</th></tr></thead>
+          <tbody><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">1</td>
+     <td>Leamington Parade</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">138</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">2</td>
+     <td>Burton</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">132</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">3</td>
+     <td>Train Station</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">124</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">4</td>
+     <td>Northampton Grosvenor</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">111</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">5</td>
+     <td>Market Harborough</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">109</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">6</td>
+     <td>Attleborough</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Ian</span></td>
+     <td style="text-align:right;font-weight:700">107</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">7</td>
+     <td>Fletton</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">99</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">8</td>
+     <td>Glenvale Drive Thru</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Ian</span></td>
+     <td style="text-align:right;font-weight:700">91</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">9</td>
+     <td>Market Street</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">90</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">10</td>
+     <td>Corby</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">82</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">11</td>
+     <td>Rothwell</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">82</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">12</td>
+     <td>Lakes</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">80</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">13</td>
+     <td>Balsall Common</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Ian</span></td>
+     <td style="text-align:right;font-weight:700">80</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">14</td>
+     <td>Lower Heathcote, Warwick</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">75</td>
+   </tr><tr style="background:#fff7e9;font-weight:700">
+     <td style="text-align:center;color:#8a7a6d">15</td>
+     <td>Northampton Drive Thru <span style="font-size:10px;font-weight:700;color:#b8860b">◄ you</span></td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">66</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">16</td>
+     <td>Peterborough</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">63</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">17</td>
+     <td>Kettering</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">63</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">18</td>
+     <td>Rugby</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">59</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">19</td>
+     <td>Higham</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">50</td>
+   </tr><tr style="background:#faf7f2;">
+     <td style="text-align:center;color:#8a7a6d">20</td>
+     <td>Olney</td>
+     <td><span class="tag t-ok" style="font-size:10.5px">Jon</span></td>
+     <td style="text-align:right;font-weight:700">38</td>
+   </tr><tr style="background:transparent;">
+     <td style="text-align:center;color:#8a7a6d">21</td>
+     <td>Billing Drive Thru</td>
+     <td><span class="tag t-amber" style="font-size:10.5px">Rich</span></td>
+     <td style="text-align:right;font-weight:700">6</td>
+   </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+    <div class="focus"><span class="ar">→</span>Focus this week: every weekend finish lifts your constructor’s average — a strong Race helps the whole Rich team.</div>
   </section>
 
   <!-- ===== TAB 5: Sentiment ===== -->
   <section class="tab-panel" id="tab-sentiment">
+    <style>
+      .sent-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+      .scorebig{font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1}
+      .scoresub{font-size:12.5px;color:var(--muted);margin-top:4px}
+      .quote{border-left:3px solid #e7ddd2;padding:5px 0 5px 12px;margin:11px 0;font-size:12.5px;color:#5b4a3e;line-height:1.5}
+      .quote .who{display:block;font-size:11px;color:var(--muted);margin-top:5px;font-weight:600}
+      .stars{color:#e0a32e;letter-spacing:1px}
+      @media(max-width:860px){.sent-grid{grid-template-columns:1fr}}
+    </style>
     <div class="section-title">💬 Sentiment — customers &amp; team</div>
-    <div class="note" style="margin-top:8px;background:var(--amberbg);border-color:#ece0c0;color:#7a5b12"><strong>⏳ Sentiment refreshes at Monday's 9:30am auto-pull.</strong> Live Google review scores &amp; 5★ breakdown, RMS "Rate My Shift" team ratings, and the sickness / return-to-work cross-reference all come from Google Maps and Google Sheets, which this build could not reach from the current browser session. Monday's scheduled refresh pulls them in full.</div>
-    <div class="focus amber"><span class="ar">→</span>Focus this week: customer &amp; team sentiment land at Monday's refresh.</div>
+    <div class="cards">
+      <div class="card"><div class="lbl">Customer (Google)</div><div class="val" style="color:var(--green)">4.6★</div><div class="meta">826 reviews · live</div></div>
+      <div class="card"><div class="lbl">Team (RMS · /5)</div><div class="val" style="color:var(--green)">4.06</div><div class="meta">117 shift ratings</div></div>
+      <div class="card"><div class="lbl">Review base</div><div class="val">826</div><div class="meta">the estate's most-reviewed site</div></div>
+      <div class="card"><div class="lbl">RMS — June</div><div class="val" style="color:var(--amber)">No entries</div><div class="meta">last logged May (4.43)</div></div>
+    </div>
+
+    <div class="sent-grid" style="margin-top:16px">
+      <div class="panel">
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <div class="scorebig" style="color:var(--green)">4.6<span style="font-size:20px">★</span></div>
+          <div class="scoresub">Google · 826 reviews · the estate's biggest review base, open since 2021</div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="quote">The atmosphere is warm and welcoming, the staff are always friendly, and the coffee is consistently excellent. I've been visiting since opening in 2021 — you can tell they really care about service and quality.<span class="who">Jake Billing · Local Guide · 8 months ago · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">We come here pretty much once a week minimum, and every single time we have the best experience. All the staff are absolutely fantastic and so pleasant to deal with.<span class="who">Hayley Deans · 4 months ago · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">First time using Bewiched… coffee was okay, service fine. Food wise? Been better. <em>(Owner replied to put it right.)</em><span class="who">Oscar Simmonds · 7 months ago · <span class="stars">★★</span></span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <div class="scorebig" style="color:var(--green)">4.06<span style="font-size:20px">/5</span></div>
+          <div class="scoresub">RMS “Rate My Shift” · 117 ratings · 67 of 117 were 5★</div>
+        </div>
+        <div class="chart-box" style="height:170px;margin-top:8px"><canvas id="teamTrend"></canvas></div>
+        <div style="margin-top:8px">
+          <div class="quote">Great energy, positive vibes only :)<span class="who">15 May · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">Laughter and support<span class="who">14 May · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">Busy, hot conditions<span class="who">25 May · <span class="stars">★★</span></span></div>
+        </div>
+        <div class="note" style="margin-top:6px">Team morale is strong on a big sample (4.06 over 117 ratings, mostly 5★). The one gap is <strong>participation: no RMS entries logged in June yet</strong> — worth a nudge so the score stays live and representative through the summer peak.</div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:14px"><strong>Two lenses on how it feels.</strong> Customer = the live Google rating &amp; newest reviews (a snapshot, refreshed weekly). Team = RMS “Rate My Shift”, where the crew score each shift 1–5 with a one-line comment. Google doesn’t publish a rating-over-time series, so the customer view shows the current score + recent reviews; the team chart is the monthly average from RMS.</div>
+
+    <div class="focus green"><span class="ar">→</span>Focus this week: 4.6★ customers &amp; 4.06 team on big samples — nudge the team to log June RMS so it stays representative.</div>
+    <div class="section-title" style="margin-top:26px">🩺 Sickness &amp; return-to-work</div>
+    <div class="cards">
+      <div class="card"><div class="lbl">Sick absences</div><div class="val">7</div><div class="meta">Mar–Jun 2026</div></div>
+      <div class="card"><div class="lbl">Lateness</div><div class="val">1</div><div class="meta">tracked separately</div></div>
+      <div class="card"><div class="lbl">Reported correctly</div><div class="val" style="color:var(--green)">7 / 7</div><div class="meta">all called in per policy</div></div>
+      <div class="card"><div class="lbl">RTW completed</div><div class="val" style="color:var(--red)">2 / 7</div><div class="meta">return-to-work logged</div></div>
+    </div>
+    <div class="sent-grid" style="margin-top:16px">
+      <div class="panel">
+        <div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Sick absences vs RTW completed</div>
+        <div class="chart-box" style="height:150px"><canvas id="absChart"></canvas></div>
+        <div class="note" style="margin-top:8px">Reporting is perfect — <strong>every one of the 7 sickness absences was called in correctly</strong>. The follow-through lags: only 2 have a return-to-work logged. Closing that gap is a quick, cheap win.</div>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Team member</th><th>Sick date</th><th>Reported</th><th>RTW</th></tr></thead>
+          <tbody>
+            <tr><td>Itai Chapotoka</td><td>5 Mar</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
+            <tr><td>Joely Wright</td><td>25 Mar</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
+            <tr><td>Sarah Tyson</td><td>22 Apr</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
+            <tr><td>Sarah Tyson</td><td>1 May</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
+            <tr><td>Iulia Naumenko</td><td>24 May</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-ok">✓</span></td></tr>
+            <tr><td>Samuel Dodd</td><td>24 May</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
+            <tr><td>Iulia Naumenko</td><td>4 Jun</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-ok">✓</span></td></tr>
+          </tbody>
+        </table>
+        <div class="mini" style="margin-top:8px">Cross-referenced HRP ‘Sickness / late’ → ‘RTW’ by team member &amp; date. Lateness (1 incident) is tracked separately and doesn’t need an RTW.</div>
+      </div>
+    </div>
+
+    <div class="focus red"><span class="ar">→</span>Focus this week: reporting is 7/7 but RTW only 2/7 — log the outstanding return-to-work chats.</div>
+    <footer style="margin-top:18px">Customer: live Google reviews (Bewiched Coffee Drive-Thru, Moulton Park) · pulled Jun 2026. Team: <a class="srclink" href="https://docs.google.com/spreadsheets/d/1YFqpR9_ftlQEbfwc5ZVMjtS5tFO0j-7ccwB8rwG56wQ/edit" target="_blank" rel="noopener">RMS Shift Ratings ↗</a> · Sickness &amp; RTW cross-referenced from the HRP sheet (‘Sickness / late’ → ‘RTW’).</footer>
   </section>
 
   <footer id="foot"></footer>
@@ -409,7 +667,65 @@ return "<tr><td>"+r[0]+"<br><span style=\"font-size:10.5px;color:#9a8a7c;font-we
 })();
 </script>
 
+<script>
+/* ---- Op's Excellence (F1) ---- */
+(function(){
+  // Race: [W/C, total score, championship points (higher=better), finishing position]
+  const R=[["11 Apr",499.75,7,16],["17 Apr",188.75,19,4],["25 Apr",248.5,15,8],["3 May",308,8,15],["8 May",341.5,8,15],["16 May",210.25,15,8],["24 May",339,8,15],["29 May",344.25,9,14],["6 Jun",343,3,20]];
+  // Qualifying: [W/C, queue average s, hospitality 0-100, quali rank of 21]
+  const Q=[["8 Apr",209.5,70,26],["14 Apr",129.5,77,10],["23 Apr",201,33,15],["28 Apr",128.5,38,9],["4 May",324,33,20],["12 May",147,45,8],["19 May",257.5,33,22],["25 May",206.5,38,11],["3 Jun",192,100,14],["8 Jun",134,75,2]];
 
+  new Chart(document.getElementById("race"),{
+    data:{labels:R.map(r=>r[0]),datasets:[
+      {type:"bar",label:"Championship points",data:R.map(r=>r[2]),backgroundColor:"#5b3a29",borderRadius:4,yAxisID:"y",order:2},
+      {type:"line",label:"Finishing position",data:R.map(r=>r[3]),borderColor:"#c0392b",backgroundColor:"#c0392b",tension:.3,pointRadius:4,borderWidth:2.5,yAxisID:"y1",order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{position:"bottom",labels:{boxWidth:14,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>c.dataset.yAxisID==="y1"?(" Finished P"+c.parsed.y):(" "+c.parsed.y+" pts")}}},
+      scales:{y:{position:"left",grid:{color:"#eee"},title:{display:true,text:"Points"},suggestedMin:0,suggestedMax:21},
+        y1:{position:"right",reverse:true,grid:{display:false},title:{display:true,text:"Finish (1 = best)"},min:1,max:21,ticks:{stepSize:5}},
+        x:{grid:{display:false}}}}});
+
+  document.querySelector("#racetbl tbody").innerHTML=R.map(r=>{
+    const pc=r[2]>=14?'t-ok':r[2]>=8?'t-amber':'t-red';
+    const fc=r[3]<=8?'t-ok':r[3]<=14?'t-amber':'t-red';
+    return "<tr><td>"+r[0]+"</td><td>"+r[1]+"</td><td><span class=\"tag "+pc+"\">"+r[2]+" pts</span></td><td><span class=\"tag "+fc+"\">P"+r[3]+"</span></td></tr>";}).join("");
+
+  new Chart(document.getElementById("quali"),{
+    data:{labels:Q.map(r=>r[0]),datasets:[
+      {type:"bar",label:"Queue average (s)",data:Q.map(r=>r[1]),backgroundColor:Q.map(r=>r[1]>=250?"#b8860b":"#2d6fb3"),borderRadius:4,yAxisID:"y",order:2},
+      {type:"line",label:"Quali rank (of 21)",data:Q.map(r=>r[3]),borderColor:"#1f8a4c",backgroundColor:"#1f8a4c",tension:.3,pointRadius:4,borderWidth:2.5,yAxisID:"y1",order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{position:"bottom",labels:{boxWidth:14,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>c.dataset.yAxisID==="y1"?(" Rank "+c.parsed.y+" of 21"):(" Queue "+c.parsed.y+"s")}}},
+      scales:{y:{position:"left",ticks:{callback:v=>v+"s"},grid:{color:"#eee"},title:{display:true,text:"Queue average"},suggestedMin:0},
+        y1:{position:"right",reverse:true,grid:{display:false},title:{display:true,text:"Rank (1 = best)"},min:1,max:21,ticks:{stepSize:5}},
+        x:{grid:{display:false}}}}});
+
+  document.querySelector("#qualitbl tbody").innerHTML=Q.map(r=>{
+    const hosp='<span class="tag '+(r[2]>=100?'t-ok':r[2]>=65?'t-amber':'t-red')+'">'+r[2]+'%</span>';
+    const rk=r[3]<=7?'t-ok':r[3]>=15?'t-red':'t-amber';
+    return "<tr><td>"+r[0]+"</td><td>"+r[1]+"s</td><td>"+hosp+"</td><td><span class=\"tag "+rk+"\">"+r[3]+" / 21</span></td></tr>";}).join("");
+})();
+</script>
+
+<script>
+/* ---- Sentiment tab ---- */
+(function(){
+  window.CHARTS=window.CHARTS||[];
+  const tT=[["Nov",4.33],["Dec",4.53],["Jan",3.53],["Feb",4.57],["Mar",3.35],["Apr",4.04],["May",4.43]];
+  window.CHARTS.push(new Chart(document.getElementById("teamTrend"),{type:"line",
+    data:{labels:tT.map(r=>r[0]),datasets:[{label:"Avg shift rating",data:tT.map(r=>r[1]),borderColor:"#1f8a4c",backgroundColor:"#1f8a4c",tension:.3,pointRadius:4,borderWidth:2.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.y+" / 5"}}},
+      scales:{y:{min:1,max:5,grid:{color:"#eee"},title:{display:true,text:"avg / 5"}},x:{grid:{display:false}}}}}));
+  window.CHARTS.push(new Chart(document.getElementById("absChart"),{type:"bar",
+    data:{labels:["Sick absences","RTW completed"],datasets:[{data:[7,2],backgroundColor:["#b8860b","#1f8a4c"],borderRadius:4}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.x}}},
+      scales:{x:{grid:{color:"#eee"},ticks:{precision:0,stepSize:1},suggestedMax:8},y:{grid:{display:false}}}}}));
+})();
+</script>
 
 
 
