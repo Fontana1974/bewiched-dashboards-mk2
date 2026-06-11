@@ -272,12 +272,15 @@ def build():
         try: v=int(float(x))
         except: return tag(str(x),"t-na")
         k="t-ok" if v<=6 else ("t-amber" if v<=15 else "t-red"); return tag(str(v),k)
+    def _iscomp(s): return isinstance(F1D.get(s),dict) and F1D[s].get('comp')
+    def _nm(s): return (SHORT.get(s,s)+(' <span class="tag t-na">benchmark</span>' if _iscomp(s) else ''))
+    def _rs(s): return ' style="background:#f6efe7;color:#8a7a6d"' if _iscomp(s) else ''
     qlist=[(s,F1D[s]['quali']) for s in F1D if not s.startswith('_') and isinstance(F1D[s],dict) and 'quali' in F1D[s]]
     qlist.sort(key=lambda x:int(float(x[1][6])))
-    quali_rows="".join(f'<tr><td>{SHORT.get(s,s)}</td><td>{_rk(q[6])}</td><td>{_q(q[0])}</td><td>{_hosp(q[1])}</td><td>{_hosp(q[2])}</td><td>{_hosp(q[3])}</td><td>{_hosp(q[4])}</td><td>{q[5]}</td><td class="mini">{q[7]}</td></tr>' for s,q in qlist)
+    quali_rows="".join(f'<tr{_rs(s)}><td>{_nm(s)}</td><td>{_rk(q[6])}</td><td>{_q(q[0])}</td><td>{_hosp(q[1])}</td><td>{_hosp(q[2])}</td><td>{_hosp(q[3])}</td><td>{_hosp(q[4])}</td><td>{q[5]}</td><td class="mini">{q[7]}</td></tr>' for s,q in qlist)
     rlist=[(s,F1D[s]['race']) for s in F1D if not s.startswith('_') and isinstance(F1D[s],dict) and 'race' in F1D[s]]
     rlist.sort(key=lambda x:int(float(x[1][7])))
-    race_rows="".join(f'<tr><td>{SHORT.get(s,s)}</td><td>{_rk(r[7])}</td><td style="font-weight:700">{r[6]}</td><td>{_q(r[0])}</td><td>{_hosp(r[1])}</td><td>{_hosp(r[2])}</td><td>{_hosp(r[3])}</td><td>{_hosp(r[4])}</td><td>{r[5]}</td><td class="mini">{r[8]}</td></tr>' for s,r in rlist)
+    race_rows="".join(f'<tr{_rs(s)}><td>{_nm(s)}</td><td>{_rk(r[7])}</td><td style="font-weight:700">{r[6]}</td><td>{_q(r[0])}</td><td>{_hosp(r[1])}</td><td>{_hosp(r[2])}</td><td>{_hosp(r[3])}</td><td>{_hosp(r[4])}</td><td>{r[5]}</td><td class="mini">{r[8]}</td></tr>' for s,r in rlist)
     # ---- actual vs forecast (last completed week) ----
     avf=""; sfc=sa=ssc=su=0
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
