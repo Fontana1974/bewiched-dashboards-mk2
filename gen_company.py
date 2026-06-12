@@ -148,7 +148,11 @@ def build():
     for s in sorted(stores,key=lambda x:R[x]['f1'][0]):
         fin,ch,last6=R[s]['f1']
         spk="".join(f'<span class="spk" style="height:{max(2,round((26-int(p))/26*18))}px" title="P{p}"></span>' for p in last6)
-        f1tbl+=f'<tr><td>{s}</td><td>{tag("P"+str(fin),cls(fin,6,15,rev=True))}</td><td>{ch}</td><td style="text-align:left"><span class="spkwrap">{spk}</span></td></tr>'
+        _fd=F1D.get(s); _sc=None
+        if isinstance(_fd,dict) and _fd.get('race') and len(_fd['race'])>5:
+            try: _sc=float(_fd['race'][5])
+            except: _sc=None
+        f1tbl+=f'<tr><td>{s}</td><td>{tag("P"+str(fin),cls(fin,6,15,rev=True))}</td><td>{ch}</td><td>{tag(("%g"%_sc) if _sc is not None else "n/a",cls(_sc,210,285,rev=True))}</td><td style="text-align:left"><span class="spkwrap">{spk}</span></td></tr>'
     f1_fin_ds=json.dumps([R[s]['f1'][0] for s in sorted(stores,key=lambda x:R[x]['f1'][0])])
     f1_fin_lbls=json.dumps([SHORT[s] for s in sorted(stores,key=lambda x:R[x]['f1'][0])])
     f1_champ_avg=round(mean([R[s]['f1'][1] for s in stores]),1)
@@ -280,7 +284,11 @@ def build():
     quali_rows="".join(f'<tr{_rs(s)}><td>{_nm(s)}</td><td>{_rk(q[6])}</td><td>{_q(q[0])}</td><td>{_hosp(q[1])}</td><td>{_hosp(q[2])}</td><td>{_hosp(q[3])}</td><td>{_hosp(q[4])}</td><td>{q[5]}</td><td class="mini">{q[7]}</td></tr>' for s,q in qlist)
     rlist=[(s,F1D[s]['race']) for s in F1D if not s.startswith('_') and isinstance(F1D[s],dict) and 'race' in F1D[s]]
     rlist.sort(key=lambda x:int(float(x[1][7])))
-    race_rows="".join(f'<tr{_rs(s)}><td>{_nm(s)}</td><td>{_rk(r[7])}</td><td style="font-weight:700">{r[6]}</td><td>{_q(r[0])}</td><td>{_hosp(r[1])}</td><td>{_hosp(r[2])}</td><td>{_hosp(r[3])}</td><td>{_hosp(r[4])}</td><td>{r[5]}</td><td class="mini">{r[8]}</td></tr>' for s,r in rlist)
+    def _scrag(x):
+        try: v=float(x)
+        except: return tag(str(x),"t-na")
+        return tag(("%g"%v),cls(v,210,285,rev=True))
+    race_rows="".join(f'<tr{_rs(s)}><td>{_nm(s)}</td><td>{_rk(r[7])}</td><td style="font-weight:700">{r[6]}</td><td>{_q(r[0])}</td><td>{_hosp(r[1])}</td><td>{_hosp(r[2])}</td><td>{_hosp(r[3])}</td><td>{_hosp(r[4])}</td><td>{_scrag(r[5])}</td><td class="mini">{r[8]}</td></tr>' for s,r in rlist)
     # ---- actual vs forecast (last completed week) ----
     avf=""; sfc=sa=ssc=su=0
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):

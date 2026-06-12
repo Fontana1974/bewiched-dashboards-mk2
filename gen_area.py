@@ -7,6 +7,14 @@ try: OVR=json.load(open('planner_overrides.json'))
 except FileNotFoundError: OVR={}
 import datetime as _dtm; GEN_STAMP=_dtm.datetime.now().strftime('%d %b %Y, %H:%M')
 PLANNERS={"Jon":"https://docs.google.com/spreadsheets/d/1PSjBGiR40171h769esQCtn3ldcpCB5XJyfqRTo7Yccs/edit","Rich":"https://docs.google.com/spreadsheets/d/11XuXn9zQr-JB4x2fQ0ORV96Sf-U7xWPQPvg2YlCl_dQ/edit","Ian":"https://docs.google.com/spreadsheets/d/1_qdK6fzqPg1NcA2KKMy2TnaZ8nQJtVE-fglz2On3oBw/edit"}
+try: FD=json.load(open('f1_detail.json'))
+except FileNotFoundError: FD={}
+def _f1score(s):
+    d=FD.get(s)
+    if isinstance(d,dict) and d.get('race') and len(d['race'])>5 and d['race'][5] not in (None,''):
+        try: return float(d['race'][5])
+        except: return None
+    return None
 def _avf_rows(stores,R):
     body=""; sfc=sa=ssc=su=0
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
@@ -178,7 +186,8 @@ def build(coach):
     for s in sorted(stores,key=lambda x:R[x]['f1'][0]):
         fin,ch,last6=R[s]['f1']
         spk="".join(f'<span class="spk" style="height:{max(2,round((26-int(p))/26*18))}px" title="P{p}"></span>' for p in last6)
-        f1tbl+=f'<tr><td>{s}</td><td>{tag("P"+str(fin),cls(fin,6,15,rev=True))}</td><td>{ch}</td><td style="text-align:left"><span class="spkwrap">{spk}</span></td></tr>'
+        _sc=_f1score(s)
+        f1tbl+=f'<tr><td>{s}</td><td>{tag("P"+str(fin),cls(fin,6,15,rev=True))}</td><td>{ch}</td><td>{tag(("%g"%_sc) if _sc is not None else "n/a",cls(_sc,210,285,rev=True))}</td><td style="text-align:left"><span class="spkwrap">{spk}</span></td></tr>'
     f1_fin_ds=json.dumps([R[s]['f1'][0] for s in sorted(stores,key=lambda x:R[x]['f1'][0])])
     f1_fin_lbls=json.dumps([SHORT[s] for s in sorted(stores,key=lambda x:R[x]['f1'][0])])
     f1_champ_avg=round(mean([R[s]['f1'][1] for s in stores]),1)
