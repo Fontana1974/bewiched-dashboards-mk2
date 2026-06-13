@@ -59,7 +59,7 @@ y4=round(100*(sum(R[s]['s4'] for s in comp4)/sum(R[s]['s4_25'] for s in comp4)-1
 awr=sum(R[s]['wr'] for s in stores); awpct=round(100*awr/area_4wk,1)
 avg_fin=round(mean([R[s]['f1'][0] for s in stores]),1)
 cons=sorted(champ['cons'],key=lambda x:-x[3])
-audit_vals=[R[s]['audit_qtd'] for s in stores if R[s].get('audit_qtd') is not None]; audit_mean=round(mean(audit_vals),1) if audit_vals else None; audit_k=cls(audit_mean,4.5,4.0)
+audit_vals=[R[s]['audit_qtd'] for s in stores if R[s].get('audit_qtd') is not None]; audit_mean=round(mean(audit_vals),2) if audit_vals else None; audit_k=cls(audit_mean,4.5,4.0)
 
 # ---- movements (tab one) from smt_visits[COACH] ----
 def hc(p):
@@ -86,7 +86,7 @@ COACH_CARDS=('<div class="cards" style="grid-template-columns:repeat(5,1fr)">'
  '<div class="card"><div class="lbl">Most present</div><div class="val">%s%%</div><div class="meta">%s · top site</div></div>'
  '<div class="card"><div class="lbl">Diary span</div><div class="val">60 wks</div><div class="meta">Weekly SMT Visit Diary</div></div>'
  '<div class="card"><div class="lbl">Stores audit avg — QTD</div><div class="val"><span class="tag %s" style="font-size:20px;padding:2px 9px">%s</span><small style="font-size:13px;color:#9a8a7c"> /5</small></div><div class="meta">%s stores · Brand Audit QTD</div></div>'
- '</div>')%(COACH,n_sites,kavg,ktop[1][0],sh(ktop[0]),audit_k,(("%.1f"%audit_mean) if audit_mean is not None else "n/a"),len(audit_vals))
+ '</div>')%(COACH,n_sites,kavg,ktop[1][0],sh(ktop[0]),audit_k,(("%.2f"%audit_mean) if audit_mean is not None else "n/a"),len(audit_vals))
 
 # ---- sales ----
 def yoycell(v): return '<td><span class="tag t-na">n/a</span></td>' if v is None else '<td><span class="tag %s">%s%s%%</span></td>'%("t-ok" if v>=0 else "t-red",("+" if v>=0 else ""),round(v,1))

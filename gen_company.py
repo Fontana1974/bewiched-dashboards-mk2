@@ -42,13 +42,13 @@ def build():
     y4=round(100*(sum(R[s]['s4'] for s in comp4)/sum(R[s]['s4_25'] for s in comp4)-1),1) if comp4 else 0
     awr=sum(R[s]['wr'] for s in stores); awpct=round(100*awr/area_4wk,1)
     avg_fin=round(mean([R[s]['f1'][0] for s in stores]),1)
-    audit_vals=[R[s]['audit_qtd'] for s in stores if R[s].get('audit_qtd') is not None]; audit_mean=round(mean(audit_vals),1) if audit_vals else None
+    audit_vals=[R[s]['audit_qtd'] for s in stores if R[s].get('audit_qtd') is not None]; audit_mean=round(mean(audit_vals),2) if audit_vals else None
     # constructor standings (for F1 tab) — all coaches
     cons=sorted(champ['cons'],key=lambda x:-x[3])
     # ---- scorecard (sorted by last-week sales desc); presence = store's own area-coach coverage ----
     ov=""
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
-        r=R[s]; v4=r['vs4w']; ylw_s=r['yoy_lw']; y4_s=r['yoy_4w']; fin=r['f1_finish']; cov=r['visdow']['total']; av=r['avail']; wp=r['waste_pct']; tk=r.get('takeaway'); tk_cell=tag((str(tk)+"%") if tk is not None else "n/a",cls(tk,40,20)); gy=round(100*(r['tx26']/r['tx25']-1),1) if r['tx25'] else None; aud=r.get('audit_qtd'); aud_cell=tag(("%.1f"%aud) if aud is not None else "n/a",cls(aud,4.5,4.0))
+        r=R[s]; v4=r['vs4w']; ylw_s=r['yoy_lw']; y4_s=r['yoy_4w']; fin=r['f1_finish']; cov=r['visdow']['total']; av=r['avail']; wp=r['waste_pct']; tk=r.get('takeaway'); tk_cell=tag((str(tk)+"%") if tk is not None else "n/a",cls(tk,40,20)); gy=round(100*(r['tx26']/r['tx25']-1),1) if r['tx25'] else None; aud=r.get('audit_qtd'); aud_cell=tag(("%.2f"%aud) if aud is not None else "n/a",cls(aud,4.5,4.0))
         new = r['lw25']==0
         ov+=("<tr>"+f'<td style="font-weight:700"><span class="dotc" style="background:{COL[s]}"></span>{s}</td>'
           f'<td style="font-weight:700">{GBP(r["lw26"])}</td>'
@@ -319,7 +319,7 @@ def build():
      "{{NSTORES}}":str(len(stores)),"{{PILL}}":"All areas · Jon · Ian · Rich · "+str(len(stores))+" stores",
      "{{FOCUS_LI}}":focus_li,"{{OVROWS}}":ov,"{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
      "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
-     "{{AREA_WASTE_PCT}}":str(awpct),"{{AREA_WASTE_RETAIL}}":GBP(awr),"{{AREA_GC}}":format(st_,",d"),"{{AREA_GC_YOY}}":pctxt(round(agy,1)),"{{GCCHIP}}":"up" if agy>=0 else "dn","{{AUDIT_QTD}}":("%.1f"%audit_mean) if audit_mean is not None else "n/a","{{AUDIT_K}}":cls(audit_mean,4.5,4.0),"{{AUDIT_META}}":str(len(audit_vals))+" stores audited · QTD",
+     "{{AREA_WASTE_PCT}}":str(awpct),"{{AREA_WASTE_RETAIL}}":GBP(awr),"{{AREA_GC}}":format(st_,",d"),"{{AREA_GC_YOY}}":pctxt(round(agy,1)),"{{GCCHIP}}":"up" if agy>=0 else "dn","{{AUDIT_QTD}}":("%.2f"%audit_mean) if audit_mean is not None else "n/a","{{AUDIT_K}}":cls(audit_mean,4.5,4.0),"{{AUDIT_META}}":str(len(audit_vals))+" stores audited · QTD",
      "{{ATV_MED}}":f"{atv_med:.2f}",
      "{{SMT_MATT_ROWS}}":smt_rows('Matt'),"{{SMT_KEL_ROWS}}":smt_rows('Kel'),"{{SMT_CLAIRE_ROWS}}":smt_rows('Claire'),"{{SMT_NOTE}}":smt_note,
      "{{LW_TABLE}}":lw_rows,"{{LW_TOTAL}}":lw_total,"{{SALESTBL}}":salestbl,"{{DPG_ROWS}}":dpg_rows,"{{DOWG_ROWS}}":dowg_rows,
