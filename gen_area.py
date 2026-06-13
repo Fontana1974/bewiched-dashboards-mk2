@@ -211,7 +211,12 @@ def build(coach):
     sent={s:R[s]['sent'] for s in stores}
     rmsv=[sent[s]['rms'] for s in stores if sent[s]['rms']]; area_rms=round(mean(rmsv),2) if rmsv else 0
     area_sick=sum(sent[s]['sick'] for s in stores); area_late=sum(sent[s]['late'] for s in stores); area_rtw=sum(sent[s]['rtw'] for s in stores)
-    rtw_comp=round(100*area_rtw/area_sick) if area_sick else 0; rtw_k="t-ok" if rtw_comp>=80 else ("t-amber" if rtw_comp>=50 else "t-red")
+    area_sickfs=sum(sent[s].get('sickfs',sent[s]['sick']) for s in stores); area_out45=sum(sent[s].get('out45',0) for s in stores); area_sick45=sum(sent[s].get('sick45',0) for s in stores)
+    _cand=sorted(stores,key=lambda z:(-sent[z].get('out45',0),-sent[z].get('sickfs',0),z))[0]; _wn=sent[_cand].get('out45',0)
+    _rb=('#fbeae8','#eccfca','#8c2f22') if area_out45>0 else ('#e6f4ec','#cfe6d8','#1c6b3d')
+    _rsub=(f" &mdash; of {area_sick45} sick-for-shift in window · worst {SHORT.get(_cand,_cand)} ({_wn})" if area_out45>0 else " &mdash; all caught up")
+    rtw_chip=f'<li style="list-style:none;margin:2px 0 9px -18px;padding:9px 13px;border-radius:10px;font-weight:700;background:{_rb[0]};border:1px solid {_rb[1]};color:{_rb[2]}">🩹 RTWs to do &mdash; last 45 days: {area_out45}{_rsub}</li>'
+    rtw_comp=round(100*area_rtw/area_sickfs) if area_sickfs else 0; rtw_k="t-ok" if rtw_comp>=80 else ("t-amber" if rtw_comp>=50 else "t-red")
     reps=[sent[s]['rep_pct'] for s in stores if sent[s]['rep_pct'] is not None]; area_rep=round(mean(reps)) if reps else 0
     rms_rows=""
     for s in sorted(stores,key=lambda x:-(sent[x]['rms'] or 0)):
@@ -224,20 +229,20 @@ def build(coach):
         x=sent[s]; rep=x['rep_pct']; rr=x['rtw_rate']
         repk="t-na" if rep is None else ("t-ok" if rep>=90 else ("t-amber" if rep>=70 else "t-red"))
         rrk="t-na" if rr is None else ("t-ok" if rr>=80 else ("t-amber" if rr>=50 else "t-red"))
-        hr_rows+=f'<tr><td>{s}</td><td>{x["sick"]}</td><td>{x["late"]}</td><td>{tag((str(rep)+"%") if rep is not None else "n/a",repk)}</td><td>{x["rtw"]}</td><td>{tag((str(rr)+"%") if rr is not None else "n/a",rrk)}</td></tr>'
+        hr_rows+=f'<tr><td>{s}</td><td>{x.get("sickfs",x["sick"])}</td><td>{x["late"]}</td><td>{tag((str(rep)+"%") if rep is not None else "n/a",repk)}</td><td>{x["rtw"]}</td><td>{tag((str(rr)+"%") if rr is not None else "n/a",rrk)}</td></tr>'
     lowrms=sorted([s for s in stores if sent[s]['rms']],key=lambda x:sent[x]['rms'])
     rms_note=f"RMS is the team's own shift rating. Softest at <b>{SHORT[lowrms[0]]} ({sent[lowrms[0]]['rms']})</b>" + (f" and <b>{SHORT[lowrms[1]]} ({sent[lowrms[1]]['rms']})</b>" if len(lowrms)>1 else "")+f"; strongest <b>{SHORT[lowrms[-1]]} ({sent[lowrms[-1]]['rms']})</b>."
     sickd=sorted(stores,key=lambda x:-sent[x]['sick'])
-    rtw_note=f"<b>Return-to-work is the gap.</b> Only {area_rtw} RTW interviews logged against {area_sick} absences ({rtw_comp}%) — policy is an RTW chat after every absence. <b>{SHORT[sickd[0]]} ({sent[sickd[0]]['sick']})</b> carries the most sickness."
+    rtw_note=f"<b>Return-to-work is the gap.</b> Only {area_rtw} RTW interviews logged against {area_sickfs} sick-for-shift absences ({rtw_comp}%) — policy is an RTW chat after every absence. <b>{SHORT[sickd[0]]} ({sent[sickd[0]]['sick']})</b> carries the most sickness."
     # focus bullets
     syoy = f"area ran <b>{GBP(area_last)}</b> last week ({pctxt(ylw)} YoY)" if comp else f"area ran <b>{GBP(area_last)}</b> last week"
-    topsales=sorted(comp4,key=lambda x:-(R[x]['yoy_4w'] or -99)); 
+    topsales=sorted(comp4,key=lambda x:-(R[x]['yoy_4w'] or -99));
     sales_b=f"<b>Sales:</b> {syoy}; 4-week {pctxt(y4)} YoY."+(f" <b>{SHORT[topsales[0]]} {pctxt(R[topsales[0]]['yoy_4w'])}</b> leads." if topsales else "")
     wpd=sorted(stores,key=lambda x:-R[x]['waste_pct'])
     waste_b=f"<b>Wastage:</b> area {awpct}% retail; worst <b>{SHORT[wpd[0]]} ({R[wpd[0]]['waste_pct']}%)</b>."
     f1_b=f"<b>Op's Excellence:</b> best <b>{SHORT[bestf[0]]} P{R[bestf[0]]['f1'][0]}</b>; reset <b>{SHORT[worstf[0]]} P{R[worstf[0]]['f1'][0]}</b>."
-    pres_b=f"<b>Presence &amp; team:</b> {coach} averages <b>{avgcov}%</b> coverage; RTW completion just <b>{rtw_comp}%</b> across {area_sick} absences."
-    focus_li="".join(f"<li>{b}</li>" for b in [sales_b,f1_b,waste_b,pres_b])
+    pres_b=f"<b>Presence &amp; team:</b> {coach} averages <b>{avgcov}%</b> coverage; RTW completion just <b>{rtw_comp}%</b> across {area_sickfs} sick-for-shift (lateness excluded)."
+    focus_li=rtw_chip+"".join(f"<li>{b}</li>" for b in [sales_b,f1_b,waste_b,pres_b])
 
     # ---- customer (Google reviews) ----
     cu={s:R[s].get('cust',{'rating':None,'reviews':0}) for s in stores}
@@ -290,16 +295,17 @@ def build(coach):
      "{{MIX_AREA_ROWS}}":mar,"{{CAPHDR}}":caphdr,"{{CAPMAT}}":capmat,"{{MIX_DS}}":mix_ds,"{{MIX_LBLS}}":mix_lbls,"{{MIX_NOTE}}":mix_note,"{{MIX_FOCUS}}":mix_focus,
      "{{F1TBL}}":f1tbl,"{{F1_FIN_DS}}":f1_fin_ds,"{{F1_FIN_LBLS}}":f1_fin_lbls,"{{F1_CHAMP_AVG}}":str(f1_champ_avg),"{{AVG_FIN2}}":str(avg_fin),
      "{{F1_TOP}}":f1_top,"{{F1_TOP_META}}":f1_top_meta,"{{CON_HTML}}":con_html,"{{CON_NOTE}}":con_note,"{{DRV_ROWS}}":drv_rows,"{{F1_NOTE}}":f1_note,"{{F1_FOCUS}}":f1_focus,
-     "{{RMS_ROWS}}":rms_rows,"{{HR_ROWS}}":hr_rows,"{{AREA_RMS}}":str(area_rms),"{{AREA_SICK}}":str(area_sick),"{{AREA_LATE}}":str(area_late),
+     "{{RMS_ROWS}}":rms_rows,"{{HR_ROWS}}":hr_rows,"{{AREA_RMS}}":str(area_rms),"{{AREA_SICK}}":str(area_sick),"{{AREA_SICKFS}}":str(area_sickfs),"{{AREA_LATE}}":str(area_late),
      "{{RTW_COMP}}":str(rtw_comp),"{{RTW_COMP_K}}":rtw_k,"{{AREA_REP}}":str(area_rep),"{{AREA_RTW}}":str(area_rtw),"{{RMS_NOTE}}":rms_note,"{{RTW_NOTE}}":rtw_note,"{{AREA_RATING}}":str(area_rating),"{{AREA_REVIEWS}}":f"{area_reviews:,}","{{CUST_ROWS}}":cust_rows,"{{CUST_NOTE}}":cust_note,"{{WK_THIS}}":wk_this,"{{WK_N1}}":wk_n1,"{{WK_N2}}":wk_n2,"{{FCST_ROWS}}":fcst_rows,"{{FCST_AREA_THIS}}":GBP(sumf[0]),"{{FCST_HRS_THIS}}":str(sumh[0]),"{{FCST_BLENDED}}":str(fcst_blended),"{{TARGETS_LINK}}":TARGETS,
     }
     html=open('TEMPLATE_AREA.html').read()
     for k,v in repl.items(): html=html.replace(k,v)
     return html
 
-import re
+import re,os
+_OUT=os.environ.get('OUTDIR','.')
 for coach,fn in [("Jon","Jon_Area_Dashboard.html"),("Ian","Ian_Area_Dashboard.html"),("Rich","Rich_Area_Dashboard.html")]:
     h=build(coach)
     left=re.findall(r'{{[A-Z_0-9]+}}',h)
-    open('/sessions/sleepy-nifty-allen/mnt/outputs/'+fn,'w').write(h)
+    open(os.path.join(_OUT,fn),'w').write(h)
     print(coach,"-> ",fn," leftover placeholders:",sorted(set(left)) or "none")

@@ -186,7 +186,12 @@ for i,(stn,cc,pts) in enumerate(drv):
 sent={s:R[s]['sent'] for s in stores}
 rmsv=[sent[s]['rms'] for s in stores if sent[s]['rms']]; area_rms=round(mean(rmsv),2) if rmsv else 0
 area_sick=sum(sent[s]['sick'] for s in stores); area_late=sum(sent[s]['late'] for s in stores); area_rtw=sum(sent[s]['rtw'] for s in stores)
-rtw_comp=round(100*area_rtw/area_sick) if area_sick else 0; rtw_k="t-ok" if rtw_comp>=80 else ("t-amber" if rtw_comp>=50 else "t-red")
+area_sickfs=sum(sent[s].get('sickfs',sent[s]['sick']) for s in stores); area_out45=sum(sent[s].get('out45',0) for s in stores); area_sick45=sum(sent[s].get('sick45',0) for s in stores)
+_cand=sorted(stores,key=lambda z:(-sent[z].get('out45',0),-sent[z].get('sickfs',0),z))[0]; _wn=sent[_cand].get('out45',0)
+_rb=('#fbeae8','#eccfca','#8c2f22') if area_out45>0 else ('#e6f4ec','#cfe6d8','#1c6b3d')
+_rsub=((" &mdash; of %s sick-for-shift in window · worst %s (%s)"%(area_sick45,sh(_cand),_wn)) if area_out45>0 else " &mdash; all caught up")
+rtw_chip='<li style="list-style:none;margin:2px 0 9px -18px;padding:9px 13px;border-radius:10px;font-weight:700;background:%s;border:1px solid %s;color:%s">🩹 RTWs to do &mdash; last 45 days: %s%s</li>'%(_rb[0],_rb[1],_rb[2],area_out45,_rsub)
+rtw_comp=round(100*area_rtw/area_sickfs) if area_sickfs else 0; rtw_k="t-ok" if rtw_comp>=80 else ("t-amber" if rtw_comp>=50 else "t-red")
 reps=[sent[s]['rep_pct'] for s in stores if sent[s]['rep_pct'] is not None]; area_rep=round(mean(reps)) if reps else 0
 rms_rows=""
 for s in sorted(stores,key=lambda x:-(sent[x]['rms'] or 0)):
@@ -199,11 +204,11 @@ for s in sorted(stores,key=lambda x:-sent[x]['sick']):
     x=sent[s]; rep=x['rep_pct']; rr=x['rtw_rate']
     repk="t-na" if rep is None else ("t-ok" if rep>=90 else ("t-amber" if rep>=70 else "t-red"))
     rrk="t-na" if rr is None else ("t-ok" if rr>=80 else ("t-amber" if rr>=50 else "t-red"))
-    hr_rows+='<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%(s,x["sick"],x["late"],tag((str(rep)+"%") if rep is not None else "n/a",repk),x["rtw"],tag((str(rr)+"%") if rr is not None else "n/a",rrk))
+    hr_rows+='<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%(s,x.get("sickfs",x["sick"]),x["late"],tag((str(rep)+"%") if rep is not None else "n/a",repk),x["rtw"],tag((str(rr)+"%") if rr is not None else "n/a",rrk))
 lowrms=sorted([s for s in stores if sent[s]['rms']],key=lambda x:sent[x]['rms'])
 rms_note="RMS is the team's own shift rating. Softest at <b>%s (%s)</b>; strongest <b>%s (%s)</b>."%(sh(lowrms[0]),sent[lowrms[0]]['rms'],sh(lowrms[-1]),sent[lowrms[-1]]['rms'])
 sickd=sorted(stores,key=lambda x:-sent[x]['sick'])
-rtw_note="<b>Return-to-work is the gap.</b> Only %s RTW interviews logged against %s absences (%s%%) — policy is an RTW chat after every absence. <b>%s (%s)</b> carries the most sickness."%(area_rtw,area_sick,rtw_comp,sh(sickd[0]),sent[sickd[0]]['sick'])
+rtw_note="<b>Return-to-work is the gap.</b> Only %s RTW interviews logged against %s sick-for-shift absences (%s%%) — policy is an RTW chat after every absence. <b>%s (%s)</b> carries the most sickness."%(area_rtw,area_sickfs,rtw_comp,sh(sickd[0]),sent[sickd[0]]['sick'])
 cu={s:R[s].get('cust',{'rating':None,'reviews':0}) for s in stores}
 rated=[s for s in stores if cu[s]['rating'] is not None]
 area_rating=round(mean([cu[s]['rating'] for s in rated]),2) if rated else 0
@@ -225,8 +230,8 @@ sales_b="<b>Sales:</b> %s; 4-week %s YoY."%(syoy,pctxt(y4))+(" <b>%s %s</b> lead
 wpd=sorted(stores,key=lambda x:-R[x]['waste_pct'])
 waste_b="<b>Wastage:</b> company %s%% retail; worst <b>%s (%s%%)</b>."%(awpct,sh(wpd[0]),R[wpd[0]]['waste_pct'])
 f1_b="<b>Op's Excellence:</b> best <b>%s P%s</b>; reset <b>%s P%s</b>."%(sh(bestf[0]),R[bestf[0]]['f1'][0],sh(worstf[0]),R[worstf[0]]['f1'][0])
-coach_b="<b>Engagement:</b> %s averages <b>~%s%%</b> weekly site coverage, heaviest at %s (%s%%); RTW completion just <b>%s%%</b> across %s absences."%(COACH,kavg,sh(ktop[0]),ktop[1][0],rtw_comp,area_sick)
-focus_li="".join("<li>%s</li>"%b for b in [sales_b,f1_b,waste_b,coach_b])
+coach_b="<b>Engagement:</b> %s averages <b>~%s%%</b> weekly site coverage, heaviest at %s (%s%%); RTW completion just <b>%s%%</b> across %s sick-for-shift (lateness excluded)."%(COACH,kavg,sh(ktop[0]),ktop[1][0],rtw_comp,area_sickfs)
+focus_li=rtw_chip+"".join("<li>%s</li>"%b for b in [sales_b,f1_b,waste_b,coach_b])
 
 # ---- forecast ----
 _t=_dt.date.today(); _mon=_t-_dt.timedelta(days=_t.weekday())
@@ -282,7 +287,7 @@ repl={
  "{{MIX_AREA_ROWS}}":mar,"{{CAPHDR}}":caphdr,"{{CAPMAT}}":capmat,"{{MIX_DS}}":mix_ds,"{{MIX_LBLS}}":mix_lbls,"{{MIX_NOTE}}":mix_note,"{{MIX_FOCUS}}":mix_focus,
  "{{F1TBL}}":f1tbl,"{{F1_FIN_DS}}":f1_fin_ds,"{{F1_FIN_LBLS}}":f1_fin_lbls,"{{F1_CHAMP_AVG}}":str(f1_champ_avg),"{{AVG_FIN2}}":str(avg_fin),
  "{{F1_TOP}}":f1_top,"{{F1_TOP_META}}":f1_top_meta,"{{CON_HTML}}":con_html,"{{CON_NOTE}}":con_note,"{{DRV_ROWS}}":drv_rows,"{{F1_NOTE}}":f1_note,"{{F1_FOCUS}}":f1_focus,
- "{{RMS_ROWS}}":rms_rows,"{{HR_ROWS}}":hr_rows,"{{AREA_RMS}}":str(area_rms),"{{AREA_SICK}}":str(area_sick),"{{AREA_LATE}}":str(area_late),
+ "{{RMS_ROWS}}":rms_rows,"{{HR_ROWS}}":hr_rows,"{{AREA_RMS}}":str(area_rms),"{{AREA_SICK}}":str(area_sick),"{{AREA_SICKFS}}":str(area_sickfs),"{{AREA_LATE}}":str(area_late),
  "{{RTW_COMP}}":str(rtw_comp),"{{RTW_COMP_K}}":rtw_k,"{{AREA_REP}}":str(area_rep),"{{AREA_RTW}}":str(area_rtw),"{{RMS_NOTE}}":rms_note,"{{RTW_NOTE}}":rtw_note,
  "{{AREA_RATING}}":str(area_rating),"{{AREA_REVIEWS}}":format(area_reviews,",d"),"{{CUST_ROWS}}":cust_rows,"{{CUST_NOTE}}":cust_note,"{{SENT_FOCUS}}":sent_focus,
 }
