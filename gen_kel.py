@@ -141,13 +141,25 @@ yjs["Company (all %s)"%len(stores)]={"latest":"08/06/2026","items":area_items}; 
 
 # ---- mix ----
 area_sales=sum(R[s]['tot'][0] for s in stores); amix={}
+swp=[s for s in stores if R[s].get('mix_prev')]
+tcl=sum(R[s]['mix'][c]['sales'] for s in swp for c in CATS) or 1
+tpl=sum(R[s]['mix_prev'][c]['sales'] for s in swp for c in CATS) or 1
+def _mv(pp,valued=False):
+    if pp is None: return '<span style="color:#9a8a7c;font-size:10.5px"> · new</span>'
+    if abs(pp)<0.05: return '<span style="color:#9a8a7c;font-size:10.5px"> &#9670; 0.0pp</span>'
+    up=pp>0; arr='&#9650;' if up else '&#9660;'
+    col=('#1f8a4c' if up else '#c0392b') if valued else '#6b7785'
+    return '<span style="color:%s;font-size:10.5px;font-weight:700"> %s %+.1fpp</span>'%(col,arr,pp)
 for c in CATS:
     cs=sum(R[s]['mix'][c]['sales'] for s in stores); caps=[R[s]['mix'][c]['cap'] for s in stores]
-    amix[c]={'mix':round(100*cs/area_sales,1),'cap_avg':round(mean(caps),1)}
+    csl=sum(R[s]['mix'][c]['sales'] for s in swp); psl=sum(R[s]['mix_prev'][c]['sales'] for s in swp)
+    mix_pp=round(100*csl/tcl-100*psl/tpl,1) if swp else None
+    cap_pp=round(mean([R[s]['mix'][c]['cap'] for s in swp])-mean([R[s]['mix_prev'][c]['cap'] for s in swp]),1) if swp else None
+    amix[c]={'mix':round(100*cs/area_sales,1),'cap_avg':round(mean(caps),1),'mix_pp':mix_pp,'cap_pp':cap_pp}
 mar=""
 for c in CATS:
     caps=[(s,R[s]['mix'][c]['cap']) for s in stores]; best=max(caps,key=lambda x:x[1]); worst=min(caps,key=lambda x:x[1])
-    mar+='<tr><td>%s</td><td>%s%%</td><td>%s%%</td><td style="text-align:left;color:#1f8a4c">%s %s%%</td><td style="text-align:left;color:#c0392b">%s %s%%</td></tr>'%(c,amix[c]["mix"],amix[c]["cap_avg"],sh(best[0]),best[1],sh(worst[0]),worst[1])
+    mar+='<tr><td>%s</td><td>%s%%%s</td><td>%s%%%s</td><td style="text-align:left;color:#1f8a4c">%s %s%%</td><td style="text-align:left;color:#c0392b">%s %s%%</td></tr>'%(c,amix[c]["mix"],_mv(amix[c]["mix_pp"]),amix[c]["cap_avg"],_mv(amix[c]["cap_pp"],True),sh(best[0]),best[1],sh(worst[0]),worst[1])
 caphdr="".join('<th>%s</th>'%c.split(" ")[0] for c in CATS)
 capmat=""
 for s in stores:
@@ -157,7 +169,7 @@ for s in stores:
     capmat+='<tr><td class="ms">%s</td>%s</tr>'%(sh(s),cells)
 mix_ds=json.dumps([amix[c]['mix'] for c in CATS]); mix_lbls=json.dumps(CATS)
 foodcap=amix['Food']['cap_avg']
-mix_note="Hot drinks anchor the mix; <b>Food capture sits at ~%s%%</b> company-wide — the clearest add-on prize."%foodcap
+mix_note="Hot drinks anchor the mix; <b>Food capture sits at ~%s%%</b> company-wide — the clearest add-on prize. <b>&#9650;&#9660; pp</b> = this 4 weeks vs the prior 4 (like-for-like); mix-share moves are neutral, capture moves are green up / red down."%foodcap
 mix_focus="Food attach is the company-wide prize — prompt a food add-on at the till where the Food column shows red."
 
 # ---- F1 ----

@@ -309,7 +309,7 @@
     <div class="grid2">
       <div class="panel"><div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Capture % ranked vs the estate (21 stores)</div><table id="peertbl"><thead><tr><th>Category</th><th>Billing</th><th>Rank</th><th>Estate avg</th><th>Best in estate</th></tr></thead><tbody></tbody></table><div class="mini" style="margin-top:8px">Capture = share of transactions including the category (last ~5 wks). Value green = above estate average; rank chip green = top third, red = bottom third.</div></div>
       <div class="panel">
-        <table id="cattbl"><thead><tr><th>Category</th><th>Current mix</th><th>Holiday tilt</th><th>Capture %</th></tr></thead><tbody></tbody></table>
+        <table id="cattbl"><thead><tr><th>Category</th><th>Current mix · &#9650;&#9660; vs prior 4wk</th><th>Holiday tilt</th><th>Capture % · &#9650;&#9660;</th></tr></thead><tbody></tbody></table>
         <div class="note" style="margin-top:10px"><strong>Mix holds through the holidays.</strong> In the mature drive-thru/destination stores last summer the split barely moved from term into the school holidays — cold drinks + milkshakes were ~37% of sales in term vs ~35% in holidays (milkshakes flat, cold easing ~2pp as the early-summer heat passed). The cold-drink peak is <strong>weather-led (Jun–Jul), not the school calendar</strong>; total volume rose ~5%. So £ grows across all categories with only a small holiday tilt. <strong>Capture %</strong> = the share of transactions that include the category (attach rate, recent weeks) — a truer read of penetration than £.</div>
       </div>
     </div>
@@ -690,13 +690,12 @@ return '<tr><td>'+r.n+'</td><td>£'+r.w+'</td><td>'+r.wq+'</td><td>'+r.sq+'</td>
 <script>
 /* ---- Sales mix & capture ---- */
 (function(){
-const ROWS=[["Hot drinks",31.2,0.8,48.0],["Cold drinks",26.9,-1.8,36.9],["Milkshakes",16.3,-0.1,18.4],["Food",13.6,0.3,17.9],["Bakery",8.2,0.9,17.4],["Other & retail",3.8,-0.2,17.4]];
+const ROWS=[["Hot drinks", 31.2, 0.8, 48, null, null], ["Cold drinks", 26.9, -1.8, 36.9, null, null], ["Milkshakes", 16.3, -0.1, 18.4, null, null], ["Food", 13.6, 0.3, 17.9, null, null], ["Bakery", 8.2, 0.9, 17.4, null, null], ["Other & retail", 3.8, -0.2, 17.5, null, null]];
 const PEER=[["Hot drinks",48.1,20,21,61.4,"Wellingborough 71.8%"],["Cold drinks",36.9,1,21,23.7,"Top of estate"],["Milkshakes",18.4,3,21,13.1,"Rushden 25.4%"],["Food",17.9,4,21,14.0,"Fletton Quays 23.8%"],["Bakery",17.4,12,21,17.5,"Attleborough 25.4%"]];
 document.querySelector("#peertbl tbody").innerHTML=PEER.map(r=>{const top=r[2]<=r[3]/3,bot=r[2]>r[3]*2/3;const rc=top?["#e6f4ec","#1f8a4c"]:bot?["#fbeae8","#c0392b"]:["#f7f0dd","#b8860b"];const vc=r[1]>=r[4]?"#1f8a4c":"#c0392b";
 return "<tr><td>"+r[0]+"</td><td style=\"font-weight:700;color:"+vc+"\">"+r[1].toFixed(1)+"%</td><td><span style=\"display:inline-block;padding:2px 7px;border-radius:6px;font-weight:700;font-size:12px;background:"+rc[0]+";color:"+rc[1]+"\">"+r[2]+"/"+r[3]+"</span></td><td>"+r[4].toFixed(1)+"%</td><td style=\"text-align:left;font-size:11.5px;color:#8a7a6d\">"+r[5]+"</td></tr>";}).join("");
 const DESC={"Hot drinks":"lattes, cappuccinos, americanos, flat whites, hot choc, tea","Cold drinks":"iced lattes, frozen lemonade, iced matcha, frappés, cold brew","Milkshakes":"Oreo, Biscoff, vanilla, chocolate, strawberry shakes","Food":"croques, ciabattas, baps, wraps, salads, meal deals","Bakery":"traybakes, croissants, brownies, cookies, cakes","Other & retail":"bottled & soft drinks, beans, sundries"};
-document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{const s=r[2]>0?"#1f8a4c":r[2]<0?"#c0392b":"#8a7a6d";
-return "<tr><td>"+r[0]+"<br><span style=\"font-size:10.5px;color:#9a8a7c;font-weight:400\">"+(DESC[r[0]]||"")+"</span></td><td>"+r[1].toFixed(1)+"%</td><td style=\"color:"+s+"\">"+(r[2]>0?"+":"")+r[2].toFixed(1)+"pp</td><td>"+r[3].toFixed(1)+"%</td></tr>";}).join("");
+document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{const s=r[2]>0?"#1f8a4c":r[2]<0?"#c0392b":"#8a7a6d";function mv(pp,val){if(pp===null||pp===undefined)return ' <span style=\"color:#9a8a7c;font-size:10px\">· new</span>';if(Math.abs(pp)<0.05)return ' <span style=\"color:#9a8a7c;font-size:10px\">&#9670; 0.0pp</span>';var up=pp>0,col=val?(up?"#1f8a4c":"#c0392b"):"#6b7785";return ' <span style=\"color:'+col+';font-size:10px;font-weight:700\">'+(up?"&#9650;":"&#9660;")+' '+(up?"+":"")+pp.toFixed(1)+'pp</span>';}return "<tr><td>"+r[0]+"<br><span style=\"font-size:10.5px;color:#9a8a7c;font-weight:400\">"+(DESC[r[0]]||"")+"</span></td><td>"+r[1].toFixed(1)+"%"+mv(r[4],false)+"</td><td style=\"color:"+s+"\">"+(r[2]>0?"+":"")+r[2].toFixed(1)+"pp</td><td>"+r[3].toFixed(1)+"%"+mv(r[5],true)+"</td></tr>";}).join("");
 })();
 </script>
 
