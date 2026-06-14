@@ -70,14 +70,14 @@ def build():
     # ---- scorecard (sorted by last-week sales desc); presence = store's own area-coach coverage ----
     ov=""
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
-        r=R[s]; v4=r['vs4w']; ylw_s=r['yoy_lw']; y4_s=r['yoy_4w']; fin=r['f1_finish']; cov=r['visdow']['total']; av=r['avail']; wp=r['waste_pct']; tk=r.get('takeaway'); tk_cell=tag((str(tk)+"%") if tk is not None else "n/a",cls(tk,40,20)); gy=round(100*(r['tx26']/r['tx25']-1),1) if r['tx25'] else None; aud=r.get('audit_qtd'); aud_cell=tag(("%.2f"%aud) if aud is not None else "n/a",cls(aud,4.5,4.0))
+        r=R[s]; v4=r['vs4w']; ylw_s=r['yoy_lw']; y4_s=r['yoy_4w']; fin=r['f1_finish']; cov=r['visdow']['total']; av=r['avail']; wp=r['waste_pct']; wpl=r.get('waste_pct_lw', wp); tk=r.get('takeaway'); tk_cell=tag((str(tk)+"%") if tk is not None else "n/a",cls(tk,40,20)); gy=round(100*(r['tx26']/r['tx25']-1),1) if r['tx25'] else None; aud=r.get('audit_qtd'); aud_cell=tag(("%.2f"%aud) if aud is not None else "n/a",cls(aud,4.5,4.0))
         new = r['lw25']==0
         ov+=("<tr>"+f'<td style="font-weight:700"><span class="dotc" style="background:{COL[s]}"></span>{s}</td>'
           f'<td style="font-weight:700">{GBP(r["lw26"])}</td>'
           f'<td>{tag("new*" if new else pctxt(ylw_s),"t-amber" if new else cls(ylw_s,0,-5))}</td>'
           f'<td>{tag("new*" if new else pctxt(gy),"t-amber" if new else cls(gy,0,-5))}</td>'
           f'<td>{aud_cell}</td><td>{tk_cell}</td>'
-          f'<td>{tag(f"{wp}%",cls(wp,3,4,rev=True))}</td><td>{tag((str(av)+"%") if av is not None else "n/a",cls(av,95,85))}</td>'
+          f'<td>{tag(f"{wpl}%",cls(wpl,3,4,rev=True))}</td><td>{tag((str(av)+"%") if av is not None else "n/a",cls(av,95,85))}</td>'
           f'<td>{tag("P"+str(fin),cls(fin,6,15,rev=True))}</td><td>{tag(f"{cov}%",cls(cov,70,40))}</td></tr>')
     # ---- SMT visit tables ----
     def hc(p):
@@ -254,7 +254,7 @@ def build():
     focus_li=rtw_chip+"".join(f"<li>{b}</li>" for b in [sales_b,f1_b,waste_b,team_b])
     # ---- forecast & hours ----
     import datetime as _dt
-    _t=_dt.date.today(); _mon=_t-_dt.timedelta(days=_t.weekday())
+    _t=_dt.date.today(); _mon=_t-_dt.timedelta(days=_t.weekday()); lw_label="W/C "+str((_mon-_dt.timedelta(days=7)).day)+" "+(_mon-_dt.timedelta(days=7)).strftime("%b")
     def _wl(d): return "W/C "+str(d.day)+" "+d.strftime("%b")
     wk_this=_wl(_mon); wk_n1=_wl(_mon+_dt.timedelta(days=7)); wk_n2=_wl(_mon+_dt.timedelta(days=14))
     def _fc(s,i):
@@ -346,7 +346,7 @@ def build():
     repl={
      "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
      "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
-     "{{GEN_STAMP}}":GEN_STAMP,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":avf,
+     "{{GEN_STAMP}}":GEN_STAMP,"{{LW_LABEL}}":lw_label,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":avf,
      "{{PLANNER_LINKS}}":('<a class="plannerbtn" href="https://docs.google.com/spreadsheets/d/1PSjBGiR40171h769esQCtn3ldcpCB5XJyfqRTo7Yccs/edit" target="_blank" rel="noopener">📋 Jon&#39;s Planner ↗</a>'
        '<a class="plannerbtn" href="https://docs.google.com/spreadsheets/d/1_qdK6fzqPg1NcA2KKMy2TnaZ8nQJtVE-fglz2On3oBw/edit" target="_blank" rel="noopener">📋 Ian&#39;s Planner ↗</a>'
        '<a class="plannerbtn" href="https://docs.google.com/spreadsheets/d/11XuXn9zQr-JB4x2fQ0ORV96Sf-U7xWPQPvg2YlCl_dQ/edit" target="_blank" rel="noopener">📋 Rich&#39;s Planner ↗</a>'),
