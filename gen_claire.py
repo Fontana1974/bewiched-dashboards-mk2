@@ -12,6 +12,10 @@ from collections import defaultdict
 from statistics import mean, median
 
 A=json.load(open('allstores.json')); REC=A['rec']; champ=A['champ']; CATS=A['cats']
+WX_TMPL=open('wx_nudge_tmpl.html',encoding='utf-8').read()
+def wx_nudge(locs,scope=""):
+    locs=[[round(x[0],4),round(x[1],4)] for x in locs if x]
+    return WX_TMPL.replace("__LOCS__",json.dumps(locs)).replace("__SCOPE__",scope)
 ACT=json.load(open('actuals.json'))
 try: OVR=json.load(open('planner_overrides.json'))
 except FileNotFoundError: OVR={}
@@ -287,6 +291,7 @@ avf+='<tr style="font-weight:700;background:#EFE6DC"><td>COMPANY TOTAL</td><td>�
 
 # ---- fill template ----
 repl={
+ "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],"estate avg"),
  "{{COACH}}":COACH,"{{COACH_CARDS}}":COACH_CARDS,"{{MOVROWS}}":mov,"{{MOV_NOTE}}":mov_note,"{{PLANNER_LINKS}}":PLANNERS_HTML,
  "{{GEN_STAMP}}":GEN_STAMP,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · Engagement Coach · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,
  "{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",

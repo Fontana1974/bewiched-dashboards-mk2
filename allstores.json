@@ -290,7 +290,11 @@
      "cap": 23.5,
      "sales": 1330
     }
-   }
+   },
+   "coords": [
+    52.36,
+    -0.69
+   ]
   },
   "Corby": {
    "coach": "Jon",
@@ -603,7 +607,11 @@
      "cap": 21.9,
      "sales": 1511
     }
-   }
+   },
+   "coords": [
+    52.49,
+    -0.69
+   ]
   },
   "Higham Ferrers": {
    "coach": "Jon",
@@ -881,7 +889,11 @@
      "cap": 23.9,
      "sales": 938
     }
-   }
+   },
+   "coords": [
+    52.31,
+    -0.59
+   ]
   },
   "Kettering": {
    "coach": "Jon",
@@ -1194,7 +1206,11 @@
      "cap": 19.8,
      "sales": 2125
     }
-   }
+   },
+   "coords": [
+    52.4,
+    -0.73
+   ]
   },
   "Olney": {
    "coach": "Jon",
@@ -1479,7 +1495,11 @@
      "cap": 14,
      "sales": 794
     }
-   }
+   },
+   "coords": [
+    52.15,
+    -0.7
+   ]
   },
   "Peterborough Bridge Street": {
    "coach": "Jon",
@@ -1771,7 +1791,11 @@
      "cap": 19.9,
      "sales": 1306
     }
-   }
+   },
+   "coords": [
+    52.57,
+    -0.24
+   ]
   },
   "Peterborough Fletton Quays": {
    "coach": "Jon",
@@ -2091,7 +2115,11 @@
      "cap": 22.6,
      "sales": 2222
     }
-   }
+   },
+   "coords": [
+    52.57,
+    -0.25
+   ]
   },
   "Rothwell": {
    "coach": "Jon",
@@ -2383,7 +2411,11 @@
      "cap": 21.7,
      "sales": 1859
     }
-   }
+   },
+   "coords": [
+    52.42,
+    -0.8
+   ]
   },
   "Rushden Lakes": {
    "coach": "Jon",
@@ -2689,7 +2721,11 @@
      "cap": 28.6,
      "sales": 5059
     }
-   }
+   },
+   "coords": [
+    52.29,
+    -0.6
+   ]
   },
   "Attleborough": {
    "coach": "Ian",
@@ -2995,7 +3031,11 @@
      "cap": 16,
      "sales": 672
     }
-   }
+   },
+   "coords": [
+    52.52,
+    -1.48
+   ]
   },
   "Billing Drive Thru": {
    "coach": "Rich",
@@ -3294,7 +3334,11 @@
    "cph": 56,
    "takeaway": 62.9,
    "audit_qtd": 4.77,
-   "mix_prev": null
+   "mix_prev": null,
+   "coords": [
+    52.26,
+    -0.79
+   ]
   },
   "Glenvale Drive Thru": {
    "coach": "Ian",
@@ -3642,7 +3686,11 @@
      "cap": 24.5,
      "sales": 3691
     }
-   }
+   },
+   "coords": [
+    52.32,
+    -0.66
+   ]
   },
   "HOE Balsall Common": {
    "coach": "Ian",
@@ -3955,7 +4003,11 @@
      "cap": 23.9,
      "sales": 886
     }
-   }
+   },
+   "coords": [
+    52.4,
+    -1.63
+   ]
   },
   "Leamington Parade": {
    "coach": "Rich",
@@ -4268,7 +4320,11 @@
      "cap": 19.4,
      "sales": 1235
     }
-   }
+   },
+   "coords": [
+    52.29,
+    -1.53
+   ]
   },
   "Lower Heathcote": {
    "coach": "Rich",
@@ -4553,7 +4609,11 @@
      "cap": 22.1,
      "sales": 1173
     }
-   }
+   },
+   "coords": [
+    52.26,
+    -1.55
+   ]
   },
   "Market Harborough": {
    "coach": "Rich",
@@ -4873,7 +4933,11 @@
      "cap": 22.1,
      "sales": 1720
     }
-   }
+   },
+   "coords": [
+    52.48,
+    -0.92
+   ]
   },
   "Northampton": {
    "coach": "Rich",
@@ -5186,7 +5250,11 @@
      "cap": 17.1,
      "sales": 1840
     }
-   }
+   },
+   "coords": [
+    52.24,
+    -0.9
+   ]
   },
   "Northampton Drive-Thru": {
    "coach": "Rich",
@@ -5534,7 +5602,11 @@
      "cap": 20.2,
      "sales": 4652
     }
-   }
+   },
+   "coords": [
+    52.26,
+    -0.85
+   ]
   },
   "Rugby": {
    "coach": "Rich",
@@ -5861,7 +5933,11 @@
      "cap": 23.9,
      "sales": 1398
     }
-   }
+   },
+   "coords": [
+    52.37,
+    -1.26
+   ]
   },
   "Wellingborough": {
    "coach": "Rich",
@@ -6167,7 +6243,11 @@
      "cap": 14.8,
      "sales": 1176
     }
-   }
+   },
+   "coords": [
+    52.3,
+    -0.7
+   ]
   },
   "Wellingborough Train Station": {
    "coach": "Rich",
@@ -6480,7 +6560,11 @@
      "cap": 33.9,
      "sales": 3615
     }
-   }
+   },
+   "coords": [
+    52.3,
+    -0.69
+   ]
   }
  },
  "champ": {
