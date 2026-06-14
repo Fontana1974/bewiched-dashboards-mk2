@@ -97,7 +97,7 @@
       <div class="card"><div class="lbl">Sales — last week</div><div class="val">{{AREA_LAST}}<span class="chip {{LWCHIP}}">{{AREA_YOY_LW}}</span></div><div class="meta">W/C 1 Jun · sales YoY</div></div>
       <div class="card"><div class="lbl">Guest checks — last week</div><div class="val">{{AREA_GC}}<span class="chip {{GCCHIP}}">{{AREA_GC_YOY}}</span></div><div class="meta">transactions · YoY</div></div>
       <div class="card"><div class="lbl">Stores audit avg — quarter-to-date (QTD)</div><div class="val"><span class="tag {{AUDIT_K}}" style="font-size:22px;padding:2px 10px">{{AUDIT_QTD}}</span><small style="font-size:14px;color:#9a8a7c"> /5</small></div><div class="meta">{{AUDIT_META}}</div></div>
-      <div class="card"><div class="lbl">Area wastage %</div><div class="val">{{AREA_WASTE_PCT}}%</div><div class="meta">{{AREA_WASTE_RETAIL}} retail · target 3%</div></div>
+      <div class="card"><div class="lbl">Area wastage %</div><div class="val">{{AREA_WASTE_PCT}}%</div><div class="meta">{{AREA_WASTE_RETAIL}} retail · last week {{WASTE_PCT_LW}}% · target 3%</div></div>
       <div class="card"><div class="lbl">Constructor standing</div><div class="val">{{CON_POS}}</div><div class="meta">{{CON_META}}</div></div>
     </div>
     <div class="section-title">Store scorecard — traffic-lit by KPI</div>
@@ -186,6 +186,21 @@
   <!-- WASTAGE & YIELD -->
   <section class="tab-panel" id="tab-waste">
     {{WX_FOOD}}
+    <div class="section-title">Wastage — last week vs 4-week run rate</div>
+    <div class="cards" style="margin-bottom:4px">
+      <div class="card"><div class="lbl">Wastage %</div>
+        <div style="display:flex;gap:20px;align-items:flex-end;margin:3px 0 4px">
+          <div><div style="font-size:21px;font-weight:800;line-height:1">{{WASTE_PCT_LW}}%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
+          <div><div style="font-size:21px;font-weight:800;line-height:1">{{AREA_WASTE_PCT}}%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week run rate</div></div>
+        </div>
+        <div class="meta">target 3%</div></div>
+      <div class="card"><div class="lbl">Waste &pound; (retail lost)</div>
+        <div style="display:flex;gap:20px;align-items:flex-end;margin:3px 0 4px">
+          <div><div style="font-size:21px;font-weight:800;line-height:1">{{WASTE_RETAIL_LW}}</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
+          <div><div style="font-size:21px;font-weight:800;line-height:1">{{WASTE_RETAIL_WK}}</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week weekly average</div></div>
+        </div>
+        <div class="meta">over-production cost &middot; the per-product tables below cover the last 4 weeks</div></div>
+    </div>
     <div class="note blue"><b>Yield = Availability % − Waste-rate %</b>, target <b>90%</b>. Below it means either <b>over-producing</b> (high waste) or <b>selling out</b> (low availability — a chance to sell more). Pick a store: &nbsp;<select id="storeSel"></select> <span id="pollNote" class="mini"></span></div>
     <div class="grid2 even" style="margin-top:8px">
       <div class="panel">
@@ -211,7 +226,7 @@
       <div class="panel">
         <table><thead><tr><th>Category</th><th>Area mix %</th><th>Avg capture %</th><th>Best</th><th>Weakest</th></tr></thead>
         <tbody>{{MIX_AREA_ROWS}}</tbody></table>
-        <div class="note"><b>Capture %</b> = share of transactions including the category (attach rate). {{MIX_NOTE}}</div>
+        <div class="note"><b>Capture %</b> = share of transactions including the category (attach rate). Each row shows the <b>4-week run rate</b> with <b>last week</b> beneath it. {{MIX_NOTE}}</div>
       </div>
     </div>
     <div class="section-title" style="margin-top:22px">Capture % by store — green = ahead of area average, red = behind</div>
