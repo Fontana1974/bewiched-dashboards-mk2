@@ -28,6 +28,7 @@ ACT=json.load(open('actuals.json'))
 try: OVR=json.load(open('planner_overrides.json'))
 except FileNotFoundError: OVR={}
 import datetime as _dtm; GEN_STAMP=_dtm.datetime.now().strftime('%d %b %Y, %H:%M')
+_today=_dtm.date.today(); _mon0=_today-_dtm.timedelta(days=_today.weekday()); _curend0=_mon0-_dtm.timedelta(days=1); win4=(_curend0-_dtm.timedelta(days=27)).strftime('%-d %b')+' → '+_curend0.strftime('%-d %b %Y'); ylatest=_curend0.strftime('%d/%m/%Y')
 PLANNERS={"Jon":"https://docs.google.com/spreadsheets/d/1PSjBGiR40171h769esQCtn3ldcpCB5XJyfqRTo7Yccs/edit","Rich":"https://docs.google.com/spreadsheets/d/11XuXn9zQr-JB4x2fQ0ORV96Sf-U7xWPQPvg2YlCl_dQ/edit","Ian":"https://docs.google.com/spreadsheets/d/1_qdK6fzqPg1NcA2KKMy2TnaZ8nQJtVE-fglz2On3oBw/edit"}
 try: FD=json.load(open('f1_detail.json'))
 except FileNotFoundError: FD={}
@@ -157,7 +158,7 @@ def build(coach):
     dowg_note="Same YoY basis by weekday — a green column is a day to protect, a red one is where to add a promo or labour."
     sales_focus="Chase the red cells in the growth grids; protect the green days with labour."
     # ---- wastage yjs/outjs + Area ----
-    yjs={s:{"latest":"08/06/2026","items":R[s]['yield_items']} for s in stores}
+    yjs={s:{"latest":ylatest,"items":R[s]['yield_items']} for s in stores}
     outjs={s:clean_outliers(R[s]['outliers']) for s in stores}
     # Area aggregate
     ai=defaultdict(lambda:{'av':[], 'sold':0,'w':0,'wr':0.0})
@@ -182,7 +183,7 @@ def build(coach):
         tot=v['sold']+v['w']
         if tot<=0: continue
         wr=round(100*v['w']/tot,1); area_items.append([n,round(mean(v['av']),1),wr,int(v['sold']),round(v['wr'],1)])
-    yjs[f"Area (all {len(stores)})"]={"latest":"08/06/2026","items":area_items}; outjs[f"Area (all {len(stores)})"]=aol
+    yjs[f"Area (all {len(stores)})"]={"latest":ylatest,"items":area_items}; outjs[f"Area (all {len(stores)})"]=aol
     # ---- mix ----
     area_sales=sum(R[s]['tot'][0] for s in stores)
     amix={}
@@ -320,7 +321,7 @@ def build(coach):
     repl={
      "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
      "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
-     "{{GEN_STAMP}}":GEN_STAMP,"{{LW_LABEL}}":lw_label,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":_avf_rows(stores,R),"{{PLANNER_LINK}}":PLANNERS.get(coach,'#'),
+     "{{GEN_STAMP}}":GEN_STAMP,"{{WIN4}}":win4,"{{LW_LABEL}}":lw_label,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":_avf_rows(stores,R),"{{PLANNER_LINK}}":PLANNERS.get(coach,'#'),
      "{{COACH}}":coach,"{{NSTORES}}":str(len(stores)),"{{PILL}}":" · ".join(SHORT[s] for s in sorted(stores,key=lambda x:-R[x]['s4'])),
      "{{FOCUS_LI}}":focus_li,"{{OVROWS}}":ov,"{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
      "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
