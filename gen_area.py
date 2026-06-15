@@ -28,7 +28,6 @@ ACT=json.load(open('actuals.json'))
 try: OVR=json.load(open('planner_overrides.json'))
 except FileNotFoundError: OVR={}
 import datetime as _dtm; GEN_STAMP=_dtm.datetime.now().strftime('%d %b %Y, %H:%M')
-_today=_dtm.date.today(); _mon0=_today-_dtm.timedelta(days=_today.weekday()); _curend0=_mon0-_dtm.timedelta(days=1); win4=(_curend0-_dtm.timedelta(days=27)).strftime('%-d %b')+' → '+_curend0.strftime('%-d %b %Y'); ylatest=_curend0.strftime('%d/%m/%Y')
 PLANNERS={"Jon":"https://docs.google.com/spreadsheets/d/1PSjBGiR40171h769esQCtn3ldcpCB5XJyfqRTo7Yccs/edit","Rich":"https://docs.google.com/spreadsheets/d/11XuXn9zQr-JB4x2fQ0ORV96Sf-U7xWPQPvg2YlCl_dQ/edit","Ian":"https://docs.google.com/spreadsheets/d/1_qdK6fzqPg1NcA2KKMy2TnaZ8nQJtVE-fglz2On3oBw/edit"}
 try: FD=json.load(open('f1_detail.json'))
 except FileNotFoundError: FD={}
@@ -158,7 +157,7 @@ def build(coach):
     dowg_note="Same YoY basis by weekday — a green column is a day to protect, a red one is where to add a promo or labour."
     sales_focus="Chase the red cells in the growth grids; protect the green days with labour."
     # ---- wastage yjs/outjs + Area ----
-    yjs={s:{"latest":ylatest,"items":R[s]['yield_items']} for s in stores}
+    yjs={s:{"latest":"08/06/2026","items":R[s]['yield_items']} for s in stores}
     outjs={s:clean_outliers(R[s]['outliers']) for s in stores}
     # Area aggregate
     ai=defaultdict(lambda:{'av':[], 'sold':0,'w':0,'wr':0.0})
@@ -183,7 +182,7 @@ def build(coach):
         tot=v['sold']+v['w']
         if tot<=0: continue
         wr=round(100*v['w']/tot,1); area_items.append([n,round(mean(v['av']),1),wr,int(v['sold']),round(v['wr'],1)])
-    yjs[f"Area (all {len(stores)})"]={"latest":ylatest,"items":area_items}; outjs[f"Area (all {len(stores)})"]=aol
+    yjs[f"Area (all {len(stores)})"]={"latest":"08/06/2026","items":area_items}; outjs[f"Area (all {len(stores)})"]=aol
     # ---- mix ----
     area_sales=sum(R[s]['tot'][0] for s in stores)
     amix={}
@@ -318,10 +317,36 @@ def build(coach):
     fcst_blended=round(sumf[0]/sumh[0],1) if sumh[0] else 0
     TARGETS="https://docs.google.com/spreadsheets/d/18iUyF6Usm5QnUAARPgNsAkqWp00fKPv1WA3waBKJFZU/edit"
 
+    # ---- F1 Qualifying / Race detail tables (area-scoped: this coach's stores; Rank/Finish = company-wide championship position) ----
+    def _hosp(x):
+        try: v=float(x)
+        except: return tag("n/a","t-na")
+        p=round(v*100); k="t-ok" if v>=1 else ("t-amber" if v>=0.5 else "t-red"); return tag(f"{p}%",k)
+    def _qsec(x):
+        try: v=float(x)
+        except: return tag("n/a","t-na")
+        k="t-ok" if v<=180 else ("t-amber" if v<=300 else "t-red"); return tag(f"{int(round(v))}s",k)
+    def _rk(x):
+        try: v=int(float(x))
+        except: return tag(str(x),"t-na")
+        k="t-ok" if v<=6 else ("t-amber" if v<=15 else "t-red"); return tag(str(v),k)
+    def _scrag(x):
+        try: v=float(x)
+        except: return tag(str(x),"t-na")
+        return tag(("%g"%v),cls(v,210,285,rev=True))
+    _qd=[(s,FD[s]['quali']) for s in stores if isinstance(FD.get(s),dict) and 'quali' in FD[s] and len(FD[s]['quali'])>=8]
+    _qd.sort(key=lambda x:int(float(x[1][6])))
+    quali_rows="".join(f'<tr><td>{SHORT.get(s,s)}</td><td>{_rk(q[6])}</td><td>{_qsec(q[0])}</td><td>{_hosp(q[1])}</td><td>{_hosp(q[2])}</td><td>{_hosp(q[3])}</td><td>{_hosp(q[4])}</td><td>{q[5]}</td><td class="mini">{q[7]}</td></tr>' for s,q in _qd)
+    _rd=[(s,FD[s]['race']) for s in stores if isinstance(FD.get(s),dict) and 'race' in FD[s] and len(FD[s]['race'])>=9]
+    _rd.sort(key=lambda x:int(float(x[1][7])))
+    race_rows="".join(f'<tr><td>{SHORT.get(s,s)}</td><td>{_rk(r[7])}</td><td style="font-weight:700">{r[6]}</td><td>{_qsec(r[0])}</td><td>{_hosp(r[1])}</td><td>{_hosp(r[2])}</td><td>{_hosp(r[3])}</td><td>{_hosp(r[4])}</td><td>{_scrag(r[5])}</td><td class="mini">{r[8]}</td></tr>' for s,r in _rd)
+    if not quali_rows: quali_rows='<tr><td colspan="9" class="mini" style="text-align:center;padding:10px">No qualifying audits yet for this area.</td></tr>'
+    if not race_rows: race_rows='<tr><td colspan="10" class="mini" style="text-align:center;padding:10px">No race audits yet for this area.</td></tr>'
+
     repl={
      "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
      "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
-     "{{GEN_STAMP}}":GEN_STAMP,"{{WIN4}}":win4,"{{LW_LABEL}}":lw_label,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":_avf_rows(stores,R),"{{PLANNER_LINK}}":PLANNERS.get(coach,'#'),
+     "{{GEN_STAMP}}":GEN_STAMP,"{{LW_LABEL}}":lw_label,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":_avf_rows(stores,R),"{{PLANNER_LINK}}":PLANNERS.get(coach,'#'),
      "{{COACH}}":coach,"{{NSTORES}}":str(len(stores)),"{{PILL}}":" · ".join(SHORT[s] for s in sorted(stores,key=lambda x:-R[x]['s4'])),
      "{{FOCUS_LI}}":focus_li,"{{OVROWS}}":ov,"{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
      "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
@@ -332,7 +357,7 @@ def build(coach):
      "{{YJS}}":json.dumps(yjs),"{{OUTJS}}":json.dumps(outjs),
      "{{MIX_AREA_ROWS}}":mar,"{{CAPHDR}}":caphdr,"{{CAPMAT}}":capmat,"{{MIX_DS}}":mix_ds,"{{MIX_LBLS}}":mix_lbls,"{{MIX_NOTE}}":mix_note,"{{MIX_FOCUS}}":mix_focus,
      "{{F1TBL}}":f1tbl,"{{F1_FIN_DS}}":f1_fin_ds,"{{F1_FIN_LBLS}}":f1_fin_lbls,"{{F1_CHAMP_AVG}}":str(f1_champ_avg),"{{AVG_FIN2}}":str(avg_fin),
-     "{{F1_TOP}}":f1_top,"{{F1_TOP_META}}":f1_top_meta,"{{CON_HTML}}":con_html,"{{CON_NOTE}}":con_note,"{{DRV_ROWS}}":drv_rows,"{{F1_NOTE}}":f1_note,"{{F1_FOCUS}}":f1_focus,
+     "{{F1_TOP}}":f1_top,"{{F1_TOP_META}}":f1_top_meta,"{{CON_HTML}}":con_html,"{{CON_NOTE}}":con_note,"{{DRV_ROWS}}":drv_rows,"{{F1_NOTE}}":f1_note,"{{F1_FOCUS}}":f1_focus,"{{QUALI_DETAIL_ROWS}}":quali_rows,"{{RACE_DETAIL_ROWS}}":race_rows,
      "{{RMS_ROWS}}":rms_rows,"{{HR_ROWS}}":hr_rows,"{{AREA_RMS}}":str(area_rms),"{{AREA_SICK}}":str(area_sick),"{{AREA_SICKFS}}":str(area_sickfs),"{{AREA_LATE}}":str(area_late),
      "{{RTW_COMP}}":str(rtw_comp),"{{RTW_COMP_K}}":rtw_k,"{{AREA_REP}}":str(area_rep),"{{AREA_RTW}}":str(area_rtw),"{{RMS_NOTE}}":rms_note,"{{RTW_NOTE}}":rtw_note,"{{AREA_RATING}}":str(area_rating),"{{AREA_REVIEWS}}":f"{area_reviews:,}","{{CUST_ROWS}}":cust_rows,"{{CUST_NOTE}}":cust_note,"{{WK_THIS}}":wk_this,"{{WK_N1}}":wk_n1,"{{WK_N2}}":wk_n2,"{{FCST_ROWS}}":fcst_rows,"{{FCST_AREA_THIS}}":GBP(sumf[0]),"{{FCST_HRS_THIS}}":str(sumh[0]),"{{FCST_BLENDED}}":str(fcst_blended),"{{TARGETS_LINK}}":TARGETS,
     }
