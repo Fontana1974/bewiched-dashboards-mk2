@@ -71,7 +71,7 @@
 <div class="brandbar"><div class="inner">
   <div class="logo"><div><div class="word">Be<span>wiched</span></div><div class="eyebrow">Area Performance</div></div></div>
   <div class="spacer"></div>
-  <div class="ctx">Area: <b>Ian</b> · 3 stores<br>4-week window: <b>18 May → 14 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed 15 Jun 2026, 15:23 · auto Mon 9am</span></div>
+  <div class="ctx">Area: <b>Ian</b> · 3 stores<br>4-week window: <b>18 May → 14 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed 15 Jun 2026, 15:42 · auto Mon 9am</span></div>
 </div></div>
 <div class="wrap">
   <header class="page">
@@ -105,7 +105,7 @@
     <div class="panel">
       <table class="scorecard">
         <thead><tr><th>Store</th><th>Last wk £</th><th>Sales YoY</th><th>Guest-count YoY</th><th>Audit /5 (QTD)</th><th>Wastage %</th><th>Availability</th><th>F1 race</th><th>Ian presence</th></tr></thead>
-        <tbody><tr><td style="font-weight:700"><span class="dotc" style="background:#2d6fb3"></span>Attleborough</td><td style="font-weight:700">£6,099</td><td><span class="tag t-amber">new*</span></td><td><span class="tag t-amber">new*</span></td><td><span class="tag t-ok">4.81</span></td><td><span class="tag t-red">5.1%</span></td><td><span class="tag t-ok">98.1%</span></td><td><span class="tag t-amber">P12</span></td><td><span class="tag t-red">33%</span></td></tr><tr><td style="font-weight:700"><span class="dotc" style="background:#c08a2d"></span>Glenvale Drive Thru</td><td style="font-weight:700">£17,213</td><td><span class="tag t-ok">+24.4%</span></td><td><span class="tag t-ok">+13.0%</span></td><td><span class="tag t-ok">4.67</span></td><td><span class="tag t-ok">2.1%</span></td><td><span class="tag t-ok">97.7%</span></td><td><span class="tag t-red">P17</span></td><td><span class="tag t-red">10%</span></td></tr><tr><td style="font-weight:700"><span class="dotc" style="background:#7a4ea8"></span>HOE Balsall Common</td><td style="font-weight:700">£5,977</td><td><span class="tag t-ok">+10.4%</span></td><td><span class="tag t-ok">+0.5%</span></td><td><span class="tag t-ok">4.64</span></td><td><span class="tag t-red">5.2%</span></td><td><span class="tag t-ok">99%</span></td><td><span class="tag t-amber">P14</span></td><td><span class="tag t-red">28%</span></td></tr></tbody>
+        <tbody><tr><td style="font-weight:700"><span class="dotc" style="background:#2d6fb3"></span>Attleborough</td><td style="font-weight:700">£6,099</td><td><span class="tag t-amber">new*</span></td><td><span class="tag t-amber">new*</span></td><td><span class="tag t-ok">4.81</span></td><td><span class="tag t-red">5.1%</span></td><td><span class="tag t-red">80.95%</span></td><td><span class="tag t-amber">P12</span></td><td><span class="tag t-red">33%</span></td></tr><tr><td style="font-weight:700"><span class="dotc" style="background:#c08a2d"></span>Glenvale Drive Thru</td><td style="font-weight:700">£17,213</td><td><span class="tag t-ok">+24.4%</span></td><td><span class="tag t-ok">+13.0%</span></td><td><span class="tag t-ok">4.67</span></td><td><span class="tag t-ok">2.1%</span></td><td><span class="tag t-amber">90.98%</span></td><td><span class="tag t-red">P17</span></td><td><span class="tag t-red">10%</span></td></tr><tr><td style="font-weight:700"><span class="dotc" style="background:#7a4ea8"></span>HOE Balsall Common</td><td style="font-weight:700">£5,977</td><td><span class="tag t-ok">+10.4%</span></td><td><span class="tag t-ok">+0.5%</span></td><td><span class="tag t-ok">4.64</span></td><td><span class="tag t-red">5.2%</span></td><td><span class="tag t-ok">95.24%</span></td><td><span class="tag t-amber">P14</span></td><td><span class="tag t-red">28%</span></td></tr></tbody>
       </table>
       <div class="legend">
         <span><span class="sw" style="background:var(--greenbg);border:1px solid #cfe6d8"></span>on track</span>
@@ -372,7 +372,7 @@ function renderWaste(store){
   btns.forEach(b=>b.addEventListener("click",()=>{btns.forEach(x=>x.classList.remove("active"));panels.forEach(p=>p.classList.remove("active"));
     b.classList.add("active");document.getElementById("tab-"+b.dataset.tab).classList.add("active");
     requestAnimationFrame(()=>{(window.CHARTS||[]).forEach(c=>{try{c.resize();}catch(e){}});});}));})();
-document.getElementById("foot").innerHTML="Data refreshed 15 Jun 2026, 15:23 · auto-refreshes every Monday 9am. Sources: live BigQuery POS, polling sheet, F1 audit, the visit rota, HRP &amp; Google reviews.";
+document.getElementById("foot").innerHTML="Data refreshed 15 Jun 2026, 15:42 · auto-refreshes every Monday 9am. Sources: live BigQuery POS, polling sheet, F1 audit, the visit rota, HRP &amp; Google reviews.";
 </script>
 </body>
 </html>
