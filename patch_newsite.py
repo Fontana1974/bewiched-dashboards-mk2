@@ -4,12 +4,20 @@
 # + Master Populator "hours used" (passed in HOURS map, gviz).  No Chrome needed.
 import json, re, sys
 
-A=json.load(open('allstores.json')); R=A['rec']; champ=A['champ']
+A=json.load(open('allstores.json')); R=A['rec']; champ=A['champ']; CATS=A['cats']
 FD=json.load(open('f1_detail.json')); STH=json.load(open('storehealth.json'))['stores']
+try: SENT=json.load(open('newsite_sentiment.json'))   # review snippets / RMS trend+comments / sickness cross-ref (gviz, headless)
+except FileNotFoundError: SENT={}
 T_RMS=50*13/21.0  # per-store quarterly RMS submission target (area method / store)
+import html as _html
+def esc(t): return _html.escape((t or "").strip())[:200]
+def stars(n):
+    try: n=int(round(float(n)))
+    except: n=0
+    return "★"*max(0,min(5,n))
 
 NEWWK="w/c 8 Jun"; OLDWK="w/c 1 Jun"; NEWWK_C="W/C 8 Jun"; OLDWK_C="W/C 1 Jun"
-NEWDATE="2026-06-08"
+NEWDATE="2026-06-08"; NEWWK_DDMM="08/06"
 
 # Master Populator "hours used" for the just-completed week (w/c 8 Jun), from the 15-Jun-dated rows. None = not yet posted.
 HOURS={'Olney':None,'Attleborough':161.0,'Billing Drive Thru':273.0,'Glenvale Drive Thru':277.0,'Northampton Drive-Thru':350.0}
@@ -29,6 +37,7 @@ STORES=[
 # fix NDT key
 STORES=[(f,('Northampton-DriveThru' and 'Northampton Drive-Thru') if k=='Northampton-DriveThru' else k,c,m) for (f,k,c,m) in STORES]
 
+SHORT={"Burton Latimer":"Burton","Higham Ferrers":"Higham","Olney":"Olney","Peterborough Bridge Street":"P'boro Bridge St","Peterborough Fletton Quays":"P'boro Fletton","Rushden Lakes":"Rushden Lakes","Attleborough":"Attleborough","Billing Drive Thru":"Billing DT","Glenvale Drive Thru":"Glenvale DT","HOE Balsall Common":"Balsall Common","Leamington Parade":"Leam Parade","Lower Heathcote":"Lower Heathcote","Market Harborough":"Mkt Harborough","Northampton":"Northampton","Northampton Drive-Thru":"Northampton DT","Wellingborough":"Wellingborough","Wellingborough Train Station":"W'boro Train Stn","Corby":"Corby","Kettering":"Kettering","Rothwell":"Rothwell","Rugby":"Rugby"}
 def racescore(s):
     d=FD.get(s)
     if isinstance(d,dict) and d.get('race') and len(d['race'])>5 and d['race'][5] not in (None,''):
@@ -159,6 +168,125 @@ def patch(fn,store,coach,mature):
         y=r['yoy_lw']; ly=r['lw25']; ycls='pos' if y>=0 else 'neg'
         sub(r'(<span>YoY[^<]*</span><b class=")(?:pos|neg|mut)(">)[^<]*(</b><small>)vs £[\d.]+k last yr(</small>)',
             rf'\g<1>{ycls}\g<2>{"+" if y>=0 else MINUS}{abs(y)}%\g<3>vs £{ly/1000:.1f}k last yr\g<4>',1,"actbox YoY stat")
+    # 5c) WASTAGE + MIX + SENTIMENT — fully headless (allstores.json + newsite_sentiment.json), no Chrome/Maps
+    sj=SENT.get(store,{}); gj=sj.get('google',{}); rj=sj.get('rms',{}); kj=sj.get('sickness',{})
+    sent=r.get('sent',{})
+    def arr(name, tf, label):
+        nonlocal h
+        i=h.find('const '+name+'=')
+        if i<0: log.append(f"  ✗ {label} array — NOT FOUND"); return
+        j=h.find('[', i); depth=0; k=j
+        while k<len(h):
+            if h[k]=='[': depth+=1
+            elif h[k]==']':
+                depth-=1
+                if depth==0: break
+            k+=1
+        try: cur=json.loads(h[j:k+1])
+        except Exception as e: log.append(f"  ✗ {label} array — parse fail {e}"); return
+        h=h[:j]+json.dumps(tf(cur),ensure_ascii=False)+h[k+1:]
+        log.append(f"  ✓ {label} array")
+    # --- WASTAGE ---
+    wp_lw=r['waste_pct_lw']; wp4=r['waste_pct']; wr_lw=int(round(r['wr_lw'])); wr4=int(round(r['wr']/4))
+    wcol=lambda v:'green' if v<=3 else ('amber' if v<=4 else 'red')
+    sub(r'color:var\(--\w+\)">[\d.]+%(</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week)',
+        f'color:var(--{wcol(wp_lw)})">{wp_lw}%\\1',1,"wastage% last-wk card")
+    sub(r'color:var\(--\w+\)">[\d.]+%(</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week run rate)',
+        f'color:var(--{wcol(wp4)})">{wp4}%\\1',1,"wastage% 4wk card")
+    sub(r'(line-height:1">)£[\d,]+(</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week)',
+        rf'\g<1>£{wr_lw:,}\g<2>',1,"waste£ last-wk card")
+    sub(r'(line-height:1">)£[\d,]+(</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week weekly avg)',
+        rf'\g<1>£{wr4:,}\g<2>',1,"waste£ 4wk card")
+    arr('WK', lambda cur: cur+[[NEWWK_DDMM, wp_lw]], "wastage WK trend (+latest wk)")
+    def items_tf(_):
+        ol=sorted(r.get('outliers',[]), key=lambda x:-x[4])[:10]
+        return [[o[0], int(round(o[4])), int(o[2]), int(o[3])] for o in ol]
+    arr('ITEMS', items_tf, "wastage outlier ITEMS")
+    # --- MIX ---
+    def rows_tf(cur):
+        mix=r.get('mix') or {}; mlwd=r.get('mix_lw') or {}; mprev=r.get('mix_prev') or {}
+        out=[]
+        for row in cur:
+            lbl=row[0]; tilt=row[2] if len(row)>2 else 0
+            cat=next((c for c in CATS if c==lbl or c.split()[0]==lbl.split()[0] or lbl.startswith(c.split()[0])), None)
+            mc=mix.get(cat) if cat else None
+            if not mc: out.append(row); continue
+            m4=mc.get('mix'); c4=mc.get('cap')
+            lwc=mlwd.get(cat) or {}; mlw=lwc.get('mix', row[6] if len(row)>6 else m4); clw=lwc.get('cap', row[7] if len(row)>7 else c4)
+            pc=mprev.get(cat) if isinstance(mprev,dict) else None
+            mpp=round(m4-pc['mix'],1) if pc else None; cpp=round(c4-pc['cap'],1) if pc else None
+            out.append([lbl, m4, tilt, c4, mpp, cpp, mlw, clw])
+        return out
+    arr('ROWS', rows_tf, "mix/capture ROWS")
+    def peer_tf(cur):
+        out=[]
+        for row in cur:
+            lbl=row[0]
+            cat=next((c for c in CATS if c==lbl or c.split()[0]==lbl.split()[0] or lbl.startswith(c.split()[0])), None)
+            caps=[(R[s]['mix'][cat]['cap'], s) for s in R if cat and cat in (R[s].get('mix') or {})] if cat else []
+            mc=(r.get('mix') or {}).get(cat)
+            if not caps or not mc: out.append(row); continue
+            caps.sort(reverse=True)
+            rank=next((i+1 for i,(v,s) in enumerate(caps) if s==store), len(caps))
+            avg=round(sum(v for v,_ in caps)/len(caps),1)
+            best=caps[0]; bestnm=SHORT.get(best[1],best[1])
+            out.append([lbl, mc['cap'], rank, len(caps), avg, f"{bestnm} {best[0]}%"])
+        return out
+    arr('PEER', peer_tf, "mix PEER (estate rank)")
+    # --- SENTIMENT cards ---
+    grate=gj.get('rating'); gcount=gj.get('count'); rms=sent.get('rms'); rmsn=sent.get('rms_n')
+    if grate is not None:
+        gcol='green' if grate>=4.5 else 'amber'
+        sub(r'(lbl">Customer \(Google\)</div><div class="val" style="color:var\(--)\w+(\)">)[\d.]+★(</div><div class="meta">)[\d,]+( reviews)',
+            rf'\g<1>{gcol}\g<2>{grate}★\g<3>{gcount:,}\g<4>',1,"Customer card")
+        sub(r'(<div class="scorebig" style="color:var\(--)\w+(\)">)[\d.]+(<span style="font-size:20px">★)',
+            rf'\g<1>{gcol}\g<2>{grate}\g<3>',1,"Google scorebig")
+        sub(r'(Google · )[\d,]+( reviews)', rf'\g<1>{gcount:,}\g<2>',1,"Google scoresub count")
+    if rms is not None:
+        rmscol='green' if rms>=4.5 else ('amber' if rms>=4.0 else 'red')
+        sub(r'(lbl">Team \(RMS · /5\)</div><div class="val" style="color:var\(--)\w+(\)">)[\d.]+(</div><div class="meta">)\d+( shift ratings)',
+            rf'\g<1>{rmscol}\g<2>{rms}\g<3>{rmsn}\g<4>',1,"Team RMS card")
+        sub(r'(<div class="scorebig" style="color:var\(--)\w+(\)">)[\d.]+(<span style="font-size:20px">/5)',
+            rf'\g<1>{rmscol}\g<2>{rms}\g<3>',1,"RMS scorebig")
+        sub(r'(RMS [^·]*· )\d+( ratings)', rf'\g<1>{rmsn}\g<2>',1,"RMS scoresub count")
+    # RMS monthly trend chart
+    if rj.get('trend'): arr('tT', lambda _:[[m,v] for m,v in rj['trend']], "RMS trend tT")
+    # --- SICKNESS cards + chart + cross-ref ---
+    sickfs=sent.get('sickfs'); rtw=sent.get('rtw'); late=sent.get('late'); rep_pct=sent.get('rep_pct')
+    if sickfs is not None:
+        reported=round((rep_pct or 0)*sickfs/100)
+        sub(r'(lbl">Sick absences</div><div class="val">)\d+(</div>)', rf'\g<1>{sickfs}\g<2>',1,"Sick-absences card")
+        sub(r'(lbl">Lateness</div><div class="val">)\d+(</div>)', rf'\g<1>{late}\g<2>',1,"Lateness card")
+        sub(r'(lbl">Reported correctly</div><div class="val"[^>]*>)\d+ / \d+(</div>)', rf'\g<1>{reported} / {sickfs}\g<2>',1,"Reported card")
+        rtwcol='green' if rtw>=sickfs*0.8 else ('amber' if rtw>=sickfs*0.5 else 'red')
+        sub(r'(lbl">Return-to-work \(RTW\) completed</div><div class="val" style="color:var\(--)\w+(\)">)\d+ / \d+(</div>)',
+            rf'\g<1>{rtwcol}\g<2>{rtw} / {sickfs}\g<3>',1,"RTW card")
+        sub(r'(data:\[)\d+, ?\d+(\],backgroundColor:\["#b8860b")', rf'\g<1>{sickfs},{rtw}\g<2>',1,"absChart data")
+    if kj.get('rows') is not None:
+        rh="".join(f'<tr><td>{esc(n)}</td><td>{d}</td><td>{rep}</td><td>{"✓" if rb else "✗"}</td></tr>' for n,d,rep,rb in kj['rows'])
+        sub(r'(<th>Team member</th><th>Sick date</th><th>Reported</th><th>RTW</th></tr></thead>\s*<tbody>)[\s\S]*?(</tbody>)',
+            lambda m:m.group(1)+rh+m.group(2),1,"sickness cross-ref table")
+    if kj.get('out45') is not None:
+        sub(r'RTWs to do — last 45 days: \d+', f'RTWs to do — last 45 days: {kj["out45"]}',1,"RTW chip (top)")
+    # --- review snippets + RMS comments (Reviews sheet text; flag empties) ---
+    def quotes(items, who_first):
+        out=[]
+        for a,b,c in items:
+            # google snippets are [star,date,text]; rms comments are [date,star,text]
+            st,dt,txt=(a,b,c) if isinstance(a,(int,float)) else (b,a,c)
+            if not (txt or '').strip(): continue
+            out.append(f'<div class="quote">{esc(txt)}<span class="who">{dt} · <span class="stars">{stars(st)}</span></span></div>')
+        if not out:
+            out=['<div class="quote" style="color:#9a8a7c">No review text in the Reviews sheet for this store yet (rating &amp; count only).<span class="who"></span></div>']
+        return "\n          "+"\n          ".join(out)+"\n        "
+    if gj.get('snippets') is not None:
+        sub(r'(scoresub">Google ·[\s\S]*?<div style="margin-top:\d+px">)[\s\S]*?(</div>\s*</div>\s*<div class="panel">)',
+            lambda m:m.group(1)+quotes(gj['snippets'],True)+m.group(2),1,"customer review snippets")
+        # new-site star-distribution chart (custDist) if present
+        if gj.get('dist'): sub(r'(custDist[\s\S]{0,300}?data:\[)\d+(?:, ?\d+){4}(\])', rf'\g<1>{",".join(str(x) for x in gj["dist"])}\g<2>',1,"custDist distribution")
+    if rj.get('comments') is not None:
+        sub(r'(<canvas id="teamTrend"></canvas></div>\s*<div style="margin-top:8px">)[\s\S]*?(</div>\s*</div>)',
+            lambda m:m.group(1)+quotes(rj['comments'],False)+m.group(2),1,"RMS comment quotes")
     # 6) constructors standings regenerate
     sub(r'(by avg pts/store</span></div>\s*)(.*?)(\s*</div>\s*<div class="panel">\s*<div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Drivers)',
         lambda m: m.group(1)+"\n"+constructors_rows(coach)+"\n   "+m.group(3),1,"constructors standings",flags=re.S)
@@ -171,5 +299,8 @@ def patch(fn,store,coach,mature):
     print(f"\n=== {fn} ({store}) ==="); print("\n".join(log))
 
 for fn,store,coach,mature in STORES:
-    patch(fn,store,coach,mature)
+    try:
+        patch(fn,store,coach,mature)
+    except Exception as e:
+        import traceback; print(f"\n!!! {fn} FAILED: {e}"); traceback.print_exc()
 print("\nDONE")

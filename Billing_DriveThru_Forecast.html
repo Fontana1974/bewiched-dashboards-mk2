@@ -299,13 +299,13 @@
     <div class="cards">
       <div class="card"><div class="lbl">Wastage %</div>
         <div style="display:flex;gap:18px;align-items:flex-end;margin:3px 0 4px">
-          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--red)">4.2%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
-          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--red)">5.7%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week run rate</div></div>
+          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--green)">3.0%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
+          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--red)">5.2%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week run rate</div></div>
         </div><div class="meta">target 3%</div></div>
       <div class="card"><div class="lbl">Waste &pound; (retail lost)</div>
         <div style="display:flex;gap:18px;align-items:flex-end;margin:3px 0 4px">
-          <div><div style="font-size:20px;font-weight:800;line-height:1">£491</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
-          <div><div style="font-size:20px;font-weight:800;line-height:1">£539</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week weekly avg</div></div>
+          <div><div style="font-size:20px;font-weight:800;line-height:1">£343</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
+          <div><div style="font-size:20px;font-weight:800;line-height:1">£625</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week weekly avg</div></div>
         </div><div class="meta">over-production &middot; item tables below are last 4 weeks</div></div>
     </div>
 
@@ -568,8 +568,8 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
     </style>
     <div class="section-title">💬 Sentiment — customers &amp; team</div>
     <div class="cards">
-      <div class="card"><div class="lbl">Customer (Google)</div><div class="val" style="color:var(--green)">5.0★</div><div class="meta">21 reviews · live</div></div>
-      <div class="card"><div class="lbl">Team (RMS · /5)</div><div class="val" style="color:var(--green)">4.8</div><div class="meta">19 shift ratings</div></div>
+      <div class="card"><div class="lbl">Customer (Google)</div><div class="val" style="color:var(--green)">5.0★</div><div class="meta">14 reviews · live</div></div>
+      <div class="card"><div class="lbl">Team (RMS · /5)</div><div class="val" style="color:var(--green)">4.85</div><div class="meta">20 shift ratings</div></div>
       <div class="card"><div class="lbl">5★ customer reviews</div><div class="val">21 / 21</div><div class="meta">100% five-star</div></div>
       <div class="card"><div class="lbl">Team trend</div><div class="val">4.7</div><div class="meta">5.0 → 4.9 → 4.7 as it gets busier</div></div>
     </div>
@@ -578,25 +578,24 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
       <div class="panel">
         <div style="display:flex;align-items:baseline;gap:10px">
           <div class="scorebig" style="color:var(--green)">5.0<span style="font-size:20px">★</span></div>
-          <div class="scoresub">Google · 21 reviews · every one 5★</div>
+          <div class="scoresub">Google · 14 reviews · every one 5★</div>
         </div>
         <div class="chart-box" style="height:170px;margin-top:8px"><canvas id="custDist"></canvas></div>
         <div style="margin-top:8px">
-          <div class="quote">Best customer service I've experienced at a drive through!!!!!<span class="who">Molly Jeyes · a week ago · <span class="stars">★★★★★</span></span></div>
-          <div class="quote">This new Bewiched store has the normal great friendly service, along with quality drinks and food. The range of seating caters for everyone's needs.<span class="who">Emma Sherlock · 20 hours ago · <span class="stars">★★★★★</span></span></div>
-          <div class="quote">It's brilliant here, so close to home, with very warm welcoming staff — especially Adam and Dawn who are so cheery so early in the morning.<span class="who">Karlie Gaskell · 3 days ago · <span class="stars">★★★★★</span></span></div>
+          <div class="quote" style="color:#9a8a7c">No review text in the Reviews sheet for this store yet (rating &amp; count only).<span class="who"></span></div>
         </div>
       </div>
       <div class="panel">
         <div style="display:flex;align-items:baseline;gap:10px">
-          <div class="scorebig" style="color:var(--green)">4.8<span style="font-size:20px">/5</span></div>
-          <div class="scoresub">RMS “Rate My Shift” · 19 ratings · 16 of 19 were 5★</div>
+          <div class="scorebig" style="color:var(--green)">4.85<span style="font-size:20px">/5</span></div>
+          <div class="scoresub">RMS “Rate My Shift” · 20 ratings · 16 of 19 were 5★</div>
         </div>
         <div class="chart-box" style="height:170px;margin-top:8px"><canvas id="teamTrend"></canvas></div>
         <div style="margin-top:8px">
-          <div class="quote">Productive / training / busier<span class="who">7 Jun · <span class="stars">★★★★★</span></span></div>
-          <div class="quote">Teamwork, coaching and smiles<span class="who">2 Jun · <span class="stars">★★★★★</span></span></div>
-          <div class="quote">Teamwork, dedicated, stressful<span class="who">8 Jun · <span class="stars">★★★★</span></span></div>
+          <div class="quote">Brand audit #boom! 💥<span class="who">12 Jun · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">all or nothing.<span class="who">12 Jun · <span class="stars">★★★★</span></span></div>
+          <div class="quote">Clean/productive/good vibes always<span class="who">9 Jun · <span class="stars">★★★★★</span></span></div>
+        </div>
         </div>
         <div class="note green" style="margin-top:6px">A flying start for a brand-new site — customers and team both rating it top-end. The gentle easing (5.0 → 4.7) is the natural “it’s getting busy” effect; keep an eye on staffing at peak so the buzz stays positive.</div>
       </div>
@@ -609,7 +608,7 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
     <div class="cards">
       <div class="card"><div class="lbl">Sick absences</div><div class="val">2</div><div class="meta">May 2026</div></div>
       <div class="card"><div class="lbl">Lateness</div><div class="val">1</div><div class="meta">tracked separately</div></div>
-      <div class="card"><div class="lbl">Reported correctly</div><div class="val" style="color:var(--green)">3 / 4</div><div class="meta">called in per policy</div></div>
+      <div class="card"><div class="lbl">Reported correctly</div><div class="val" style="color:var(--green)">2 / 2</div><div class="meta">called in per policy</div></div>
       <div class="card"><div class="lbl">Return-to-work (RTW) completed</div><div class="val" style="color:var(--red)">0 / 2</div><div class="meta">return-to-work logged</div></div>
     </div>
     <div class="sent-grid" style="margin-top:16px">
@@ -621,10 +620,7 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
       <div class="panel">
         <table>
           <thead><tr><th>Team member</th><th>Sick date</th><th>Reported</th><th>RTW</th></tr></thead>
-          <tbody>
-            <tr><td>Alex Bates</td><td>25 May</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
-            <tr><td>Jamie-Louise Lasham</td><td>26 May</td><td><span class="tag t-ok">Yes</span></td><td><span class="tag t-red">✗</span></td></tr>
-          </tbody>
+          <tbody><tr><td>Jamie-Louise Lasham</td><td>26 May</td><td>Yes</td><td>✗</td></tr><tr><td>Alex Bates</td><td>25 May</td><td>Yes</td><td>✗</td></tr></tbody>
         </table>
         <div class="mini" style="margin-top:8px">Cross-referenced HRP ‘Sickness / late’ → ‘RTW’ by team member &amp; date. Lateness (1 incident) is tracked separately and doesn’t need an RTW.</div>
       </div>
@@ -734,8 +730,8 @@ document.getElementById("foot").innerHTML="Generated "+new Date().toLocaleString
 <script>
 /* ---- Wastage ---- */
 (function(){
-const WK=[["18/05",4.65],["25/05",8.26],["01/06",3.68]];
-const ITEMS=[["Cheese & Onion Croque", 264, 48, 54], ["Ham & Cheese Croque", 236, 43, 96], ["Sausage Bap", 230, 54, 43], ["Tuna Ciabatta", 198, 36, 34], ["Chicken & Chorizo Ciabatta", 137, 25, 53], ["Mozzarella & Tomato Ciabatta", 121, 22, 39], ["Bacon Bap", 89, 21, 38], ["Green & Grain Salad", 64, 12, 10], ["Croissant Pastry", 56, 26, 32], ["Chicken Caprese Sandwich", 55, 11, 14]];
+const WK=[["18/05", 4.65], ["25/05", 8.26], ["01/06", 3.68], ["08/06", 3.0]];
+const ITEMS=[["Cheese & Onion Croque", 264, 48, 72], ["Sausage Bap", 242, 57, 66], ["Ham & Cheese Croque", 236, 43, 132], ["Tuna Ciabatta", 214, 39, 42], ["Chicken & Chorizo Ciabatta", 137, 25, 62], ["Mozzarella & Tomato Ciabatta", 126, 23, 45], ["Bacon Bap", 89, 21, 61], ["Green & Grain Salad", 70, 13, 10]];
 new Chart(document.getElementById('waste'),{type:'line',data:{labels:WK.map(r=>r[0]),datasets:[
 {label:'Wastage %',data:WK.map(r=>r[1]),borderColor:'#c0392b',backgroundColor:'#c0392b',tension:.3,pointRadius:4,borderWidth:2.5},
 {label:'Target 3%',data:WK.map(()=>3),borderColor:'#1f8a4c',borderDash:[6,4],pointRadius:0,borderWidth:2},
@@ -752,8 +748,8 @@ return '<tr><td>'+r.n+'</td><td>£'+r.w+'</td><td>'+r.wq+'</td><td>'+r.sq+'</td>
 <script>
 /* ---- Sales mix & capture ---- */
 (function(){
-const ROWS=[["Hot drinks", 31.2, 0.8, 48, null, null, 39.5, 57.2], ["Cold drinks", 26.9, -1.8, 36.9, null, null, 21.7, 29.7], ["Milkshakes", 16.3, -0.1, 18.4, null, null, 11.3, 13.9], ["Food", 13.6, 0.3, 17.9, null, null, 14.5, 17.5], ["Bakery", 8.2, 0.9, 17.4, null, null, 8.9, 18.1], ["Other & retail", 3.8, -0.2, 17.5, null, null, 4.0, 18.5]];
-const PEER=[["Hot drinks",48.1,20,21,61.4,"Wellingborough 71.8%"],["Cold drinks",36.9,1,21,23.7,"Top of estate"],["Milkshakes",18.4,3,21,13.1,"Rushden 25.4%"],["Food",17.9,4,21,14.0,"Fletton Quays 23.8%"],["Bakery",17.4,12,21,17.5,"Attleborough 25.4%"]];
+const ROWS=[["Hot drinks", 32.7, 0.8, 49.8, null, null, 38.2, 56.3], ["Cold drinks", 25.9, -1.8, 35.2, null, null, 21.6, 29.0], ["Milkshakes", 15.6, -0.1, 17.6, null, null, 13.1, 15.0], ["Food", 13.9, 0.3, 18.2, null, null, 15.2, 19.4], ["Bakery", 8.1, 0.9, 17.1, null, null, 7.9, 16.9], ["Other & retail", 3.8, -0.2, 17.7, null, null, 4.0, 18.1]];
+const PEER=[["Hot drinks", 49.8, 20, 21, 59.2, "Wellingborough 69.5%"], ["Cold drinks", 35.2, 2, 21, 25.0, "Rushden Lakes 37.0%"], ["Milkshakes", 17.6, 5, 21, 13.8, "Rushden Lakes 26.9%"], ["Food", 18.2, 4, 21, 14.0, "P'boro Fletton 24.8%"], ["Bakery", 17.1, 12, 21, 17.2, "Attleborough 23.4%"]];
 document.querySelector("#peertbl tbody").innerHTML=PEER.map(r=>{const top=r[2]<=r[3]/3,bot=r[2]>r[3]*2/3;const rc=top?["#e6f4ec","#1f8a4c"]:bot?["#fbeae8","#c0392b"]:["#f7f0dd","#b8860b"];const vc=r[1]>=r[4]?"#1f8a4c":"#c0392b";
 return "<tr><td>"+r[0]+"</td><td style=\"font-weight:700;color:"+vc+"\">"+r[1].toFixed(1)+"%</td><td><span style=\"display:inline-block;padding:2px 7px;border-radius:6px;font-weight:700;font-size:12px;background:"+rc[0]+";color:"+rc[1]+"\">"+r[2]+"/"+r[3]+"</span></td><td>"+r[4].toFixed(1)+"%</td><td style=\"text-align:left;font-size:11.5px;color:#8a7a6d\">"+r[5]+"</td></tr>";}).join("");
 const DESC={"Hot drinks":"lattes, cappuccinos, americanos, flat whites, hot choc, tea","Cold drinks":"iced lattes, frozen lemonade, iced matcha, frappés, cold brew","Milkshakes":"Oreo, Biscoff, vanilla, chocolate, strawberry shakes","Food":"croques, ciabattas, baps, wraps, salads, meal deals","Bakery":"traybakes, croissants, brownies, cookies, cakes","Other & retail":"bottled & soft drinks, beans, sundries"};
@@ -795,7 +791,7 @@ document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{const s=r[2]>0?"#
     data:{labels:["5★","4★","3★","2★","1★"],datasets:[{data:cust,backgroundColor:["#1f8a4c","#7bbf86","#e0a32e","#e08a3e","#c0392b"],borderRadius:4}]},
     options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.x+" reviews"}}},
       scales:{x:{grid:{color:"#eee"},ticks:{precision:0},title:{display:true,text:"reviews"}},y:{grid:{display:false}}}}}));
-  const tT=[["Apr",5.0],["May",4.87],["Jun",4.67]];
+  const tT=[["Apr", 5], ["May", 4.87], ["Jun", 4.67]];
   window.CHARTS.push(new Chart(document.getElementById("teamTrend"),{type:"line",
     data:{labels:tT.map(r=>r[0]),datasets:[{label:"Avg shift rating",data:tT.map(r=>r[1]),borderColor:"#1f8a4c",backgroundColor:"#1f8a4c",tension:.3,pointRadius:4,borderWidth:2.5}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.y+" / 5"}}},
