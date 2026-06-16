@@ -47,7 +47,7 @@
   tbody tr:hover{background:#faf6f1;} tfoot td{font-weight:700;border-top:2px solid var(--line);}
   .mini{font-size:11.5px;color:var(--muted);} .neg{color:var(--red);font-weight:700} .pos{color:var(--green);font-weight:700}
   .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-weight:700;font-size:12.5px;}
-  .t-red{background:var(--redbg);color:var(--red)} .t-amber{background:var(--amberbg);color:var(--amber)} .t-ok{background:var(--greenbg);color:var(--green)} .t-na{background:#eee;color:#999}
+  .t-red{background:var(--redbg);color:var(--red)} .t-amber{background:var(--amberbg);color:var(--amber)} .t-ok{background:var(--greenbg);color:var(--green)} .t-na{background:#eee;color:#999} .t-grey{background:#eee;color:#999;font-style:italic}
   .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
   .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:10px} .legend span{display:inline-flex;align-items:center;gap:5px} .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
   .scorecard td,.scorecard th{text-align:center;padding:7px 6px;} .scorecard td:first-child,.scorecard th:first-child{text-align:left;}
@@ -115,17 +115,17 @@
       <div class="card"><div class="lbl">Customer rating</div><div class="val">{{AREA_RATING}}★</div><div class="meta">{{AREA_REVIEWS}} Google reviews · team RMS {{AREA_RMS}}/5</div></div>
     </div>
     <div class="section-title">Store scorecard — last week ({{LW_LABEL}}), traffic-lit by KPI</div>
-    <div class="note" style="margin:-2px 0 8px">All columns are <b>last week ({{LW_LABEL}})</b> except: <b>Audit /5</b> = quarter-to-date &middot; <b>Availability</b> = current polling &middot; <b>F1 race</b> = latest audited race &middot; <b>Coach presence</b> = % of recent weeks on site.</div>
+    <div class="note" style="margin:-2px 0 8px">All columns are <b>last week ({{LW_LABEL}})</b> except: <b>RMS avg</b> &amp; <b>Google health</b> = quarter-to-date (Q2: 1 Apr&ndash;16 Jun) &middot; <b>Availability</b> = current polling &middot; <b>F1 race</b> = latest audited race &middot; <b>Coach presence</b> = % of recent weeks on site.</div>
     <div class="panel">
       <table class="scorecard">
-        <thead><tr><th>Store</th><th>Last wk £</th><th>Sales YoY</th><th>Guest-count YoY</th><th>Audit /5 (QTD)</th><th>Takeaway %</th><th>Wastage %</th><th>Availability</th><th>F1 race</th><th>Coach presence</th></tr></thead>
+        <thead><tr><th>Store</th><th>Last wk £</th><th>Sales YoY</th><th>Guest-count YoY</th><th>RMS avg (QTD)</th><th>Google health (QTD)</th><th>Wastage %</th><th>Availability</th><th>F1 race</th><th>Coach presence</th></tr></thead>
         <tbody>{{OVROWS}}</tbody>
       </table>
       <div class="legend">
         <span><span class="sw" style="background:var(--greenbg);border:1px solid #cfe6d8"></span>on track</span>
         <span><span class="sw" style="background:var(--amberbg);border:1px solid #ece0c0"></span>watch</span>
         <span><span class="sw" style="background:var(--redbg);border:1px solid #eccfca"></span>act now</span>
-        <span class="mini">YoY green ≥0% · Audit /5 green ≥4.5 · amber ≥4 · Takeaway % of transactions green ≥40% · amber 20–40% · red &lt;20% · Wastage vs 3% · Availability ≥95% (polled to 08/06/2026) · F1 race finish ≤6 green, >15 red (field of ~25 incl. competitor audits) </span>
+        <span class="mini">YoY green ≥0% · RMS avg (shift rating, QTD) green ≥4.5 · amber ≥4.0 · red &lt;4.0 · Google health (QTD) green ≥3.32 · amber ≥2.5 · red &lt;2.5 — scales each store's quarterly reviews to its own review target; “no feed” = review scraper not currently live for that store · Wastage vs 3% · Availability ≥95% (polled to 08/06/2026) · F1 race finish ≤6 green, >15 red (field of ~25 incl. competitor audits) </span>
       </div>
     </div>
     <div class="section-title">SMT site presence — Matt, Kel &amp; Claire</div>

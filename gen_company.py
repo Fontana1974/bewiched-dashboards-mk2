@@ -27,6 +27,8 @@ def wx_recent(amix):
 SMT=json.load(open('smt_visits.json'))
 WASTE=json.load(open('company_wastage.json'))['rows']
 F1D=json.load(open('f1_detail.json'))
+try: STH=json.load(open('storehealth.json'))['stores']
+except Exception: STH={}
 ACT=json.load(open('actuals.json'))
 try: OVR=json.load(open('planner_overrides.json'))
 except FileNotFoundError: OVR={}
@@ -70,13 +72,13 @@ def build():
     # ---- scorecard (sorted by last-week sales desc); presence = store's own area-coach coverage ----
     ov=""
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
-        r=R[s]; v4=r['vs4w']; ylw_s=r['yoy_lw']; y4_s=r['yoy_4w']; fin=r['f1_finish']; cov=r['visdow']['total']; av=r['avail']; wp=r['waste_pct']; wpl=r.get('waste_pct_lw', wp); tk=r.get('takeaway'); tk_cell=tag((str(tk)+"%") if tk is not None else "n/a",cls(tk,40,20)); gy=round(100*(r['tx26']/r['tx25']-1),1) if r['tx25'] else None; aud=r.get('audit_qtd'); aud_cell=tag(("%.2f"%aud) if aud is not None else "n/a",cls(aud,4.5,4.0))
+        r=R[s]; v4=r['vs4w']; ylw_s=r['yoy_lw']; y4_s=r['yoy_4w']; fin=r['f1_finish']; cov=r['visdow']['total']; av=r['avail']; wp=r['waste_pct']; wpl=r.get('waste_pct_lw', wp); gy=round(100*(r['tx26']/r['tx25']-1),1) if r['tx25'] else None; _sh=STH.get(s,{}); _ra=_sh.get('r_avg'); rms_cell=tag(("%.2f"%_ra) if _ra is not None else "n/a",cls(_ra,4.5,4.0) if _ra is not None else "t-grey"); _gh=_sh.get('g_health'); _stale=_sh.get('g_stale'); gh_cell=(tag("no feed","t-grey") if (_stale or _gh is None) else tag(("%.2f"%_gh),cls(_gh,3.32,2.5)))
         new = r['lw25']==0
         ov+=("<tr>"+f'<td style="font-weight:700"><span class="dotc" style="background:{COL[s]}"></span>{s}</td>'
           f'<td style="font-weight:700">{GBP(r["lw26"])}</td>'
           f'<td>{tag("new*" if new else pctxt(ylw_s),"t-amber" if new else cls(ylw_s,0,-5))}</td>'
           f'<td>{tag("new*" if new else pctxt(gy),"t-amber" if new else cls(gy,0,-5))}</td>'
-          f'<td>{aud_cell}</td><td>{tk_cell}</td>'
+          f'<td>{rms_cell}</td><td>{gh_cell}</td>'
           f'<td>{tag(f"{wpl}%",cls(wpl,3,4,rev=True))}</td><td>{tag((str(av)+"%") if av is not None else "n/a",cls(av,95,85))}</td>'
           f'<td>{tag("P"+str(fin),cls(fin,6,15,rev=True))}</td><td>{tag(f"{cov}%",cls(cov,70,40))}</td></tr>')
     # ---- SMT visit tables ----
