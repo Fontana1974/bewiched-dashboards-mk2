@@ -72,7 +72,7 @@
 <div class="brandbar"><div class="inner">
   <div class="logo"><div><div class="word">Be<span>wiched</span></div><div class="eyebrow">Engagement Coach</div></div></div>
   <div class="spacer"></div>
-  <div class="ctx">Engagement Coach: <b>Kel</b> · 21 stores (company-wide)<br>4-week window: <b>11 May → 7 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed 15 Jun 2026, 20:29 · auto Mon 9am</span></div>
+  <div class="ctx">Engagement Coach: <b>Kel</b> · 21 stores (company-wide)<br>4-week window: <b>11 May → 7 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed 16 Jun 2026, 08:31 · auto Mon 9am</span></div>
 </div></div>
 <div class="wrap">
   <header class="page">
@@ -283,6 +283,7 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
         <div class="note"><b>Race Total Score benchmark</b> (lower = better, updated formula): <span style="color:var(--green);font-weight:700">&le;210 good</span> &middot; <span style="color:#b8860b;font-weight:700">&le;285 watch</span> &middot; <span style="color:var(--red);font-weight:700">&gt;285 act</span>. Reset from the old &ldquo;60 = good&rdquo; for the new scoring.</div>
       </div>
     </div>
+    
     <div class="focus red"><span class="ar">&rarr;</span>Reset the weekend routine at Rushden Lakes &amp; Higham; lift qualifying to fix the handicapped grid start.</div>
   </section>
 
@@ -364,7 +365,7 @@ function renderWaste(store){
   btns.forEach(b=>b.addEventListener("click",()=>{btns.forEach(x=>x.classList.remove("active"));panels.forEach(p=>p.classList.remove("active"));
     b.classList.add("active");document.getElementById("tab-"+b.dataset.tab).classList.add("active");
     requestAnimationFrame(()=>{(window.CHARTS||[]).forEach(c=>{try{c.resize();}catch(e){}});});}));})();
-document.getElementById("foot").innerHTML="Data refreshed 15 Jun 2026, 20:29 · company-wide engagement view · auto-refreshes every Monday 9am. Sources: live BigQuery POS, polling sheet, F1 audit, SMT visit diary, HRP &amp; Google reviews.";
+document.getElementById("foot").innerHTML="Data refreshed 16 Jun 2026, 08:31 · company-wide engagement view · auto-refreshes every Monday 9am. Sources: live BigQuery POS, polling sheet, F1 audit, SMT visit diary, HRP &amp; Google reviews.";
 </script>
 </body>
 </html>

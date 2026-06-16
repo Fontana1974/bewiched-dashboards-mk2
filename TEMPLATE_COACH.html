@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex, nofollow">
-<title>{{COACH}} — Engagement Coach · Bewiched</title>
+<title>{{COACH}} — {{ROLE}} · Bewiched</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{--bg:#f4efe9;--card:#fff;--ink:#2b211b;--muted:#8a7a6d;--line:#e7ddd2;--brown:#5b3a29;--cream:#efe6dc;
@@ -70,13 +70,13 @@
 </head>
 <body>
 <div class="brandbar"><div class="inner">
-  <div class="logo"><div><div class="word">Be<span>wiched</span></div><div class="eyebrow">Engagement Coach</div></div></div>
+  <div class="logo"><div><div class="word">Be<span>wiched</span></div><div class="eyebrow">{{ROLE}}</div></div></div>
   <div class="spacer"></div>
-  <div class="ctx">Engagement Coach: <b>{{COACH}}</b> · {{NSTORES}} stores (company-wide)<br>4-week window: <b>11 May → 7 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed {{GEN_STAMP}} · auto Mon 9am</span></div>
+  <div class="ctx">{{ROLE}}: <b>{{COACH}}</b> · {{NSTORES}} stores (company-wide)<br>4-week window: <b>11 May → 7 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed {{GEN_STAMP}} · auto Mon 9am</span></div>
 </div></div>
 <div class="wrap">
   <header class="page">
-    <h1>🧭 {{COACH}} — Engagement Coach · Company Dashboard</h1>
+    <h1>🧭 {{COACH}} — {{ROLE}} · Company Dashboard</h1>
     <div class="sub"><span class="pill">{{PILL}}</span>
     <br>Live BigQuery POS to 9 Jun · availability (polling) · F1 (audit sheet) · visits (rota) · RMS &amp; HRP. Sales gross inc VAT.</div>
   </header>
@@ -248,6 +248,7 @@
         <div class="note"><b>Race Total Score benchmark</b> (lower = better, updated formula): <span style="color:var(--green);font-weight:700">&le;210 good</span> &middot; <span style="color:#b8860b;font-weight:700">&le;285 watch</span> &middot; <span style="color:var(--red);font-weight:700">&gt;285 act</span>. Reset from the old &ldquo;60 = good&rdquo; for the new scoring.</div>
       </div>
     </div>
+    {{SPEED_WIDGETS}}
     <div class="focus red"><span class="ar">&rarr;</span>{{F1_FOCUS}}</div>
   </section>
 

@@ -307,12 +307,16 @@ for s in sorted(stores,key=lambda x:-R[x]['lw26']):
 tsv=round(100*(sa/sfc-1)) if sfc else 0; tac=round(sa/su,2) if su else 0; thv=round(su-ssc,1)
 avf+='<tr style="font-weight:700;background:#EFE6DC"><td>COMPANY TOTAL</td><td>£%s</td><td>£%s</td><td>%s%s%%</td><td>%s</td><td>%s</td><td>%s%s</td><td></td><td>£%.2f</td></tr>'%(format(int(sfc),",d"),format(int(sa),",d"),("+" if tsv>=0 else ""),tsv,("%g"%ssc),("%g"%su),("+" if thv>=0 else ""),("%g"%thv),tac)
 
+# ---- role (Kel unchanged) ----
+ROLE="Engagement Coach"
+SPEED_WIDGETS=""
+
 # ---- fill template ----
 repl={
  "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
  "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
  "{{COACH}}":COACH,"{{COACH_CARDS}}":COACH_CARDS,"{{MOVROWS}}":mov,"{{MOV_NOTE}}":mov_note,"{{PLANNER_LINKS}}":PLANNERS_HTML,
- "{{GEN_STAMP}}":GEN_STAMP,"{{LW_LABEL}}":lw_label,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · Engagement Coach · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,
+ "{{GEN_STAMP}}":GEN_STAMP,"{{ROLE}}":ROLE,"{{SPEED_WIDGETS}}":SPEED_WIDGETS,"{{LW_LABEL}}":lw_label,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · "+ROLE+" · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,
  "{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
  "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
  "{{AREA_WASTE_PCT}}":str(awpct),"{{AREA_WASTE_RETAIL}}":GBP(awr),"{{WASTE_PCT_LW}}":str(awpct_lw),"{{WASTE_RETAIL_LW}}":GBP(awr_lw),"{{WASTE_RETAIL_WK}}":GBP(awr_wk),"{{ATV_MED}}":"%.2f"%atv_med,

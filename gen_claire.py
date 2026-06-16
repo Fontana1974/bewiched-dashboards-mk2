@@ -307,12 +307,47 @@ for s in sorted(stores,key=lambda x:-R[x]['lw26']):
 tsv=round(100*(sa/sfc-1)) if sfc else 0; tac=round(sa/su,2) if su else 0; thv=round(su-ssc,1)
 avf+='<tr style="font-weight:700;background:#EFE6DC"><td>COMPANY TOTAL</td><td>£%s</td><td>£%s</td><td>%s%s%%</td><td>%s</td><td>%s</td><td>%s%s</td><td></td><td>£%.2f</td></tr>'%(format(int(sfc),",d"),format(int(sa),",d"),("+" if tsv>=0 else ""),tsv,("%g"%ssc),("%g"%su),("+" if thv>=0 else ""),("%g"%thv),tac)
 
+# ---- Audit-Coach role + speed/queue widgets (Claire only) ----
+ROLE="Audit Coach"
+try:
+    SQ=json.load(open('speed_queue.json'))
+    _mxq=max(t[1] for t in SQ['trend']) or 1
+    def _qcol(x): return "#c0392b" if x>=250 else ("#b8860b" if x>=210 else "#1f8a4c")
+    _trend_rows="".join(
+        f'<tr><td style="font-weight:600">{lab}</td><td style="text-align:right;font-weight:700">{int(sec)}s</td>'
+        f'<td style="width:48%"><div style="background:#efe7dd;border-radius:5px;height:11px;overflow:hidden"><i style="display:block;height:100%;border-radius:5px;width:{round(sec/_mxq*100)}%;background:{_qcol(sec)}"></i></div></td>'
+        f'<td class="mini">{n} audits</td></tr>' for lab,sec,n in SQ['trend'])
+    _slower=SQ['direction']=='worsening'; _dirk="red" if _slower else "green"; _arrow="slower" if _slower else "faster"
+    _ar=[c[1] for c in SQ['corr'] if c[0]=='Brand audit QTD']; _ar=_ar[0] if _ar else None
+    def _cread(name,r,tier):
+        nm=name.lower()
+        if tier=='meaningful': return (f"shorter queues track with <b>higher {nm}</b>" if r<0 else f"longer queues track with higher {nm}")
+        if tier=='suggestive': return "suggestive only — not statistically firm"
+        return "no real link in the data"
+    _corr_rows="".join(f'<tr><td>{name}</td><td style="text-align:center;font-weight:700">{r:+.2f}</td><td class="mini">{_cread(name,r,tier)}</td></tr>' for name,r,n,tier in SQ['corr'])
+    _fast=", ".join(f"{sh(k)} {v}s" for k,v in SQ['fastest']); _slow=", ".join(f"{sh(k)} {v}s" for k,v in SQ['slowest'])
+    _auditline=(f"Shorter queues track with <b>higher Brand Audit scores (r&nbsp;=&nbsp;{_ar:+.2f})</b> — the clearest link in the data. " if _ar is not None else "")
+    SPEED_WIDGETS=(
+        '<div class="section-title" style="margin-top:26px">⏱️ Speed of service — quarter trend (company-wide)</div><div class="panel">'
+        f'<div class="note {_dirk}"><b>Direction of travel: {SQ["direction"]} — queues getting {_arrow}.</b> Company average queue time has moved from <b>{SQ["first"]}s</b> in early April to <b>{SQ["last"]}s</b> in the week of 8 Jun — about <b>{abs(SQ["change_pct"])}% {_arrow}</b> across the quarter. Based on {SQ["n_audits"]} F1 race audits this quarter (all sites; competitor benchmarks excluded).</div>'
+        '<table><thead><tr><th>Week</th><th style="text-align:right">Avg queue</th><th>Trend</th><th>Audits</th></tr></thead>'
+        f'<tbody>{_trend_rows}</tbody></table>'
+        '<div class="note">Queue average = seconds in the queue at the weekly F1 audit; lower is faster. Bars: green ≤210s · amber ≤250s · red &gt;250s.</div></div>'
+        '<div class="section-title" style="margin-top:22px">🔗 What queue speed tracks with — across 21 stores, quarter-to-date</div><div class="panel">'
+        f'<div class="note red"><b>Faster service tends to mean cleaner audits.</b> {_auditline}Quickest sites: <b>{_fast}</b>. Slowest: <b>{_slow}</b>.</div>'
+        '<table><thead><tr><th>Queue speed vs…</th><th style="text-align:center">r</th><th>What it means</th></tr></thead>'
+        f'<tbody>{_corr_rows}</tbody></table>'
+        '<div class="note">Correlation r runs −1 to +1; negative means shorter queues go with higher values. With 21 stores, |r|≥0.43 is statistically meaningful, 0.30–0.43 suggestive, below that is noise. Only links the data supports are shown — notably queue speed had <b>no real link to customer rating</b> this quarter.</div></div>'
+    )
+except Exception as _e:
+    SPEED_WIDGETS=""
+
 # ---- fill template ----
 repl={
  "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
  "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
  "{{COACH}}":COACH,"{{COACH_CARDS}}":COACH_CARDS,"{{MOVROWS}}":mov,"{{MOV_NOTE}}":mov_note,"{{PLANNER_LINKS}}":PLANNERS_HTML,
- "{{GEN_STAMP}}":GEN_STAMP,"{{LW_LABEL}}":lw_label,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · Engagement Coach · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,
+ "{{GEN_STAMP}}":GEN_STAMP,"{{ROLE}}":ROLE,"{{SPEED_WIDGETS}}":SPEED_WIDGETS,"{{LW_LABEL}}":lw_label,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · "+ROLE+" · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,
  "{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
  "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
  "{{AREA_WASTE_PCT}}":str(awpct),"{{AREA_WASTE_RETAIL}}":GBP(awr),"{{WASTE_PCT_LW}}":str(awpct_lw),"{{WASTE_RETAIL_LW}}":GBP(awr_lw),"{{WASTE_RETAIL_WK}}":GBP(awr_wk),"{{ATV_MED}}":"%.2f"%atv_med,
