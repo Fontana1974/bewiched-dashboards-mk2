@@ -335,26 +335,12 @@ try:
     _qdir=QC['direction']; _qdk="red" if _qdir=='worsening' else "green"
     _strong=", ".join(f"{sh(k)} {v}%" for k,v in QC['strongest'])
     _weak=", ".join(f"{sh(k)} {v}%" for k,v in QC['weakest'])
-    _ar=[c[1] for c in QC['corr'] if c[0]=='Brand audit QTD']; _ar=_ar[0] if _ar else 0.0
-    _tk=[c[1] for c in QC['corr'] if c[0]=='Takeaway %']; _tk=_tk[0] if _tk else 0.0
-    def _qcread(name,r,tier):
-        nm=name.lower()
-        if tier in ('meaningful','suggestive'):
-            base=("more queue-calling, higher "+nm) if r>0 else ("more queue-calling, lower "+nm)
-            return base+(" (suggestive)" if tier=='suggestive' else "")
-        return "no real link in the data"
-    _qc_corr="".join(f'<tr><td>{name}</td><td style="text-align:center;font-weight:700">{r:+.2f}</td><td class="mini">{_qcread(name,r,tier)}</td></tr>' for name,r,n,tier in QC['corr'])
     qcall_widget=(
         '<div class="section-title" style="margin-top:22px">\U0001f4e3 Queue calling \u2014 quarter trend (Working the Queue, company-wide)</div><div class="panel">'
         f'<div class="note {_qdk}"><b>Direction of travel: {_qdir}.</b> Company queue-calling has fallen from <b>{QC["first"]}%</b> in early April to <b>{QC["last"]}%</b> in the week of 8 Jun ({QC["change"]:+d} pts), averaging <b>{QC["avg"]}%</b> across the quarter ({QC["n_audits"]} race audits). Strongest: <b>{_strong}</b>. Needs work: <b>{_weak}</b>.</div>'
         '<table><thead><tr><th>Week</th><th style="text-align:right">Queue calling</th><th>Trend</th><th>Audits</th></tr></thead>'
         f'<tbody>{_qc_rows}</tbody></table>'
-        '<div class="note">Queue calling = the F1 audit \u201cWorking the Queue\u201d score (how well the team calls guests forward), shown as %. Higher is better. Bars: green \u226575% \u00b7 amber \u226550% \u00b7 red &lt;50%. From the weekly Race audit (the full unannounced audit); also recorded in Qualifying.</div></div>'
-        '<div class="section-title" style="margin-top:22px">\U0001f517 What queue calling tracks with \u2014 across 21 stores, quarter-to-date</div><div class="panel">'
-        f'<div class="note"><b>Strongest link: queue calling &amp; the brand audit (r = {_ar:+.2f}).</b> Better queue-calling sites tend to audit a little higher \u2014 and to run a higher takeaway mix (r = {_tk:+.2f}). Both are suggestive, not firm. Little or no link to sales, customer rating or team RMS this quarter.</div>'
-        '<table><thead><tr><th>Queue calling vs\u2026</th><th style="text-align:center">r</th><th>What it means</th></tr></thead>'
-        f'<tbody>{_qc_corr}</tbody></table>'
-        '<div class="note">Correlation r runs \u22121 to +1; positive means more queue-calling goes with higher values. With 21 stores |r|\u22650.45 is firm, 0.30\u20130.45 suggestive, below that noise. Only what the data supports is shown.</div></div>')
+        '<div class="note">Queue calling = the F1 audit \u201cWorking the Queue\u201d score (how well the team calls guests forward), shown as %. Higher is better. Bars: green \u226575% \u00b7 amber \u226550% \u00b7 red &lt;50%. From the weekly Race audit (the full unannounced audit); also recorded in Qualifying.</div></div>')
     SPEED_WIDGETS=speed_widget+qcall_widget
 except Exception as _e:
     SPEED_WIDGETS=""
