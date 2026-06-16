@@ -1,9 +1,12 @@
 {
- "_source": "Bewiched - Google Reviews sheet (1Dm3fxmhodV2xH...), Reviews tab — LAST COMPLETE WEEK (w/c 8 Jun) avg Star Rating, filtered on the per-review Time column",
+ "_source": "Google Reviews sheet (1Dm3fxmhodV2xH...), Reviews tab, LAST COMPLETE WEEK (w/c 8 Jun). Google health = ((SUM(per-store avg star)/21)*0.5)+((SUM(reviews)/125)*5*0.5)",
  "_updated": "2026-06-16",
  "window": "W/C 8 Jun",
- "company_rating": 4.9,
+ "company_health": 1.67,
+ "sum_store_avg": 34.8,
+ "stores_with_reviews": 7,
  "reviews": 42,
- "cumulative_rating": 4.73,
- "cumulative_reviews": 3556
+ "avg_rating_last_week": 4.9,
+ "target": 3.32,
+ "reviews_target": 125
 }

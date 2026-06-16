@@ -366,13 +366,13 @@ def build():
             try: _ls.append(float(_r[5]))
             except Exception: pass
     ops_lw=round(sum(_ls)/len(_ls)) if _ls else None   # company LAST-WEEK avg race score (mean latest race score; LOWER=better)
-    try: _CUST=json.load(open('customer.json')); _crate=_CUST.get('company_rating'); _crev=_CUST.get('reviews')
-    except Exception: _crate=None; _crev=None
+    try: _CUST=json.load(open('customer.json')); _ch=_CUST.get('company_health'); _crate=_CUST.get('avg_rating_last_week'); _crev=_CUST.get('reviews')
+    except Exception: _ch=None; _crate=None; _crev=None
     try: _RMS=json.load(open('rms.json')); _rh=_RMS.get('company_health'); _rr=_RMS.get('avg_rating'); _rs=_RMS.get('submissions')
     except Exception: _rh=None; _rr=None; _rs=None
     kpw_sales_k='green' if ylw>=8 else 'red'; kpw_sales_v=pctxt(ylw)
     kpw_ops_k=('green' if ops_lw<=190 else 'red') if ops_lw is not None else 'red'; kpw_ops_v=(str(ops_lw) if ops_lw is not None else "n/a")
-    kpw_cust_k=('green' if _crate>=4.6 else 'red') if _crate else 'red'; kpw_cust_v=((str(_crate)+"\u2605") if _crate else "n/a")
+    kpw_cust_k=('green' if _ch>=3.32 else 'red') if _ch is not None else 'red'; kpw_cust_v=(("%.2f"%_ch) if _ch is not None else "n/a")
     kpw_people_k=('green' if _rh>=3.32 else 'red') if _rh is not None else 'red'; kpw_people_v=(("%.2f"%_rh) if _rh is not None else "n/a")
     repl={
      "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),

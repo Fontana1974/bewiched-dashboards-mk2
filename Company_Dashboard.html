@@ -78,7 +78,7 @@
 <div class="brandbar"><div class="inner">
   <div class="logo"><div><div class="word">Be<span>wiched</span></div><div class="eyebrow">Company Performance</div></div></div>
   <div class="spacer"></div>
-  <div class="ctx">Whole company · <b>21 stores</b><br>4-week window: <b>11 May → 7 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed 16 Jun 2026, 15:40 · auto Mon 9am</span></div>
+  <div class="ctx">Whole company · <b>21 stores</b><br>4-week window: <b>11 May → 7 Jun 2026</b> · YoY vs 2025<br><span style="color:#e7b35a;font-weight:700">🔄 Refreshed 16 Jun 2026, 15:49 · auto Mon 9am</span></div>
 </div></div>
 <div class="wrap">
   <header class="page">
@@ -89,7 +89,7 @@
   <div class="kpws">
     <a class="kpw green" onclick="goTab('sales')"><div class="kl">📈 Sales</div><div class="kv">+8.8%</div><div class="kt">sales YoY · last week · target ≥8%</div></a>
     <a class="kpw red" onclick="goTab('f1')"><div class="kl">🏁 Operations</div><div class="kv">301</div><div class="kt">F1 avg race score · last wk · target ≤190 (lower=better)</div></a>
-    <a class="kpw green" onclick="goTab('sentiment')"><div class="kl">⭐ Customer</div><div class="kv">4.9★</div><div class="kt">Google rating · last wk · 42 reviews · target ≥4.6</div></a>
+    <a class="kpw red" onclick="goTab('sentiment')"><div class="kl">⭐ Customer</div><div class="kv">1.67</div><div class="kt">Google health · last wk · target ≥3.32 · 42 reviews</div></a>
     <a class="kpw red" onclick="goTab('sentiment')"><div class="kl">👥 People</div><div class="kv">2.70</div><div class="kt">RMS health · last wk · target ≥3.32 · 52 ratings</div></a>
   </div>
   <div class="note" style="margin:-2px 0 8px"><b>At a glance</b> — <b style="color:#1c6b3d">green</b> on/above target · <b style="color:#9a2f22">red</b> below target. Tap a widget for the detail.</div>
@@ -411,7 +411,7 @@ function goTab(t){var b=document.querySelector('.tab-btn[data-tab="'+t+'"]');if(
   btns.forEach(b=>b.addEventListener("click",()=>{btns.forEach(x=>x.classList.remove("active"));panels.forEach(p=>p.classList.remove("active"));
     b.classList.add("active");document.getElementById("tab-"+b.dataset.tab).classList.add("active");
     requestAnimationFrame(()=>{(window.CHARTS||[]).forEach(c=>{try{c.resize();}catch(e){}});});}));})();
-document.getElementById("foot").innerHTML="Data refreshed 16 Jun 2026, 15:40 · auto-refreshes every Monday 9am. Sources: live BigQuery POS, polling sheet, F1 audit, SMT visit diary, HRP &amp; Google reviews.";
+document.getElementById("foot").innerHTML="Data refreshed 16 Jun 2026, 15:49 · auto-refreshes every Monday 9am. Sources: live BigQuery POS, polling sheet, F1 audit, SMT visit diary, HRP &amp; Google reviews.";
 </script>
 </body>
 </html>
