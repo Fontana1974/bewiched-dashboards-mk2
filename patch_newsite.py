@@ -182,11 +182,22 @@ def sales_tab_section(store):
           + _reccard("Record revenue week", d.get("rec_week"), "week of")
           + _reccard("Record revenue hour", d.get("rec_hour"), "")
           + '</div>')
+    # drive-thru widget (drive-thru stores only)
+    dt=d.get("drivethru"); dt_section=""
+    if dt and dt.get("cars"):
+        dt_section=(f'  <div class="section-title">🚗 Drive-thru — last week</div>\n'
+                    f'  <div class="cards" style="grid-template-columns:repeat(2,1fr)">'
+                    f'<div class="card"><div class="lbl">🚗 Cars last week</div><div class="val">{dt["cars"]:,}</div>'
+                    f'<div class="meta">drive-thru orders through the lane till</div></div>'
+                    f'<div class="card"><div class="lbl">🚗 Drive-thru mix</div><div class="val">{dt["mix"]:g}%</div>'
+                    f'<div class="meta">share of the store\'s transactions taken at the drive-thru</div></div>'
+                    f'</div>\n')
     return (f'<!-- STORESALES START -->\n<!-- ===== TAB: Sales (store-scoped) ===== -->\n'
             f'<section class="tab-panel" id="tab-storesales">\n'
             f'  <div class="section-title">📊 Sales by day &amp; daypart — {store}</div>\n'
             f'  <div class="note">This store only · {win}, shown as <b>averages for a typical day</b> (not 4-week totals). Day-of-week = 4-week total ÷ 4 weeks; daypart = 4-week total ÷ 28 days. Dayparts: <b>Morning 5am–11am</b>, <b>Lunch 11am–2pm</b>, <b>Afternoon 2pm–5pm</b>, <b>Evening 5pm+</b>. (The Food &amp; bakery traction panel below stays as 4-week totals.)</div>\n'
             f'  <div class="section-title">🏆 All-time records</div>\n  {recs}\n'
+            f'{dt_section}'
             f'  <div class="section-title">{dow_title}</div>\n  <div>{dowrows}</div>{dow_note}\n'
             f'  <div class="section-title">Average sales by daypart — a typical day</div>\n  <div class="cards">{dpcards}</div>\n'
             f'  <div class="section-title">🥪 Food &amp; bakery gaining traction by daypart</div>\n'

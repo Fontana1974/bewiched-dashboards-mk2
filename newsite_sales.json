@@ -136,7 +136,8 @@
    "rec_hour": {
     "gbp": 316,
     "label": "Sun 5 Apr 2026, 11am–12pm"
-   }
+   },
+   "drivethru": null
   },
   "Attleborough": {
    "has_ly": false,
@@ -267,7 +268,8 @@
    "rec_hour": {
     "gbp": 278,
     "label": "Sat 2 May 2026, 11am–12pm"
-   }
+   },
+   "drivethru": null
   },
   "Billing Drive Thru": {
    "has_ly": false,
@@ -411,6 +413,10 @@
    "rec_hour": {
     "gbp": 347,
     "label": "Sat 23 May 2026, 10am–11am"
+   },
+   "drivethru": {
+    "cars": 670,
+    "mix": 46.0
    }
   },
   "Glenvale Drive Thru": {
@@ -597,6 +603,10 @@
    "rec_hour": {
     "gbp": 614,
     "label": "Sun 26 Apr 2026, 10am–11am"
+   },
+   "drivethru": {
+    "cars": 896,
+    "mix": 40.7
    }
   },
   "Northampton Drive-Thru": {
@@ -792,6 +802,10 @@
    "rec_hour": {
     "gbp": 754,
     "label": "Sun 7 Jun 2026, 11am–12pm"
+   },
+   "drivethru": {
+    "cars": 1687,
+    "mix": 49.3
    }
   }
  }

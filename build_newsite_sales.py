@@ -36,6 +36,11 @@ def Lopt(fn):
     except FileNotFoundError: return []
 rw_rows  = Lopt("ns_recweek_raw.json")   # all-time record weekly revenue: k="<store>|<YYYY-MM-DD wc>"
 rh_rows  = Lopt("ns_rechour_raw.json")   # all-time record hour revenue:   k="<store>|<YYYY-MM-DD>|<hour 0-23>"
+dt_rows  = Lopt("ns_drivethru_raw.json") # DRIVE-THRU stores only: cars (drive-thru till orders) + total orders, last complete week
+drivethru={}
+for r in dt_rows:
+    s=r["k"]; cars=i(r["cars"]); tot=i(r["total"])
+    if tot>0: drivethru[s]={"cars":cars, "mix":round(100*cars/tot,1)}
 
 def _wc_label(iso):   # "2026-04-20" -> "20 Apr 2026"
     d=_dt.date.fromisoformat(iso); return "%d %s %d" % (d.day, d.strftime("%b"), d.year)
@@ -101,7 +106,8 @@ for s in STORES:
             sell = [[p,c] for p,c in sl[:3]]
         fout[d] = {"gain":gain, "new":new, "sell":sell}
     out["stores"][s] = {"has_ly":has_ly, "dow":dseries, "daypart":dpser, "food":fout,
-                        "rec_week":recweek.get(s), "rec_hour":rechour.get(s)}
+                        "rec_week":recweek.get(s), "rec_hour":rechour.get(s),
+                        "drivethru":drivethru.get(s)}  # present only for drive-thru stores
 
 json.dump(out, open(os.path.join(BASE,"newsite_sales.json"),"w"), ensure_ascii=False, indent=1)
 
