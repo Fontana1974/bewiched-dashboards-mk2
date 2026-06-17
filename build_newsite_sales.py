@@ -59,6 +59,10 @@ for r in rh_rows:
     if ordc and rev/ordc > ATV_CEIL:   # secondary guard (primary guard is the SQL HAVING clause)
         continue                       # skip an implausible single-hour outlier rather than show it
     rechour[s]={"gbp": rev, "label": _hour_label(d, int(hr))}
+# all-time RECORD drive-thru cars week (complete weeks; SQL applies a plausibility ceiling) → merge into drivethru
+for r in Lopt("ns_dtrecord_raw.json"):
+    s, wc = r["k"].rsplit("|",1)
+    if s in drivethru: drivethru[s]["rec_cars"]=i(r["cars"]); drivethru[s]["rec_label"]=_wc_label(wc)
 
 # index by store
 dp = {s:{} for s in STORES}

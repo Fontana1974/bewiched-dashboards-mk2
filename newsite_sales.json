@@ -416,7 +416,9 @@
    },
    "drivethru": {
     "cars": 670,
-    "mix": 46.0
+    "mix": 46.0,
+    "rec_cars": 689,
+    "rec_label": "25 May 2026"
    }
   },
   "Glenvale Drive Thru": {
@@ -606,7 +608,9 @@
    },
    "drivethru": {
     "cars": 896,
-    "mix": 40.7
+    "mix": 40.7,
+    "rec_cars": 933,
+    "rec_label": "11 May 2026"
    }
   },
   "Northampton Drive-Thru": {
@@ -805,7 +809,9 @@
    },
    "drivethru": {
     "cars": 1687,
-    "mix": 49.3
+    "mix": 49.3,
+    "rec_cars": 3133,
+    "rec_label": "18 Jul 2022"
    }
   }
  }

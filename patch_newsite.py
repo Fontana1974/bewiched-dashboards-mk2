@@ -185,10 +185,12 @@ def sales_tab_section(store):
     # drive-thru widget (drive-thru stores only)
     dt=d.get("drivethru"); dt_section=""
     if dt and dt.get("cars"):
+        rec_line=(f'<div class="meta" style="margin-top:3px">🏆 Record week: <b>{dt["rec_cars"]:,} cars</b> · w/c {dt["rec_label"]}</div>'
+                  if dt.get("rec_cars") else "")
         dt_section=(f'  <div class="section-title">🚗 Drive-thru — last week</div>\n'
                     f'  <div class="cards" style="grid-template-columns:repeat(2,1fr)">'
                     f'<div class="card"><div class="lbl">🚗 Cars last week</div><div class="val">{dt["cars"]:,}</div>'
-                    f'<div class="meta">drive-thru orders through the lane till</div></div>'
+                    f'<div class="meta">drive-thru orders through the lane till</div>{rec_line}</div>'
                     f'<div class="card"><div class="lbl">🚗 Drive-thru mix</div><div class="val">{dt["mix"]:g}%</div>'
                     f'<div class="meta">share of the store\'s transactions taken at the drive-thru</div></div>'
                     f'</div>\n')
