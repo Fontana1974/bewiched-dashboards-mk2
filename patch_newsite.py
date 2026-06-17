@@ -297,7 +297,7 @@ def patch(fn,store,coach,mature):
         # new-site star-distribution chart (custDist) if present
         if gj.get('dist'): sub(r'(custDist[\s\S]{0,300}?data:\[)\d+(?:, ?\d+){4}(\])', rf'\g<1>{",".join(str(x) for x in gj["dist"])}\g<2>',1,"custDist distribution")
     if rj.get('comments') is not None:
-        sub(r'(<canvas id="teamTrend"></canvas></div>\s*<div style="margin-top:8px">)[\s\S]*?(</div>\s*</div>)',
+        sub(r'(<canvas id="teamTrend"></canvas></div>\s*<div style="margin-top:8px">)[\s\S]*?(</div>\s*<div class="note)',
             lambda m:m.group(1)+quotes(rj['comments'],False)+m.group(2),1,"RMS comment quotes")
     # 6) constructors standings regenerate
     sub(r'(by avg pts/store</span></div>\s*)(.*?)(\s*</div>\s*<div class="panel">\s*<div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Drivers)',
@@ -307,6 +307,15 @@ def patch(fn,store,coach,mature):
     sub(r'(<div class="card"><div class="lbl">Latest Race result</div><div class="val"[^>]*>)P\d+ · \d+ pts(</div>)',
         rf'\g<1>P{fin} · {chp} pts\g<2>',1,"Latest Race card value")
     # 8) generated timestamp note already dynamic (new Date()). leave.
+    # SAFETY: sentiment section must have balanced <div> nesting, else sickness/RTW leaks onto every tab.
+    def _sent_depth(s):
+        i=s.find('id="tab-sentiment"'); j=s.find('</section>',i)
+        seg=s[i:j] if i>=0 else ""
+        return len(re.findall(r'<div\b',seg))-len(re.findall(r'</div>',seg))
+    if _sent_depth(h)<0:
+        h=re.sub(r'(</div>)\s*</div>\s*(<div class="note[^"]*" style="margin-top:6px">)', r'\1\n        \2', h, count=1)
+    if _sent_depth(h)!=0:
+        log.append(f"  !! SENTIMENT DIV IMBALANCE {_sent_depth(h)} — sickness/RTW may leak; not auto-fixed")
     h=relocate_coaching(h)  # keep coaching on Op's Excellence only (sickness/RTW stay on Sentiment)
     open(fn,'w',encoding='utf-8').write(h)
     print(f"\n=== {fn} ({store}) ==="); print("\n".join(log))
