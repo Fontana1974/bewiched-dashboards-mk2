@@ -20,6 +20,8 @@ A=json.load(open('allstores.json')); R=A['rec']; champ=A['champ']; CATS=A['cats'
 FD=json.load(open('f1_detail.json')); STH=json.load(open('storehealth.json'))['stores']
 try: SENT=json.load(open('newsite_sentiment.json'))   # review snippets / RMS trend+comments / sickness cross-ref (gviz, headless)
 except FileNotFoundError: SENT={}
+try: NS=json.load(open('newsite_sales.json'))          # per-store Sales tab: DOW + daypart + Food&Bakery traction (BigQuery, headless)
+except FileNotFoundError: NS={}
 T_RMS=50*13/21.0  # per-store quarterly RMS submission target (area method / store)
 import html as _html
 def esc(t): return _html.escape((t or "").strip())[:200]
@@ -116,6 +118,88 @@ def constructors_rows(coach):
           f'     <div style="text-align:right"><div style="font-weight:800;font-size:18px;color:{valc}">{avg}</div><div style="font-size:9.5px;color:#9a8a7c;margin-top:-2px">pts/store</div></div>\n'
           f'   </div>')
     return "\n".join(out)
+
+# ===== NEW per-store "Sales" tab (DOW + daypart + Food&Bakery traction) =====
+_DPICON={"Morning":"🌅","Lunch":"🥪","Afternoon":"☕","Evening":"🌙"}
+def _chip(pct):
+    if pct is None: return ""
+    up=pct>=0; bg="#eef3ee" if up else "#fbeae8"; col="var(--green)" if up else "var(--red)"; sign="+" if up else MINUS
+    return f'<span style="display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:{bg};color:{col};font-weight:600">{sign}{abs(pct)}%</span>'
+
+def sales_tab_section(store):
+    d=(NS.get("stores") or {}).get(store); win=NS.get("_window",""); hrs=NS.get("hours",{})
+    if not d:
+        return ('<!-- STORESALES START -->\n<section class="tab-panel" id="tab-storesales">\n'
+                f'  <div class="section-title">📊 Sales by day &amp; daypart — {store}</div>\n'
+                '  <p class="note">Store sales data not available this run.</p>\n</section>\n<!-- STORESALES END -->')
+    has=d.get("has_ly")
+    # day of week
+    dow=d.get("dow",[]); maxc=max([c for _,c,_ in dow] or [1]) or 1; dowrows=""
+    for lab,cur,ly in dow:
+        pct=round(100*(cur-ly)/ly) if ly>0 else None; bw=round(100*cur/maxc); chip=_chip(pct) if has else ""
+        dowrows+=(f'<div style="display:flex;align-items:center;gap:10px;margin:4px 0">'
+                  f'<div style="width:36px;font-size:12px;color:var(--muted)">{lab}</div>'
+                  f'<div style="flex:1;height:14px;background:var(--cream);border-radius:7px;overflow:hidden"><div style="height:100%;width:{bw}%;background:var(--brown);border-radius:7px"></div></div>'
+                  f'<div style="width:64px;text-align:right;font-size:12.5px"><b>{gbp(cur)}</b></div>'
+                  f'<div style="width:56px;text-align:right">{chip}</div></div>')
+    dow_title="Day-of-week sales · YoY" if has else "Day-of-week sales"
+    dow_note="" if has else '<div class="mini" style="margin-top:6px">Brand-new site — this year only (no prior-year comparison yet).</div>'
+    # daypart cards
+    dpcards=""
+    for lab,cur,ly in d.get("daypart",[]):
+        pct=round(100*(cur-ly)/ly) if ly>0 else None
+        meta=(hrs.get(lab,"")+" · "+_chip(pct)) if has else (hrs.get(lab,"")+" · <span class='mini'>new site</span>")
+        dpcards+=(f'<div class="card"><div class="lbl">{_DPICON.get(lab,"")} {lab}</div>'
+                  f'<div class="val">{gbp(cur)}</div><div class="meta">{meta}</div></div>')
+    # food & bakery traction
+    fcards=""; food=d.get("food",{})
+    for lab in ["Morning","Lunch","Afternoon","Evening"]:
+        fd=food.get(lab,{}); rows=""; cap=""
+        if has:
+            for nm,cur,pct,gb in fd.get("gain",[]):
+                rows+=(f'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">'
+                       f'<span style="font-size:12.5px;color:#3f2d22">{nm}</span>'
+                       f'<span style="white-space:nowrap;font-size:12px"><b>{gbp(cur)}</b> {_chip(pct)}</span></div>')
+            if fd.get("new"):
+                cap="<div style='font-size:11.5px;color:#1d4e7a;margin-top:7px'>🆕 New this year: "+", ".join(f"{p} ({gbp(c)})" for p,c in fd["new"])+"</div>"
+        else:
+            for p,c in fd.get("sell",[]):
+                rows+=(f'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">'
+                       f'<span style="font-size:12.5px;color:#3f2d22">{p}</span>'
+                       f'<span style="white-space:nowrap;font-size:12px"><b>{gbp(c)}</b></span></div>')
+            if rows: cap="<div style='font-size:11.5px;color:#8a7a6d;margin-top:7px'>Top sellers — new site, no prior-year comparison yet.</div>"
+        if not rows: rows='<div class="mini" style="padding:5px 0">Limited data this daypart.</div>'
+        fcards+=(f'<div class="panel" style="padding:13px 15px"><div style="font-size:13px;font-weight:700;color:var(--brown);margin-bottom:6px">{_DPICON.get(lab,"")} {lab} <span class="mini" style="font-weight:400">· {hrs.get(lab,"")}</span></div>{rows}{cap}</div>')
+    food_lead=("Food &amp; bakery items growing fastest vs the same 4 weeks last year (ranked by £ added). Names cleaned of till codes."
+               if has else "Top food &amp; bakery sellers by daypart — this brand-new site has no prior-year comparison yet.")
+    return (f'<!-- STORESALES START -->\n<!-- ===== TAB: Sales (store-scoped) ===== -->\n'
+            f'<section class="tab-panel" id="tab-storesales">\n'
+            f'  <div class="section-title">📊 Sales by day &amp; daypart — {store}</div>\n'
+            f'  <div class="note">This store only · {win}. Dayparts: <b>Morning 5am–11am</b>, <b>Lunch 11am–2pm</b>, <b>Afternoon 2pm–5pm</b>, <b>Evening 5pm+</b>.</div>\n'
+            f'  <div class="section-title">{dow_title}</div>\n  <div>{dowrows}</div>{dow_note}\n'
+            f'  <div class="section-title">Sales by daypart</div>\n  <div class="cards">{dpcards}</div>\n'
+            f'  <div class="section-title">🥪 Food &amp; bakery gaining traction by daypart</div>\n'
+            f'  <div class="note" style="margin-bottom:4px">{food_lead}</div>\n'
+            f'  <div class="cards">{fcards}</div>\n</section>\n<!-- STORESALES END -->')
+
+def inject_sales_tab(h, store):
+    # 1) rename existing front tab button label (idempotent)
+    h=h.replace('data-tab="sales" role="tab"><span class="dot">📈</span>Sales &amp; Hours</button>',
+                'data-tab="sales" role="tab"><span class="dot">📈</span>Forecast / Review</button>')
+    # 2) ensure the new Sales nav button exists right after the Forecast/Review button
+    if 'data-tab="storesales"' not in h:
+        h=h.replace('data-tab="sales" role="tab"><span class="dot">📈</span>Forecast / Review</button>',
+                    'data-tab="sales" role="tab"><span class="dot">📈</span>Forecast / Review</button>\n    <button class="tab-btn" data-tab="storesales" role="tab"><span class="dot">📊</span>Sales</button>',1)
+    # 3) tab-status dot map (idempotent)
+    if 'storesales:' not in h:
+        h=h.replace('sentiment:"green"}','sentiment:"green",storesales:"green"}',1)
+    # 4) (re)build the section: replace prior injection else insert before the Wastage tab
+    sec=sales_tab_section(store)
+    h2,n=re.subn(r'<!-- STORESALES START -->.*?<!-- STORESALES END -->', lambda m: sec, h, flags=re.S)
+    if n: return h2
+    m=re.search(r'(\n\s*(?:<!--[^>]*-->\s*)?<section class="tab-panel" id="tab-waste">)', h)
+    if m: return h[:m.start()]+"\n  "+sec+"\n"+h[m.start():]
+    return h
 
 def patch(fn,store,coach,mature):
     h=open(fn,encoding='utf-8').read(); log=[]
@@ -317,12 +401,16 @@ def patch(fn,store,coach,mature):
     if _sent_depth(h)!=0:
         log.append(f"  !! SENTIMENT DIV IMBALANCE {_sent_depth(h)} — sickness/RTW may leak; not auto-fixed")
     h=relocate_coaching(h)  # keep coaching on Op's Excellence only (sickness/RTW stay on Sentiment)
+    before=('data-tab="storesales"' in h)
+    h=inject_sales_tab(h,store)   # rename front tab -> "Forecast / Review" + (re)build store-scoped "Sales" tab
+    log.append("  ✓ Sales tab "+("rebuilt" if before else "added")+" + front tab renamed to Forecast / Review")
     open(fn,'w',encoding='utf-8').write(h)
     print(f"\n=== {fn} ({store}) ==="); print("\n".join(log))
 
-for fn,store,coach,mature in STORES:
-    try:
-        patch(fn,store,coach,mature)
-    except Exception as e:
-        import traceback; print(f"\n!!! {fn} FAILED: {e}"); traceback.print_exc()
-print("\nDONE")
+if __name__=='__main__':
+    for fn,store,coach,mature in STORES:
+        try:
+            patch(fn,store,coach,mature)
+        except Exception as e:
+            import traceback; print(f"\n!!! {fn} FAILED: {e}"); traceback.print_exc()
+    print("\nDONE")
