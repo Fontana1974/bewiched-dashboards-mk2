@@ -4,8 +4,6 @@ from statistics import mean,median
 A=json.load(open('allstores.json')); REC=A['rec']; champ=A['champ']; CATS=A['cats']
 try: DPFOOD=json.load(open('daypart_food.json'))
 except FileNotFoundError: DPFOOD={}
-try: DPSTORE=json.load(open('daypart_store.json'))
-except FileNotFoundError: DPSTORE={"stores":{}}
 WX_TMPL=open('wx_nudge_tmpl.html',encoding='utf-8').read()
 WX_TOP='<div id="wxnudge_top" style="display:none;margin:0 0 16px;padding:9px 14px;border-radius:11px;font-size:13px;line-height:1.5"></div>'
 WX_FOOD='<div id="wxfood" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>'
@@ -150,8 +148,6 @@ def build():
             cards+=(f'<div class="panel" style="padding:13px 15px"><div style="font-size:13px;font-weight:700;color:var(--brown);margin-bottom:6px">{_ICON.get(dp,"")} {dp} <span class="mini" style="font-weight:400">· {d.get("hours","")}</span></div>{rows}{newln}</div>')
         daypart_food=f'<div class="cards" style="grid-template-columns:repeat(4,1fr)">{cards}</div>'
         daypart_food_note=DPFOOD.get("_window","")
-    # ---- per-store daypart/dow selector data (PART 3) from daypart_store.json ----
-    dpstore_js=json.dumps(DPSTORE)
     # ---- wastage ----
     yjs={s:{"latest":"08/06/2026","items":R[s]['yield_items']} for s in stores}
     outjs={s:clean_outliers(R[s]['outliers']) for s in stores}
@@ -416,7 +412,7 @@ def build():
      "{{ATV_MED}}":f"{atv_med:.2f}",
      "{{SMT_MATT_ROWS}}":smt_rows('Matt'),"{{SMT_KEL_ROWS}}":smt_rows('Kel'),"{{SMT_CLAIRE_ROWS}}":smt_rows('Claire'),"{{SMT_NOTE}}":smt_note,
      "{{LW_TABLE}}":lw_rows,"{{LW_TOTAL}}":lw_total,"{{SALESTBL}}":salestbl,"{{DPG_ROWS}}":dpg_rows,"{{DOWG_ROWS}}":dowg_rows,
-     "{{DPG_NOTE}}":dpg_note,"{{DOWG_NOTE}}":dowg_note,"{{SALES_FOCUS}}":sales_focus,"{{DAYPART_FOOD}}":daypart_food,"{{DAYPART_FOOD_NOTE}}":daypart_food_note,"{{DPSTORE_JS}}":dpstore_js,
+     "{{DPG_NOTE}}":dpg_note,"{{DOWG_NOTE}}":dowg_note,"{{SALES_FOCUS}}":sales_focus,"{{DAYPART_FOOD}}":daypart_food,"{{DAYPART_FOOD_NOTE}}":daypart_food_note,
      "{{YJS}}":json.dumps(yjs),"{{OUTJS}}":json.dumps(outjs),
      "{{MIX_AREA_ROWS}}":mar,"{{CAPHDR}}":caphdr,"{{CAPMAT}}":capmat,"{{MIX_DS}}":mix_ds,"{{MIX_LBLS}}":mix_lbls,"{{MIX_NOTE}}":mix_note,"{{MIX_FOCUS}}":mix_focus,
      "{{F1TBL}}":f1tbl,"{{F1_FIN_DS}}":f1_fin_ds,"{{F1_FIN_LBLS}}":f1_fin_lbls,"{{F1_CHAMP_AVG}}":str(f1_champ_avg),"{{AVG_FIN2}}":str(avg_fin),
