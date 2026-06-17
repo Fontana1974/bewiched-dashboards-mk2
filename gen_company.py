@@ -4,6 +4,15 @@ from statistics import mean,median
 A=json.load(open('allstores.json')); REC=A['rec']; champ=A['champ']; CATS=A['cats']
 try: DPFOOD=json.load(open('daypart_food.json'))
 except FileNotFoundError: DPFOOD={}
+try: QBENCH=json.load(open('queue_benchmark.json'))
+except FileNotFoundError: QBENCH=None
+def qbench_line(scope):
+    """Competitor queue-time benchmark line for the top of the Focus panel. scope={'ours','comp'}."""
+    if not scope or not scope.get("ours") or not scope.get("comp"): return ""
+    o=scope["ours"]; c=scope["comp"]; diff=c-o; faster=diff>0
+    return (f'<div class="focus{"" if faster else " red"}" style="margin:0 0 10px">⏱️ On average our queue time is '
+            f'<b>{o} seconds</b> (vs competition <b>{c} seconds</b>) — <b>{abs(diff)} seconds {"faster" if faster else "slower"}</b> '
+            f'than the chains <span class="mini" style="font-weight:400">· F1 race audits, this quarter</span></div>')
 WX_TMPL=open('wx_nudge_tmpl.html',encoding='utf-8').read()
 WX_TOP='<div id="wxnudge_top" style="display:none;margin:0 0 16px;padding:9px 14px;border-radius:11px;font-size:13px;line-height:1.5"></div>'
 WX_FOOD='<div id="wxfood" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>'
@@ -410,6 +419,7 @@ def build():
      "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
      "{{AREA_WASTE_PCT}}":str(awpct),"{{AREA_WASTE_RETAIL}}":GBP(awr),"{{WASTE_PCT_LW}}":str(awpct_lw),"{{WASTE_RETAIL_LW}}":GBP(awr_lw),"{{WASTE_RETAIL_WK}}":GBP(awr_wk),"{{AREA_GC}}":format(st_,",d"),"{{AREA_GC_YOY}}":pctxt(round(agy,1)),"{{GCCHIP}}":"up" if agy>=0 else "dn","{{AUDIT_QTD}}":("%.2f"%audit_mean) if audit_mean is not None else "n/a","{{AUDIT_K}}":cls(audit_mean,4.5,4.0),"{{AUDIT_META}}":str(len(audit_vals))+" stores audited · QTD",
      "{{ATV_MED}}":f"{atv_med:.2f}",
+     "{{QUEUE_BENCH}}":qbench_line(QBENCH.get("company") if QBENCH else None),
      "{{SMT_MATT_ROWS}}":smt_rows('Matt'),"{{SMT_KEL_ROWS}}":smt_rows('Kel'),"{{SMT_CLAIRE_ROWS}}":smt_rows('Claire'),"{{SMT_NOTE}}":smt_note,
      "{{LW_TABLE}}":lw_rows,"{{LW_TOTAL}}":lw_total,"{{SALESTBL}}":salestbl,"{{DPG_ROWS}}":dpg_rows,"{{DOWG_ROWS}}":dowg_rows,
      "{{DPG_NOTE}}":dpg_note,"{{DOWG_NOTE}}":dowg_note,"{{SALES_FOCUS}}":sales_focus,"{{DAYPART_FOOD}}":daypart_food,"{{DAYPART_FOOD_NOTE}}":daypart_food_note,

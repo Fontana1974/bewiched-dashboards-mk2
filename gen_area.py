@@ -4,6 +4,15 @@ from statistics import mean,median
 A=json.load(open('allstores.json')); REC=A['rec']; champ=A['champ']; CATS=A['cats']
 try: DPFOOD_AREA=json.load(open('daypart_food_area.json'))
 except FileNotFoundError: DPFOOD_AREA={}
+try: QBENCH=json.load(open('queue_benchmark.json'))
+except FileNotFoundError: QBENCH=None
+def qbench_line(scope):
+    """Competitor queue-time benchmark line for the top of the Focus panel. scope={'ours','comp'}."""
+    if not scope or not scope.get("ours") or not scope.get("comp"): return ""
+    o=scope["ours"]; c=scope["comp"]; diff=c-o; faster=diff>0
+    return (f'<div class="focus{"" if faster else " red"}" style="margin:0 0 10px">⏱️ On average this area\'s queue time is '
+            f'<b>{o} seconds</b> (vs competition <b>{c} seconds</b>) — <b>{abs(diff)} seconds {"faster" if faster else "slower"}</b> '
+            f'than the chains <span class="mini" style="font-weight:400">· F1 race audits, this quarter</span></div>')
 WX_TMPL=open('wx_nudge_tmpl.html',encoding='utf-8').read()
 WX_TOP='<div id="wxnudge_top" style="display:none;margin:0 0 16px;padding:9px 14px;border-radius:11px;font-size:13px;line-height:1.5"></div>'
 WX_FOOD='<div id="wxfood" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>'
@@ -431,6 +440,7 @@ def build(coach):
      "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
      "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
      "{{GEN_STAMP}}":GEN_STAMP,"{{LW_LABEL}}":lw_label,"{{AVF_WK}}":ACT.get('_week_label','last week'),"{{AVF_ROWS}}":_avf_rows(stores,R),"{{PLANNER_LINK}}":PLANNERS.get(coach,'#'),
+     "{{QUEUE_BENCH}}":qbench_line((QBENCH.get("areas") or {}).get(coach) if QBENCH else None),
      "{{COACH}}":coach,"{{NSTORES}}":str(len(stores)),"{{PILL}}":" · ".join(SHORT[s] for s in sorted(stores,key=lambda x:-R[x]['s4'])),
      "{{FOCUS_LI}}":focus_li,"{{OVROWS}}":ov,"{{OV_TOTAL}}":ov_total,"{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
      "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",

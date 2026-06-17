@@ -12,6 +12,14 @@ from collections import defaultdict
 from statistics import mean, median
 
 A=json.load(open('allstores.json')); REC=A['rec']; champ=A['champ']; CATS=A['cats']
+try: QBENCH=json.load(open('queue_benchmark.json'))
+except FileNotFoundError: QBENCH=None
+def qbench_line(scope):
+    if not scope or not scope.get("ours") or not scope.get("comp"): return ""
+    o=scope["ours"]; c=scope["comp"]; diff=c-o; faster=diff>0
+    return (f'<div class="focus{"" if faster else " red"}" style="margin:0 0 10px">⏱️ On average our queue time is '
+            f'<b>{o} seconds</b> (vs competition <b>{c} seconds</b>) — <b>{abs(diff)} seconds {"faster" if faster else "slower"}</b> '
+            f'than the chains <span class="mini" style="font-weight:400">· F1 race audits, this quarter</span></div>')
 WX_TMPL=open('wx_nudge_tmpl.html',encoding='utf-8').read()
 WX_TOP='<div id="wxnudge_top" style="display:none;margin:0 0 16px;padding:9px 14px;border-radius:11px;font-size:13px;line-height:1.5"></div>'
 WX_FOOD='<div id="wxfood" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>'
@@ -351,7 +359,7 @@ repl={
  "{{WX_NUDGE}}":wx_nudge([R[s]['coords'] for s in stores if R[s].get('coords')],wx_recent(amix)),
  "{{WX_NUDGE_TOP}}":WX_TOP,"{{WX_FOOD}}":WX_FOOD,
  "{{COACH}}":COACH,"{{COACH_CARDS}}":COACH_CARDS,"{{MOVROWS}}":mov,"{{MOV_NOTE}}":mov_note,"{{PLANNER_LINKS}}":PLANNERS_HTML,
- "{{GEN_STAMP}}":GEN_STAMP,"{{FOOT_VIEW}}":"coach","{{ROLE}}":ROLE,"{{SPEED_WIDGETS}}":SPEED_WIDGETS,"{{LW_LABEL}}":lw_label,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · "+ROLE+" · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,
+ "{{GEN_STAMP}}":GEN_STAMP,"{{FOOT_VIEW}}":"coach","{{ROLE}}":ROLE,"{{SPEED_WIDGETS}}":SPEED_WIDGETS,"{{LW_LABEL}}":lw_label,"{{NSTORES}}":str(len(stores)),"{{PILL}}":COACH+" · "+ROLE+" · all "+str(len(stores))+" stores","{{FOCUS_LI}}":focus_li,"{{QUEUE_BENCH}}":qbench_line(QBENCH.get("company") if QBENCH else None),
  "{{AREA_LAST}}":GBP(area_last),"{{AREA_YOY_LW}}":pctxt(ylw),"{{LWCHIP}}":"up" if ylw>=0 else "dn",
  "{{AREA_4WK}}":GBP(area_4wk),"{{AREA_YOY_4W}}":pctxt(y4),"{{W4CHIP}}":"up" if y4>=0 else "dn",
  "{{AREA_WASTE_PCT}}":str(awpct),"{{AREA_WASTE_RETAIL}}":GBP(awr),"{{WASTE_PCT_LW}}":str(awpct_lw),"{{WASTE_RETAIL_LW}}":GBP(awr_lw),"{{WASTE_RETAIL_WK}}":GBP(awr_wk),"{{ATV_MED}}":"%.2f"%atv_med,
