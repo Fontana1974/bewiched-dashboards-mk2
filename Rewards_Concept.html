@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Bewiched — Tiered Rewards Concept (Draft)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#f4efe9;--card:#fff;--ink:#2b211b;--muted:#8a7a6d;--line:#e7ddd2;--brown:#5b3a29;
+    --brown2:#3f281c;--cream:#efe6dc;--green:#1f8a4c;--red:#c0392b;--gold:#e7b35a;
+    --t1:#c9a06a;--t2:#9c6b3f;--t3:#5b3a29;--t4:#bb8a2e;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .brandbar{background:linear-gradient(180deg,var(--brown) 0%,var(--brown2) 100%);color:#f6efe7;}
+  .brandbar .inner{max-width:1080px;margin:0 auto;padding:16px 22px;display:flex;align-items:center;gap:13px;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo .word{font-size:22px;font-weight:800;letter-spacing:.2px;line-height:1;}
+  .logo .word span{color:var(--gold)}
+  .logo .eyebrow{font-size:10.5px;letter-spacing:2.4px;text-transform:uppercase;color:#cbb29c;margin-top:3px;}
+  .brandbar .spacer{flex:1}
+  .brandbar .ctx{font-size:11.5px;color:#cbb29c;text-align:right;line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 22px 70px;}
+  .draftflag{display:inline-block;background:#fff8ec;border:1px solid #f0e0bf;color:#7a5e1e;border-radius:999px;padding:4px 13px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:14px;}
+  h1{margin:0 0 8px;font-size:30px;letter-spacing:-.5px;}
+  .lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:760px;margin:0 0 8px;}
+  h2.sec{margin:48px 0 4px;font-size:21px;letter-spacing:-.3px;border-top:1px solid var(--line);padding-top:30px;}
+  .sublede{color:var(--muted);font-size:13.5px;line-height:1.6;max-width:780px;margin:6px 0 20px;}
+  p{font-size:14px;line-height:1.7;}
+  .accentbar{height:4px;width:54px;background:var(--gold);border-radius:3px;margin:14px 0 0;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:26px 0 6px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(80,50,30,.05);}
+  .kpi .lab{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+  .kpi .val{font-size:27px;font-weight:800;letter-spacing:-.6px;margin:6px 0 2px;}
+  .kpi .sub{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .kpi.good .val{color:var(--green)} .kpi.bad .val{color:var(--red)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-top:8px;box-shadow:0 1px 3px rgba(80,50,30,.05);}
+  .panel.warn{background:#fff6f3;border-color:#f1cfc6;}
+  .panel h3{margin:0 0 8px;font-size:16px;}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;}
+  .tier{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(80,50,30,.05);display:flex;flex-direction:column;}
+  .tier .head{padding:16px 18px 14px;color:#fff;}
+  .tier .head .nm{font-size:18px;font-weight:800;letter-spacing:-.2px;}
+  .tier .head .reach{font-size:11px;font-weight:700;opacity:.92;margin-top:3px;letter-spacing:.3px;}
+  .tier .thresh{padding:13px 18px;border-bottom:1px solid var(--line);background:var(--cream);}
+  .tier .thresh .big{font-size:19px;font-weight:800;letter-spacing:-.3px;}
+  .tier .thresh .sm{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .tier ul{margin:0;padding:14px 18px 16px 32px;font-size:12.8px;line-height:1.6;flex:1;}
+  .tier ul li{margin-bottom:7px;}
+  .tier .foot{font-size:11px;color:var(--muted);padding:0 18px 15px;line-height:1.5;}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:8px;}
+  th,td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line);}
+  th{background:var(--brown);color:#f6efe7;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;font-weight:700;}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  tr:last-child td{border-bottom:none;}
+  .gap-hi{color:var(--green);font-weight:800;} .gap-lo{color:var(--red);font-weight:800;}
+  .tagrow td{background:var(--cream);font-weight:700;font-size:12px;letter-spacing:.3px;text-transform:uppercase;color:var(--brown);}
+  .verdict{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;display:inline-block;}
+  .v-hero{background:#e6f4ec;color:var(--green);} .v-good{background:#fbf2dd;color:#9c7211;} .v-avoid{background:#fbe7e3;color:var(--red);}
+  .mechs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px;}
+  .mech{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(80,50,30,.05);}
+  .mech .ic{font-size:20px;}
+  .mech h4{margin:8px 0 5px;font-size:14.5px;}
+  .mech p{margin:0;font-size:12.6px;color:#5c4f44;line-height:1.55;}
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-top:8px;box-shadow:0 1px 3px rgba(80,50,30,.05);}
+  .chartwrap{position:relative;height:300px;}
+  .chartwrap.tall{height:340px;}
+  .note{background:#fff8ec;border:1px solid #f0e0bf;color:#7a5e1e;border-radius:12px;padding:13px 16px;font-size:12.5px;margin-top:24px;line-height:1.6}
+  .decisions{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 24px 8px;margin-top:8px;box-shadow:0 1px 3px rgba(80,50,30,.05);}
+  .decisions .d{border-bottom:1px solid var(--line);padding:16px 0;}
+  .decisions .d:last-child{border-bottom:none;}
+  .decisions .q{font-weight:800;font-size:14px;margin-bottom:5px;}
+  .decisions .opt{font-size:13px;color:#5c4f44;line-height:1.6;}
+  .decisions .rec{font-size:12.5px;color:var(--green);font-weight:700;margin-top:5px;}
+  footer{color:var(--muted);font-size:12px;margin-top:34px;line-height:1.6;border-top:1px solid var(--line);padding-top:20px;}
+  .vto{font-size:12.5px;color:var(--brown);background:var(--cream);border-radius:10px;padding:10px 14px;display:inline-block;margin-top:14px;line-height:1.55}
+  @media(max-width:900px){.kpis,.tiers,.mechs{grid-template-columns:repeat(2,1fr)}.twocol{grid-template-columns:1fr}}
+  @media(max-width:560px){.kpis,.tiers,.mechs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="brandbar"><div class="inner"><div class="logo"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="17" fill="#e7b35a"/><path d="M9 14h12v5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5v-5z" fill="#3f281c"/><path d="M21 15h2.2a2.6 2.6 0 0 1 0 5.2H21" fill="none" stroke="#3f281c" stroke-width="1.6"/><path d="M12 8.5c-1 1 0 2 0 3M15.5 8c-1 1 0 2 0 3M19 8.5c-1 1 0 2 0 3" fill="none" stroke="#3f281c" stroke-width="1.5" stroke-linecap="round"/></svg><div><div class="word">Be<span>wiched</span></div><div class="eyebrow">Rewards Strategy</div></div></div><div class="spacer"></div><div class="ctx">Concept proposal · Draft<br>Not yet live · for board reaction</div></div></div>
+<div class="wrap">
+  <span class="draftflag">● Draft concept — for reaction, not sign-off</span>
+  <h1>The Roasters' Club</h1>
+  <p class="lede">A tiered rewards system for the Bewiched app, designed to do one thing the current scheme doesn't: <b>protect margin while making the customer feel more rewarded, not less.</b> Today we hand back cash. Cash is the single most expensive thing we can give away — every £1 off is £1 of gross profit gone. This concept swaps cash-off for rewards that cost us pennies but feel like pounds, wrapped in an earned-status ladder that drives frequency, ATV and retention.</p>
+  <div class="accentbar"></div>
+  <div class="vto">Ladders to the VTO — 1-yr targets: <b>+10% lfl</b>, <b>18% profit</b>, app share climbing. 5-yr: <b>£20m / 40 stores</b>. This protects the profit line <i>and</i> the lfl line at the same time, using the brand's own Unique — <b>Freshly Roasted Coffee</b> — as the reward currency.</div>
+  <h2 class="sec">Where we are today</h2>
+  <p class="sublede">Rolling 90 days to 18 Jun 2026, from the live POS (<code>v_sales_details</code>). The app is now a serious channel — and the rewards attached to it are leaking margin.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="lab">App / loyalty share</div><div class="val">38.8%</div><div class="sub">127,871 of 329,831 orders carry a customer ID — and climbing</div></div>
+    <div class="kpi"><div class="lab">App ATV vs all</div><div class="val good">+19%</div><div class="sub">£8.80 app vs £7.39 estate ATV — identified customers already spend more</div></div>
+    <div class="kpi bad"><div class="lab">Rewards given (QTD)</div><div class="val">£34.4k</div><div class="sub">14,323 redemptions — and the mix is the problem</div></div>
+    <div class="kpi bad"><div class="lab">£1 Off — the workhorse</div><div class="val">8,304</div><div class="sub">redemptions QTD (~£8.3k). Pure cash-off = pound-for-pound GP lost</div></div>
+  </div>
+  <div class="panel warn" style="margin-top:18px"><h3>The problem in one line</h3><p style="margin:0">Cash-off rewards — <b>£1 / £3 / £5 Off</b> — dominate the redemption mix, and they are the <b>most margin-destructive reward we can possibly give</b>. A £1-off costs us a full £1 of gross profit. A free latte <i>feels</i> like £3.40 to the customer but costs us roughly <b>42p</b> in milk, beans and cup. We are currently giving away the expensive thing and under-using the cheap-but-valuable one. That's backwards.</p></div>
+  <h2 class="sec">The core move: stop giving cash, start giving coffee</h2>
+  <p class="sublede">Every reward sits somewhere on the gap between what it <i>costs us</i> and what it <i>feels worth</i> to the customer. The whole strategy is to push redemptions into the top-right of that gap — high perceived value, near-zero cost to us — and tier the access so it drives behaviour.</p>
+  <div class="kpis">
+    <div class="kpi good"><div class="lab">Today — cost per £1 of perceived value</div><div class="val">~78p</div><div class="sub">Cash-heavy mix. We give away nearly the full face value in real GP.</div></div>
+    <div class="kpi good"><div class="lab">Concept — cost per £1 of perceived value</div><div class="val">~32p</div><div class="sub">Coffee-led mix. Same (or richer) reward feeling, fraction of the cost.</div></div>
+    <div class="kpi good"><div class="lab">Indicative GP protected</div><div class="val">~£64k/yr</div><div class="sub">At today's reward volume, holding perceived value flat. Before breakage & frequency upside.</div></div>
+    <div class="kpi good"><div class="lab">Aspirational top tier</div><div class="val">~3–4%</div><div class="sub">Reach the top tier — most aspire, few fully exploit. The "illusion" works for us.</div></div>
+  </div>
+  <h2 class="sec">The ladder — four earned roasts</h2>
+  <p class="sublede">Status is <b>earned on a rolling 90-day window</b> of spend, so it has to be maintained — that's what drives repeat frequency. Thresholds are anchored to the real spend distribution of our 20,762 active app customers (see the data below), set so each rung feels reachable but the top stays rare. Naming uses the roast journey — our own <b>Freshly Roasted Coffee</b> Unique — so the ladder <i>is</i> the brand story.</p>
+  <div class="tiers">
+    <div class="tier"><div class="head" style="background:var(--t1)"><div class="nm">☕ Light Roast</div><div class="reach">Everyone on the app · 100%</div></div><div class="thresh"><div class="big">Just join</div><div class="sm">£0+ in last 90 days</div></div><ul><li><b>Free drink on sign-up</b> (your first roast on us)</li><li>Earn <b>5 Beans per £1</b> spent</li><li>Free drink on your <b>birthday</b></li><li>Member-only app pricing on seasonal launches</li></ul><div class="foot">The on-ramp. Costs us a cup of coffee to convert a stranger into a tracked, higher-ATV customer.</div></div>
+    <div class="tier"><div class="head" style="background:var(--t2)"><div class="nm">🔥 Medium Roast</div><div class="reach">Top ~25% of members</div></div><div class="thresh"><div class="big">£50 / 90 days</div><div class="sm">≈ £17 a month · the regular's tier (P75)</div></div><ul><li>Everything in Light, plus:</li><li><b>Free size upgrade</b> any time (reg → large)</li><li><b>Bean booster:</b> 6 per £1</li><li><b>Free filter / batch brew</b> reward unlocked</li><li>Early access to new drinks (48h before launch)</li></ul><div class="foot">The habitual customer. Rewards here cost 10–18p but feel like a £3 treat.</div></div>
+    <div class="tier"><div class="head" style="background:var(--t3)"><div class="nm">🖤 Dark Roast</div><div class="reach">Top ~10% of members</div></div><div class="thresh"><div class="big">£120 / 90 days</div><div class="sm">≈ £40 a month · the loyalist (P90)</div></div><ul><li>Everything in Medium, plus:</li><li><b>Free handcrafted coffee</b> every 8th visit (auto)</li><li><b>Skip-the-queue</b> order-ahead in the app</li><li><b>Extra shot / syrup free</b>, always</li><li>Name on the <b>"Maker's Pick"</b> screen in-store</li></ul><div class="foot">Near-daily customers. Perks cost almost nothing and make them feel known by name.</div></div>
+    <div class="tier"><div class="head" style="background:linear-gradient(135deg,#2b1a12,#5b3a29);border-bottom:3px solid var(--gold)"><div class="nm" style="color:var(--gold)">★ Reserve</div><div class="reach" style="color:var(--gold)">Top ~3–4% · aspirational</div></div><div class="thresh"><div class="big">£275 / 90 days</div><div class="sm">≈ £92 a month · the superfan (P95–P99)</div></div><ul><li>Everything in Dark, plus:</li><li><b>Free Reserve shake</b> (our hero Unique) monthly</li><li><b>Bring-a-friend</b> free drink each month</li><li>First taste of new menu & roast drops</li><li>Invites to roastery / barista events</li><li>A real human "thank you" from the team</li></ul><div class="foot">The badge most aspire to and few fully exploit — that gap is exactly where the margin lives.</div></div>
+  </div>
+  <div class="note"><strong>Why rolling, not lifetime.</strong> Lifetime tiers reward yesterday's spend forever and cost us margin on autopilot. A rolling 90-day window means status must be <em>maintained</em> — that's the lever that lifts visit frequency, which is the real prize given app ATV is already +19%.</div>
+  <h2 class="sec">Thresholds, grounded in the real distribution</h2>
+  <p class="sublede">Set against the actual 90-day spend of our 20,762 active app customers. The bands are drawn at real percentiles so each tier is genuinely reachable but the top stays scarce. Median app customer spends £22 / 90 days; the P95 superfan spends £174; the P99 spends £383.</p>
+  <div class="chartbox"><div class="chartwrap"><canvas id="distChart"></canvas></div></div>
+  <div class="twocol" style="margin-top:18px">
+    <div class="panel"><h3>Spend per app customer — 90 days</h3><p style="margin:0">P50 <b>£22</b> · P75 <b>£52</b> · P90 <b>£111</b> · P95 <b>£174</b> · P99 <b>£383</b>. Tier cut-offs (£50 / £120 / £275) sit just above P75 / P90 / P95 — a customer can <i>see</i> the next rung from where they are.</p></div>
+    <div class="panel"><h3>Visit frequency — 90 days</h3><p style="margin:0">P50 <b>2 visits</b> · P75 <b>6</b> · P90 <b>13</b> · P95 <b>21</b> · P99 <b>48</b> (near-daily). The same shape supports a <i>visit-based</i> ladder if we'd rather drive frequency than basket size — a key decision below.</p></div>
+  </div>
+  <h2 class="sec">The reward menu, reframed for margin</h2>
+  <p class="sublede">Every reward scored on what it feels worth vs what it actually costs us. The "value illusion" column is the gap we're farming. Cost figures are working estimates — to be locked against real recipe costings before launch.</p>
+  <table><thead><tr><th>Reward</th><th class="num">Feels worth</th><th class="num">Costs us (COGS)</th><th class="num">Value illusion</th><th>Verdict</th></tr></thead><tbody>
+    <tr class="tagrow"><td colspan="5">Lead with these — high perceived value, near-zero cost</td></tr>
+    <tr><td>Free filter / batch brew</td><td class="num">£2.80</td><td class="num">£0.18</td><td class="num gap-hi">94%</td><td><span class="verdict v-hero">Hero</span></td></tr>
+    <tr><td>Free handcrafted coffee (latte / cap / flat white)</td><td class="num">£3.40</td><td class="num">£0.42</td><td class="num gap-hi">88%</td><td><span class="verdict v-hero">Hero</span></td></tr>
+    <tr><td>Size upgrade (reg → large)</td><td class="num">£0.60</td><td class="num">£0.10</td><td class="num gap-hi">83%</td><td><span class="verdict v-hero">Hero</span></td></tr>
+    <tr><td>Extra shot / syrup</td><td class="num">£0.70</td><td class="num">£0.12</td><td class="num gap-hi">83%</td><td><span class="verdict v-hero">Hero</span></td></tr>
+    <tr><td>Birthday treat (drink + cookie, 1×/yr)</td><td class="num">£5.60</td><td class="num">£0.77</td><td class="num gap-hi">86%</td><td><span class="verdict v-hero">Hero</span></td></tr>
+    <tr class="tagrow"><td colspan="5">Use to drive attach & treat occasions</td></tr>
+    <tr><td>Treat pairing — cookie with any coffee</td><td class="num">£2.20</td><td class="num">£0.35</td><td class="num gap-hi">84%</td><td><span class="verdict v-good">Drives attach</span></td></tr>
+    <tr><td>Free Reserve shake (hero Unique, top tier)</td><td class="num">£4.50</td><td class="num">£1.30</td><td class="num gap-hi">71%</td><td><span class="verdict v-good">Status only</span></td></tr>
+    <tr class="tagrow"><td colspan="5">Retain only as a capped exception — never the default</td></tr>
+    <tr><td>£1 / £3 / £5 cash-off</td><td class="num">face</td><td class="num">face</td><td class="num gap-lo">0%</td><td><span class="verdict v-avoid">Minimise</span></td></tr>
+  </tbody></table>
+  <div class="note"><strong>The points trick.</strong> Beans (points) are deliberately generous-feeling — <b>5 per £1</b> means a £3 coffee earns 15 Beans, and a free coffee lands at ~150 Beans. The customer feels showered in points; we're only ever redeeming them against an item that costs us pennies. Big numbers, small cost.</div>
+  <h2 class="sec">Margin: before vs after</h2>
+  <p class="sublede">Same volume of reward "value" handed to customers (~£34.4k QTD), modelled under today's cash-heavy mix vs the concept's coffee-led mix. The customer feeling stays the same or improves; the real cost to us roughly halves and then some.</p>
+  <div class="chartbox"><div class="chartwrap tall"><canvas id="marginChart"></canvas></div></div>
+  <div class="twocol" style="margin-top:18px">
+    <div class="panel warn"><h3>Today — cash-led mix</h3><p style="margin:0">~75% of reward value is cash-off (~£25.8k, lost pound-for-pound) + ~25% free drinks (~£1.1k real cost). <b>Real GP cost ≈ £26.9k QTD</b> for £34.4k of perceived value — <b>78p in the pound</b>.</p></div>
+    <div class="panel"><h3>Concept — coffee-led mix</h3><p style="margin:0">Flip to ~20% cash-off (capped) + ~80% high-margin items. <b>Real GP cost ≈ £10.9k QTD</b> for the <i>same</i> £34.4k of perceived value — <b>32p in the pound</b>. Indicative protection <b>~£16k/quarter (~£64k/yr)</b>, before breakage and frequency upside.</p></div>
+  </div>
+  <h2 class="sec">The behavioural engine ("illusion of value")</h2>
+  <p class="sublede">The levers that make a low-cost scheme feel generous, and quietly work in our favour.</p>
+  <div class="mechs">
+    <div class="mech"><div class="ic">💎</div><h4>Generous-feeling points</h4><p>5 Beans per £1 and big redemption numbers make the scheme feel rich — while every redemption lands on an item costing us pennies.</p></div>
+    <div class="mech"><div class="ic">⏳</div><h4>Breakage</h4><p>Beans expire after 6 months of inactivity; tier status decays on the rolling window. Industry breakage runs 10–25% of issued value — reward never claimed is margin retained.</p></div>
+    <div class="mech"><div class="ic">🎯</div><h4>Aspirational thresholds</h4><p>Reserve is visible to all but reached by ~3–4%. Most aspire and lift their spend chasing it; few fully exploit the perks. The gap is the win.</p></div>
+    <div class="mech"><div class="ic">🎁</div><h4>Surprise & delight</h4><p>Random "Golden Cup" free upgrades and double-Bean weekends — cheap, memorable, and timed to fill trough trading periods.</p></div>
+    <div class="mech"><div class="ic">⚡</div><h4>Status perks that cost ~£0</h4><p>Skip-the-queue order-ahead, early access to launches, name on the in-store screen. Zero COGS, high felt status — and they pull customers <i>into</i> store.</p></div>
+    <div class="mech"><div class="ic">🤝</div><h4>Attach, not discount</h4><p>Treat-pairings (cookie + coffee) and bring-a-friend rewards generate <i>incremental</i> sales rather than discounting an existing one — reward spend that grows revenue.</p></div>
+  </div>
+  <h2 class="sec">What I need you to weigh in on</h2>
+  <p class="sublede">This is a concept to react to. The structure works on the data, but five calls are genuinely yours to make.</p>
+  <div class="decisions">
+    <div class="d"><div class="q">1 · Spend-based or visit-based tiers?</div><div class="opt">Spend-based (proposed) rewards basket size and protects ATV. Visit-based (P75 = 6, P90 = 13, P95 = 21 visits / 90 days) would drive raw frequency harder — better for the lfl line, but a £2.50 daily-coffee customer climbs as fast as a £6 one.</div><div class="rec">My lean: spend-based primary, with a visit-count "fast-track" to the next tier as a secondary trigger.</div></div>
+    <div class="d"><div class="q">2 · Four tiers, or three?</div><div class="opt">Four gives a clear aspirational top (Reserve) and more steps to climb. Three is simpler to run and communicate at the counter. The data supports either — P75 / P90 / P95 are clean break points.</div><div class="rec">My lean: four — the Reserve badge is where the "illusion of value" pays off hardest.</div></div>
+    <div class="d"><div class="q">3 · Do we keep cash-off at all?</div><div class="opt">Keeping a small, capped cash-off (e.g. lapsed-customer win-back only) is a useful blunt instrument. But every pound of it is a pound of GP. The concept caps it at ~20% of reward value and falling.</div><div class="rec">My lean: keep it only as a win-back lever, never a default earn.</div></div>
+    <div class="d"><div class="q">4 · Rolling window length — 90 days?</div><div class="opt">90 days matches our data window and feels fair. 30 days drives frequency harder but risks demoting good customers after one quiet fortnight (holidays, illness) and feeling punitive.</div><div class="rec">My lean: 90 days, reviewed monthly so status updates feel live, not cliff-edge.</div></div>
+    <div class="d"><div class="q">5 · Does "The Roasters' Club" land?</div><div class="opt">It leans on Freshly Roasted Coffee — a genuine Unique — and the roast-journey naming is ownable. But it's a customer-facing name and needs to sit alongside, not clash with, BrewCrew internally.</div><div class="rec">My lean: strong contender, but worth testing 2–3 names with the team before we commit.</div></div>
+  </div>
+  <div class="note" style="margin-top:26px"><strong>Caveat on the numbers.</strong> COGS and perceived-value figures are working estimates for the concept and the margin model is illustrative — it holds perceived reward value constant and varies only the mix. Before any launch we'd lock COGS against real recipe costings and model the actual current redemption split (£1 / £3 / £5 / free-drink) rather than the assumed 75/25.</div>
+  <footer><strong>Bewiched Limited · internal · DRAFT concept — not live.</strong><br>Behavioural &amp; tier data: live POS via BigQuery (<code>v_sales_details</code>), rolling 90 days to 18 Jun 2026 — 329,831 orders, 127,871 identified (38.8%), 20,762 active app customers. Redemption mix (QTD ~14,323 / ~£34.4k) from the established rewards analysis. Margin model and COGS are illustrative estimates for reaction. Prepared as a strategy concept for board discussion.</footer>
+</div>
+<script>
+const BROWN='#5b3a29', GOLD='#bb8a2e', RED='#c0392b', GREEN='#1f8a4c', MUTED='#8a7a6d', LINE='#e7ddd2';
+Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+Chart.defaults.color = '#5c4f44';
+new Chart(document.getElementById('distChart'), {type:'bar',data:{labels:['P50 £22','P75 £52','P90 £111','P95 £174','P99 £383'],datasets:[{label:'Spend per app customer (£ / 90 days)',data:[22,52,111,174,383],backgroundColor:['#c9a06a','#9c6b3f','#5b3a29','#bb8a2e','#2b1a12'],borderRadius:6,barPercentage:0.7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Where the tier cut-offs sit — Medium £50 · Dark £120 · Reserve £275',color:MUTED,font:{size:12,weight:'normal'}},tooltip:{callbacks:{label:(c)=>'£'+c.parsed.y+' over 90 days'}}},scales:{y:{ticks:{callback:v=>'£'+v},grid:{color:LINE},title:{display:true,text:'£ spend per customer (90 days)'}},x:{grid:{display:false}}}}});
+new Chart(document.getElementById('marginChart'), {type:'bar',data:{labels:['TODAY — cash-led mix','CONCEPT — coffee-led mix'],datasets:[{label:'Real GP cost of cash-off',data:[25.8,6.9],backgroundColor:RED,borderRadius:5,stack:'cost'},{label:'Real COGS cost of free items',data:[1.1,4.0],backgroundColor:BROWN,borderRadius:5,stack:'cost'},{label:'Margin protected vs today',data:[0,16.0],backgroundColor:GREEN,borderRadius:5,stack:'cost'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},title:{display:true,text:'Real cost to deliver the same £34.4k of perceived reward value (QTD, £000s)',color:MUTED,font:{size:12,weight:'normal'}},tooltip:{callbacks:{label:(c)=>c.dataset.label+': £'+c.parsed.x.toFixed(1)+'k'}}},scales:{x:{stacked:true,ticks:{callback:v=>'£'+v+'k'},grid:{color:LINE},max:38,title:{display:true,text:'£000s — QTD'}},y:{stacked:true,grid:{display:false}}}}});
+</script>
+</body>
+</html>
