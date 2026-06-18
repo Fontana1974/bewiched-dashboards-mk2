@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Bewiched App — Usage Dashboard (Vicky)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#f4efe9;--card:#fff;--ink:#2b211b;--muted:#8a7a6d;--line:#e7ddd2;--brown:#5b3a29;
+    --green:#1f8a4c;--red:#c0392b;--amber:#b8860b;--app:#6b4bb0;--appbg:#efeaf8;--cream:#efe6dc;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px;}
+  header h1{margin:0 0 4px;font-size:23px;letter-spacing:-.3px;}
+  header .sub{color:var(--muted);font-size:13.5px;line-height:1.5;}
+  .pill{display:inline-block;background:var(--appbg);color:var(--app);border:1px solid #ddd0f0;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;margin-right:6px;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 2px rgba(80,50,30,.04);}
+  .card .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .card .val{font-size:30px;font-weight:800;margin-top:6px;letter-spacing:-.5px;color:var(--app);}
+  .card .meta{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .kpi-hero{background:linear-gradient(180deg,#f7f3fc,#fff);border:1.5px solid #ddd0f0;}
+  .section-title{font-size:15px;font-weight:700;margin:30px 0 12px;color:var(--brown);}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(80,50,30,.04);}
+  .chart-box{height:330px;position:relative}
+  .note{background:#fff8ec;border:1px solid #f0e0bf;color:#7a5e1e;border-radius:10px;padding:10px 14px;font-size:12.5px;margin:14px 0 0;line-height:1.55;}
+  .note.purple{background:var(--appbg);border-color:#ddd0f0;color:#4a3582;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line);}
+  th:first-child,td:first-child{text-align:left;}
+  thead th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:700;}
+  footer{color:var(--muted);font-size:12px;margin-top:26px;line-height:1.6}
+  a{color:var(--app)}
+  @media(max-width:860px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📱 Bewiched App — Usage Dashboard</h1>
+    <div class="sub">
+      <span class="pill">Prepared for Vicky</span><span class="pill">App project · v1 draft</span>
+      <br>How much of Bewiched trade goes through the app, over time and vs the wider market. Source: live BigQuery POS. <span id="gen"></span>
+    </div>
+  </header>
+
+  <div class="note purple"><b>What counts as an "app" transaction?</b> A till order with a <b>customer name attached</b> (a registered app/loyalty account — these all carry an email). This is the agreed definition for this draft. <b>Caveat for Matt:</b> it captures every order tied to a known customer — that includes <b>in-store loyalty scans</b>, not only "order-ahead via the app". So treat it as <b>app/loyalty-identified transactions</b> (an upper bound on pure mobile order-ahead). It is the same basis as Greggs' published "app scanned" loyalty metric, but not strictly like-for-like with chains that quote "mobile order &amp; pay".</div>
+
+  <div class="cards">
+    <div class="card kpi-hero"><div class="lbl">📱 App share of transactions</div><div class="val" id="kpiPct">—</div><div class="meta" id="kpiPctMeta">latest complete week</div></div>
+    <div class="card"><div class="lbl">App transactions · last week</div><div class="val" style="color:var(--brown)" id="kpiApp">—</div><div class="meta" id="kpiAppMeta">named-customer orders</div></div>
+    <div class="card"><div class="lbl">App share · this quarter</div><div class="val" style="color:var(--brown)" id="kpiQtr">—</div><div class="meta">Q2 2026 to date</div></div>
+    <div class="card"><div class="lbl">Trend vs a year ago</div><div class="val" style="color:var(--green)" id="kpiYoY">—</div><div class="meta">app share, quarter vs same qtr 2024/25</div></div>
+  </div>
+
+  <div class="section-title">App share of transactions — by week (last 26 complete weeks)</div>
+  <div class="panel"><div class="chart-box"><canvas id="wk"></canvas></div>
+    <div class="note">Each point = app transactions ÷ all transactions that week, company-wide. The line is gently climbing — Bewiched's app/loyalty attach has risen from the low-to-mid 30s into the high 30s%.</div>
+  </div>
+
+  <div class="section-title">App share of transactions — by quarter</div>
+  <div class="grid2">
+    <div class="panel"><div class="chart-box"><canvas id="qtr"></canvas></div></div>
+    <div class="panel">
+      <table id="qtrTbl"><thead><tr><th>Quarter</th><th>App txns</th><th>Total txns</th><th>App %</th></tr></thead><tbody></tbody></table>
+      <div class="note" style="margin-top:10px">Steady structural growth: ~33% through 2024 → ~37% in 2025 → ~39–40% in 2026. Q2 2026 is part-quarter (to 14 Jun).</div>
+    </div>
+  </div>
+
+  <div class="section-title">App share by store — quarter to date (1 Apr – 14 Jun 2026)</div>
+  <div class="panel"><div class="chart-box" style="height:520px"><canvas id="store"></canvas></div>
+    <div class="note">Big spread across the estate — the drive-thrus &amp; community sites (Burton, Glenvale, Balsall, Northampton DT) run 50–60%+, while transient/commuter sites (Wellingborough Train Station, Northampton high street, Rushden Lakes) sit nearer 18–27%. A clear adoption-gap map for the app project.</div>
+  </div>
+
+  <div class="section-title">Market comparison — app / mobile / loyalty share of transactions</div>
+  <div class="panel"><div class="chart-box"><canvas id="mkt"></canvas></div>
+    <div class="note"><b>External published figures — not strictly like-for-like.</b> Each chain measures a slightly different thing: Bewiched = app/loyalty-identified transactions (named customer); Greggs = loyalty app "scanned" share; Starbucks = "Mobile Order &amp; Pay" share (US); Pret = digital (Club Pret) transaction share. They're a directional benchmark, not an exact comparison. Costa quotes "&gt;70% of <i>Costa Club</i> transactions via app" — that's a share <i>of loyalty</i>, not of total transactions, so it's excluded from the bar (shown here as a note). Caffè Nero publishes app users (3m+) but no clean transaction-share figure.</div>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const PURPLE="#6b4bb0", BROWN="#5b3a29";
+const pc=(a,t)=>t?Math.round(1000*a/t)/10:0;
+const ddmm=s=>{const[y,m,d]=s.split("-");return d+"/"+m;};
+
+// ===== weekly: [w/c, app, total] =====
+const WK=[["2025-12-15",9327,24716],["2025-12-22",6728,19537],["2025-12-29",7757,22293],["2026-01-05",8794,21572],["2026-01-12",8982,22724],["2026-01-19",9175,23018],["2026-01-26",9352,23653],["2026-02-02",9502,23516],["2026-02-09",9223,23224],["2026-02-16",9048,24242],["2026-02-23",9703,24395],["2026-03-02",9678,24099],["2026-03-09",9470,23821],["2026-03-16",9661,24390],["2026-03-23",9651,23950],["2026-03-30",8958,23875],["2026-04-06",9460,25307],["2026-04-13",9839,24553],["2026-04-20",10132,25659],["2026-04-27",9922,25551],["2026-05-04",10005,25395],["2026-05-11",9937,25244],["2026-05-18",9896,25822],["2026-05-25",9501,26528],["2026-06-01",10355,26336],["2026-06-08",10192,26237]];
+// ===== quarterly: [label, app, total] =====
+const QTR=[["2024 Q1",78904,227788],["2024 Q2",83783,251851],["2024 Q3",88235,272576],["2024 Q4",96053,286467],["2025 Q1",106352,293363],["2025 Q2",111885,303061],["2025 Q3",113354,307426],["2025 Q4",117946,309618],["2026 Q1",119218,301781],["2026 Q2*",110731,286119]];
+// ===== per store QTD: [store, app, total] =====
+const STORE=[["Burton Latimer",4785,7897],["Glenvale Drive Thru",13406,24329],["HOE Balsall Common",4989,9473],["Northampton Drive-Thru",17487,35801],["Rugby",5381,11422],["Rothwell",4631,10021],["Higham Ferrers",3178,6950],["Peterborough Fletton Quays",5237,12805],["Corby",4330,10708],["Attleborough",2375,5979],["Lower Heathcote",2629,6674],["Kettering",5224,14603],["Billing Drive Thru",2138,6059],["Olney",2780,8122],["Market Harborough",4867,14537],["Leamington Parade",4295,13906],["Wellingborough",3826,12506],["Rushden Lakes",6667,24778],["Peterborough Bridge Street",1929,7905],["Northampton",2960,15523],["Wellingborough Train Station",2343,13244]];
+// ===== market: [name, pct, colour] ===== external published figures
+const MKT=[["Pret (digital · Club Pret)",42,"#9aa6b0"],["Bewiched (app/loyalty)",pc(WK[WK.length-1][1],WK[WK.length-1][2]),PURPLE],["Starbucks US (mobile O&P)",31,"#9aa6b0"],["Greggs (loyalty app scanned)",27,"#9aa6b0"]];
+
+// KPIs
+const last=WK[WK.length-1];
+document.getElementById("kpiPct").textContent=pc(last[1],last[2])+"%";
+document.getElementById("kpiPctMeta").textContent="w/c "+ddmm(last[0])+" · "+last[1].toLocaleString("en-GB")+" of "+last[2].toLocaleString("en-GB");
+document.getElementById("kpiApp").textContent=last[1].toLocaleString("en-GB");
+const q26=QTR[QTR.length-1], q25=QTR[5]; // 2026 Q2* vs 2025 Q2
+document.getElementById("kpiQtr").textContent=pc(q26[1],q26[2])+"%";
+const yoy=(pc(q26[1],q26[2])-pc(q25[1],q25[2])).toFixed(1);
+document.getElementById("kpiYoY").textContent=(yoy>=0?"+":"")+yoy+" pts";
+document.getElementById("gen").textContent="Generated "+new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})+".";
+
+const baseY={ticks:{callback:v=>v+"%"},grid:{color:"#eee"},suggestedMin:0};
+// weekly line
+new Chart(wk,{type:"line",data:{labels:WK.map(r=>ddmm(r[0])),datasets:[{label:"App % of transactions",data:WK.map(r=>pc(r[1],r[2])),borderColor:PURPLE,backgroundColor:"rgba(107,75,176,.12)",fill:true,tension:.3,pointRadius:2,borderWidth:2.5}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.y+"% app ("+WK[c.dataIndex][1].toLocaleString("en-GB")+" / "+WK[c.dataIndex][2].toLocaleString("en-GB")+")"}}},scales:{y:{...baseY,suggestedMin:25,suggestedMax:45},x:{grid:{display:false}}}}});
+// quarterly bars
+new Chart(qtr,{type:"bar",data:{labels:QTR.map(r=>r[0]),datasets:[{label:"App % of transactions",data:QTR.map(r=>pc(r[1],r[2])),backgroundColor:QTR.map((r,i)=>i===QTR.length-1?"#b9a6e0":PURPLE),borderRadius:5}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.y+"% app"}}},scales:{y:{...baseY,suggestedMax:45},x:{grid:{display:false}}}}});
+document.querySelector("#qtrTbl tbody").innerHTML=QTR.slice().reverse().map(r=>`<tr><td>${r[0]}</td><td>${r[1].toLocaleString("en-GB")}</td><td>${r[2].toLocaleString("en-GB")}</td><td><b>${pc(r[1],r[2])}%</b></td></tr>`).join("");
+// per store
+const SS=STORE.map(r=>[r[0],pc(r[1],r[2])]).sort((a,b)=>b[1]-a[1]);
+new Chart(store,{type:"bar",data:{labels:SS.map(r=>r[0]),datasets:[{label:"App % (QTD)",data:SS.map(r=>r[1]),backgroundColor:SS.map(r=>r[1]>=45?"#1f8a4c":r[1]>=30?PURPLE:"#c98a3a"),borderRadius:4}]},
+  options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+c.parsed.x+"% of transactions"}}},scales:{x:{...baseY,suggestedMax:65},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+// market
+new Chart(mkt,{type:"bar",data:{labels:MKT.map(r=>r[0]),datasets:[{label:"% of transactions",data:MKT.map(r=>r[1]),backgroundColor:MKT.map(r=>r[2]),borderRadius:5}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" ~"+c.parsed.y+"% of transactions"}}},scales:{y:{...baseY,suggestedMax:50},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+document.getElementById("foot").innerHTML="<b>Definition:</b> app transaction = order with a customer name (registered app/loyalty account) attached · live BigQuery POS (v_sales_details). Includes in-store loyalty scans — see caveat above.<br>"+
+"<b>Market sources</b> (external, published, not like-for-like): "+
+"Starbucks ~31% mobile order &amp; pay (US) — GeekWire / Starbucks earnings 2024–25; "+
+"Pret ~42% digital transactions H1 2023 — Marketing Week; "+
+"Greggs 26.7% loyalty app scanned FY2025 (20.1% 2024) — Greggs results / Statista; "+
+"Costa &gt;70% of Costa Club transactions via app (share of loyalty, not total) — Marketing Week / Econsultancy. "+
+"Figures retrieved Jun 2026. v1 draft for Vicky — not yet in the main dashboard index.";
+</script>
+</body>
+</html>
