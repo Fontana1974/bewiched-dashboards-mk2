@@ -265,19 +265,21 @@ def inject_star(h, store):
 
 def compliance_panel(store):
     st=(STAR.get("stores") or {}).get(store) if STAR else None
-    c=st and st.get("compliance")
+    c=st and st.get("ops")
     if not c: return ""
     return (f'<!-- COMPLIANCE START -->\n'
-            f'<div class="section-title" style="margin-top:4px">🛡️ Compliance — quarter to date</div>\n'
-            f'<div class="cards" style="grid-template-columns:repeat(3,1fr)">'
-            f'<div class="card"><div class="lbl">Coaching checklists</div><div class="val">{c.get("coaching_cs_pct"):g}%</div>'
-            f'<div class="meta">of standard · CS {c.get("coaching_cs_pct"):g}% · Barista {c.get("coaching_barista_pct"):g}%</div></div>'
-            f'<div class="card"><div class="lbl">Open / close checklist</div><div class="val">{c.get("openclose_pct"):g}%</div>'
-            f'<div class="meta">open {c.get("open_pct"):g}% · close {c.get("close_pct"):g}% · {esc(c.get("openclose_detail",""))}</div></div>'
+            f'<div class="section-title" style="margin-top:4px">🛡️ Operations &amp; compliance — quarter to date</div>\n'
+            f'<div class="cards" style="grid-template-columns:repeat(4,1fr)">'
+            f'<div class="card"><div class="lbl">Brand audit</div><div class="val">{c.get("brand_audit"):g}<span style="font-size:15px;color:var(--muted)">/5</span></div>'
+            f'<div class="meta">QTD · feeds Operations</div></div>'
+            f'<div class="card"><div class="lbl">Remote audit</div><div class="val">{c.get("remote_audit"):g}<span style="font-size:15px;color:var(--muted)">/100</span></div>'
+            f'<div class="meta">avg of {c.get("remote_n")} QTD · feeds Operations</div></div>'
+            f'<div class="card"><div class="lbl">Compliance</div><div class="val">{c.get("compliance_pct"):g}%</div>'
+            f'<div class="meta">coaching {c.get("coaching_cs_pct"):g}% + open/close {c.get("openclose_pct"):g}% (50/50) · feeds Operations</div></div>'
             f'<div class="card"><div class="lbl">Return-to-work (RTW)</div><div class="val">{c.get("rtw_pct"):g}%</div>'
-            f'<div class="meta">{esc(c.get("rtw_detail",""))}</div></div>'
+            f'<div class="meta">{esc(c.get("rtw_detail",""))} · feeds People</div></div>'
             f'</div>\n'
-            f'<div class="note" style="margin-top:8px">🛡️ <b>Compliance {c.get("score_pct"):g}%</b> = coaching checklist % + open/close completion % (50/50) — this feeds the <b>Operations</b> star (with F1 race &amp; brand audit). <b>RTW {c.get("rtw_pct"):g}%</b> feeds the <b>People</b> star (with RMS health). Open/close from the Process Street → HRP feed.</div>\n'
+            f'<div class="note" style="margin-top:8px">The <b>Operations</b> star is now an equal-thirds blend of <b>brand audit</b>, <b>remote audit</b> and <b>compliance</b> (coaching {c.get("coaching_cs_pct"):g}% + open/close {c.get("openclose_pct"):g}%, from the Process Street → HRP feed: {esc(c.get("openclose_detail",""))}). The <b>F1 race score below now feeds the Customer star</b> (50/50 with Google health), not Operations. RTW feeds People.</div>\n'
             f'<!-- COMPLIANCE END -->')
 
 def inject_compliance(h, store):
