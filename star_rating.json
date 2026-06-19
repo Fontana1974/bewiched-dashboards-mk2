@@ -1,20 +1,23 @@
 {
- "_method": "Grow composite star rating (TEST — Glenvale only). Each pillar scored 0-5 vs target by linear interpolation between three anchors: floor=0 stars, target=3 stars, stretch=5 stars (clamped 0-5). Anchors — Sales YoY: floor -8%, target +8%, stretch +20%. Customer Google-health: floor 1.66, target 3.32, stretch 5.0. People = 50/50 blend of RMS-health (floor 1.66/target 3.32/stretch 5.0) and RTW% completed (floor 0/target 80/stretch 100). OPERATIONS = equal-thirds blend of (a) avg F1 race score (floor 320/target 190/stretch 130, lower=better), (b) brand-audit QTD /5 (floor 4.0/target 4.5/stretch 5.0), and (c) COMPLIANCE = coaching-checklist % of standard (floor 50/target 85/stretch 100). Composite = simple average of the four pillars. All quarter-to-date (Q2 2026, 1 Apr-14 Jun). NOTE: open/close checklist % is NOT yet in compliance — the HRP Process St open/close tabs are live same-day snapshots (time-of-day dependent), not a windowed %; compliance v1 = coaching only until a proper open/close completion-rate feed exists. Glenvale: F1 270->1.15, audit 4.67->3.68, compliance(coaching 80.6%)->2.62 => Operations 2.48; RMS 4.14->3.98, RTW 45%->1.69 => People 2.83.",
- "_window": "quarter-to-date · 1 Apr – 14 Jun 2026",
+ "_method": "Grow composite star rating (TEST — Glenvale only). Each pillar scored 0-5 vs target by linear interpolation between three anchors: floor=0 stars, target=3 stars, stretch=5 stars (clamped 0-5). Anchors — Sales YoY: floor -8%, target +8%, stretch +20%. Customer Google-health: floor 1.66, target 3.32, stretch 5.0. People = 50/50 blend of RMS-health (floor 1.66/target 3.32/stretch 5.0) and RTW% completed (floor 0/target 80/stretch 100). OPERATIONS = equal-thirds blend of (a) avg F1 race score (floor 320/target 190/stretch 130, lower=better), (b) brand-audit QTD /5 (floor 4.0/target 4.5/stretch 5.0), and (c) COMPLIANCE. COMPLIANCE = 50/50 blend of coaching-checklist % of standard and open/close-checklist completion %, normalised on floor 50/target 85/stretch 100. Composite = simple average of the four pillars. All quarter-to-date (Q2 2026). Glenvale: F1 270->1.15, audit 4.67->3.68, compliance 90%(coaching 80.6% + open/close ~100%)->3.71 => Operations 2.85; RMS 4.14->3.98, RTW 45%->1.69 => People 2.83.",
+ "_window": "quarter-to-date · 1 Apr – 14 Jun 2026 (open/close: 20 Apr – 14 Jun)",
  "stores": {
   "Glenvale Drive Thru": {
    "composite": 3.6,
    "pillars": [
     {"name": "Sales", "star": 5.0, "qtd": "+33.3% YoY", "target": "target +8%"},
-    {"name": "Operations", "star": 2.5, "qtd": "F1 270 + audit 4.67 + compliance 81%", "target": "equal-thirds: F1·audit·compliance"},
+    {"name": "Operations", "star": 2.8, "qtd": "F1 270 + audit 4.67 + compliance 90%", "target": "equal-thirds: F1·audit·compliance"},
     {"name": "Customer", "star": 3.9, "qtd": "4.07 Google health", "target": "target 3.32"},
     {"name": "People", "star": 2.8, "qtd": "4.14 RMS + 45% RTW", "target": "RMS health + RTW% (50/50)"}
    ],
    "compliance": {
-    "score_pct": 80.6,
+    "score_pct": 90,
     "coaching_cs_pct": 80.6,
     "coaching_barista_pct": 80.6,
-    "openclose_status": "Open check completed today; close pending (evening). Live same-day snapshot only — no windowed % fed yet.",
+    "open_pct": 100,
+    "close_pct": 100,
+    "openclose_pct": 100,
+    "openclose_detail": "57 open & 56 close checklists completed vs 56 trading days (20 Apr–14 Jun) — done on ~every day. Source: Process Street → HRP 'Process St - Data'",
     "rtw_pct": 45,
     "rtw_detail": "5 of 11 sickness absences with a return-to-work logged (QTD)"
    }

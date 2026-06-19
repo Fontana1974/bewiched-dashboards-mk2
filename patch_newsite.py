@@ -270,14 +270,14 @@ def compliance_panel(store):
     return (f'<!-- COMPLIANCE START -->\n'
             f'<div class="section-title" style="margin-top:4px">🛡️ Compliance — quarter to date</div>\n'
             f'<div class="cards" style="grid-template-columns:repeat(3,1fr)">'
-            f'<div class="card"><div class="lbl">Coaching checklists</div><div class="val">{c.get("score_pct"):g}%</div>'
-            f'<div class="meta">of standard · CS {c.get("coaching_cs_pct"):g}% · Barista {c.get("coaching_barista_pct"):g}% (feeds the Operations star)</div></div>'
+            f'<div class="card"><div class="lbl">Coaching checklists</div><div class="val">{c.get("coaching_cs_pct"):g}%</div>'
+            f'<div class="meta">of standard · CS {c.get("coaching_cs_pct"):g}% · Barista {c.get("coaching_barista_pct"):g}%</div></div>'
+            f'<div class="card"><div class="lbl">Open / close checklist</div><div class="val">{c.get("openclose_pct"):g}%</div>'
+            f'<div class="meta">open {c.get("open_pct"):g}% · close {c.get("close_pct"):g}% · {esc(c.get("openclose_detail",""))}</div></div>'
             f'<div class="card"><div class="lbl">Return-to-work (RTW)</div><div class="val">{c.get("rtw_pct"):g}%</div>'
-            f'<div class="meta">{esc(c.get("rtw_detail",""))} (feeds the People star)</div></div>'
-            f'<div class="card"><div class="lbl">Open / close checklist</div><div class="val" style="font-size:15px;color:var(--muted)">snapshot only</div>'
-            f'<div class="meta">{esc(c.get("openclose_status",""))}</div></div>'
+            f'<div class="meta">{esc(c.get("rtw_detail",""))}</div></div>'
             f'</div>\n'
-            f'<div class="note" style="margin-top:8px">Compliance now feeds the Operations star (coaching %) and People star (RTW %). Open/close completion is shown for context but is not yet in the score — the HRP open/close tabs are live same-day snapshots, not a windowed %.</div>\n'
+            f'<div class="note" style="margin-top:8px">🛡️ <b>Compliance {c.get("score_pct"):g}%</b> = coaching checklist % + open/close completion % (50/50) — this feeds the <b>Operations</b> star (with F1 race &amp; brand audit). <b>RTW {c.get("rtw_pct"):g}%</b> feeds the <b>People</b> star (with RMS health). Open/close from the Process Street → HRP feed.</div>\n'
             f'<!-- COMPLIANCE END -->')
 
 def inject_compliance(h, store):
