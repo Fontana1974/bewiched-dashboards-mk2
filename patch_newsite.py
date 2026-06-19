@@ -263,6 +263,30 @@ def inject_star(h, store):
     if 'class="kpws"' in h: return h.replace('<div class="kpws">', sc+'\n  <div class="kpws">', 1)
     return re.sub(r'(</header>)', lambda m: m.group(1)+"\n  "+sc, h, count=1)
 
+def compliance_panel(store):
+    st=(STAR.get("stores") or {}).get(store) if STAR else None
+    c=st and st.get("compliance")
+    if not c: return ""
+    return (f'<!-- COMPLIANCE START -->\n'
+            f'<div class="section-title" style="margin-top:4px">🛡️ Compliance — quarter to date</div>\n'
+            f'<div class="cards" style="grid-template-columns:repeat(3,1fr)">'
+            f'<div class="card"><div class="lbl">Coaching checklists</div><div class="val">{c.get("score_pct"):g}%</div>'
+            f'<div class="meta">of standard · CS {c.get("coaching_cs_pct"):g}% · Barista {c.get("coaching_barista_pct"):g}% (feeds the Operations star)</div></div>'
+            f'<div class="card"><div class="lbl">Return-to-work (RTW)</div><div class="val">{c.get("rtw_pct"):g}%</div>'
+            f'<div class="meta">{esc(c.get("rtw_detail",""))} (feeds the People star)</div></div>'
+            f'<div class="card"><div class="lbl">Open / close checklist</div><div class="val" style="font-size:15px;color:var(--muted)">snapshot only</div>'
+            f'<div class="meta">{esc(c.get("openclose_status",""))}</div></div>'
+            f'</div>\n'
+            f'<div class="note" style="margin-top:8px">Compliance now feeds the Operations star (coaching %) and People star (RTW %). Open/close completion is shown for context but is not yet in the score — the HRP open/close tabs are live same-day snapshots, not a windowed %.</div>\n'
+            f'<!-- COMPLIANCE END -->')
+
+def inject_compliance(h, store):
+    h=re.sub(r'\s*<!-- COMPLIANCE START -->.*?<!-- COMPLIANCE END -->', '', h, flags=re.S)
+    cp=compliance_panel(store)
+    if not cp: return h
+    # insert at the very top of the Op's Excellence tab (id="tab-f1")
+    return re.sub(r'(<section class="tab-panel"[^>]*id="tab-f1">)', lambda m: m.group(1)+"\n  "+cp, h, count=1)
+
 def patch(fn,store,coach,mature):
     h=open(fn,encoding='utf-8').read(); log=[]
     def sub(pat,repl,n_expected,label,flags=0):
@@ -278,8 +302,9 @@ def patch(fn,store,coach,mature):
     else:
         sub(r'</style>', PILLAR_CSS+"\n</style>",1,"pillar CSS")
         sub(r'(</header>)', r'\1\n'+pillars(store).replace('\\','\\\\'),1,"pillar block")
-    # 1b) TEST Grow star rating (gated to stores in star_rating.json — Glenvale only). Idempotent + self-removing.
+    # 1b) TEST Grow star rating + compliance panel (gated to stores in star_rating.json — Glenvale only). Idempotent + self-removing.
     h=inject_star(h,store)
+    h=inject_compliance(h,store)
     # 2) actbox value + week
     sub(r'(Last week actual sales · )w/c 1 Jun(</div><div class="ab-val">)£[\d,]+(</div>)',
         rf'\g<1>{NEWWK}\g<2>{gbp(LW)}\g<3>',1,"actbox £ + week")
