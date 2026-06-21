@@ -1,0 +1,9 @@
+{
+ "Glenvale Drive Thru": {
+  "remote_audit": 89, "remote_n": 10,
+  "coaching_cs_pct": 80.6, "coaching_barista_pct": 80.6,
+  "open_pct": 100, "close_pct": 100, "openclose_pct": 100,
+  "openclose_detail": "57 open & 56 close vs 56 trading days (20 Apr–14 Jun), Process Street feed",
+  "rtw_detail": "RTW% from HRP sickness/RTW (Glenvale, QTD)"
+ }
+}

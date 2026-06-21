@@ -98,11 +98,11 @@ const pc=(a,t)=>t?Math.round(1000*a/t)/10:0;
 const ddmm=s=>{const[y,m,d]=s.split("-");return d+"/"+m;};
 
 // ===== weekly: [w/c, app, total] =====
-const WK=[["2025-12-15", 9327, 24716], ["2025-12-22", 6728, 19537], ["2025-12-29", 7757, 22293], ["2026-01-05", 8794, 21572], ["2026-01-12", 8982, 22724], ["2026-01-19", 9175, 23018], ["2026-01-26", 9352, 23653], ["2026-02-02", 9502, 23516], ["2026-02-09", 9223, 23224], ["2026-02-16", 9048, 24242], ["2026-02-23", 9703, 24395], ["2026-03-02", 9678, 24099], ["2026-03-09", 9470, 23821], ["2026-03-16", 9661, 24390], ["2026-03-23", 9651, 23950], ["2026-03-30", 8958, 23875], ["2026-04-06", 9460, 25307], ["2026-04-13", 9839, 24553], ["2026-04-20", 10132, 25659], ["2026-04-27", 9922, 25551], ["2026-05-04", 10005, 25395], ["2026-05-11", 9937, 25244], ["2026-05-18", 9896, 25822], ["2026-05-25", 9501, 26528], ["2026-06-01", 10355, 26336], ["2026-06-08", 10192, 26237]];
+const WK=__WK__;
 // ===== quarterly: [label, app, total] =====
-const QTR=[["2024 Q1", 78903, 227788], ["2024 Q2", 83783, 251851], ["2024 Q3", 88235, 272576], ["2024 Q4", 96054, 286467], ["2025 Q1", 106351, 293363], ["2025 Q2", 111885, 303061], ["2025 Q3", 113354, 307426], ["2025 Q4", 117947, 309618], ["2026 Q1", 119218, 301781], ["2026 Q2*", 105457, 273242]];
+const QTR=__QTR__;
 // ===== per store QTD: [store, app, total] =====
-const STORE=[["Burton Latimer", 4785, 7897], ["Glenvale Drive Thru", 13406, 24329], ["HOE Balsall Common", 4989, 9473], ["Northampton Drive-Thru", 17487, 35801], ["Rugby", 5381, 11422], ["Rothwell", 4631, 10021], ["Higham Ferrers", 3178, 6950], ["Peterborough Fletton Quays", 5237, 12805], ["Corby", 4330, 10708], ["Attleborough", 2375, 5979], ["Lower Heathcote", 2629, 6674], ["Kettering", 5224, 14603], ["Billing Drive Thru", 2138, 6059], ["Olney", 2780, 8122], ["Market Harborough", 4867, 14537], ["Leamington Parade", 4295, 13906], ["Wellingborough", 3826, 12506], ["Rushden Lakes", 6667, 24778], ["Peterborough Bridge Street", 1929, 7905], ["Northampton", 2960, 15523], ["Wellingborough Train Station", 2343, 13244]];
+const STORE=__STORE__;
 // ===== market: [name, pct, colour] ===== external published figures
 const MKT=[["Pret (digital · Club Pret)",42,"#9aa6b0"],["Bewiched (app/loyalty)",pc(WK[WK.length-1][1],WK[WK.length-1][2]),PURPLE],["Starbucks US (mobile O&P)",31,"#9aa6b0"],["Greggs (loyalty app scanned)",27,"#9aa6b0"]];
 
@@ -134,7 +134,7 @@ new Chart(mkt,{type:"bar",data:{labels:MKT.map(r=>r[0]),datasets:[{label:"% of t
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" ~"+c.parsed.y+"% of transactions"}}},scales:{y:{...baseY,suggestedMax:50},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
 
 // ===== app rewards (named product lines): [reward, count, value£] =====
-const REWARDS=[["£1 Off", 8304, 8296], ["£3 Off", 2013, 6039], ["£5 off", 1577, 7885], ["Free Large Latte or Cappuccino", 1107, 4738], ["Free Regular Latte or Cappuccino", 696, 2843], ["£10 off", 345, 3450], ["Free Flat White", 281, 1107]].sort((a,b)=>b[1]-a[1]);
+const REWARDS=__REWARDS__.sort((a,b)=>b[1]-a[1]);
 const rTot=REWARDS.reduce((s,r)=>s+r[1],0), rVal=REWARDS.reduce((s,r)=>s+r[2],0);
 document.getElementById("rewTot").innerHTML="<b>"+rTot.toLocaleString("en-GB")+"</b> reward redemptions · <b>£"+rVal.toLocaleString("en-GB")+"</b> of value given this quarter.";
 new Chart(rew,{type:"bar",data:{labels:REWARDS.map(r=>r[0]),datasets:[{label:"Redemptions",data:REWARDS.map(r=>r[1]),backgroundColor:REWARDS.map(r=>r[0].toLowerCase().startsWith("free")?"#1f8a4c":"#6b4bb0"),borderRadius:4}]},
