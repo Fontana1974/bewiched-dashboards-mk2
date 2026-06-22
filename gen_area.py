@@ -56,7 +56,7 @@ def _avf_rows(stores,R):
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
         a=ACT.get(s)
         if not isinstance(a,list): continue
-        fc=a[1] or 0; sched=a[2] or 0; used=a[3] or 0; act=R[s]['lw26']; tcph=R[s].get('cph',55)
+        fc=a[1] or 0; sched=a[2] or 0; used=a[3] or 0; act=R[s]['lw26']; tcph=(OVR[s].get('cph') if isinstance(OVR.get(s),dict) and OVR[s].get('cph') else R[s].get('cph',55))
         if isinstance(OVR.get(s),dict) and OVR[s].get('used_lastwk') is not None: used=OVR[s]['used_lastwk']
         sfc+=fc; sa+=act; ssc+=sched; su+=used
         sv=round(100*(act/fc-1)) if fc else None
@@ -357,7 +357,7 @@ def build(coach):
         return round(ly*(1+y/100)) if (ly>0 and y is not None) else R[s]['lw26']
     sumly=[0,0,0]; sumf=[0,0,0]; sumh=[0,0,0]; sumlw=0; fcst_rows=""
     for s in sorted(stores,key=lambda x:-R[x]['lw26']):
-        cph=R[s].get('cph',55); lw=R[s]['lw26']; sumlw+=lw
+        cph=(OVR[s].get('cph') if isinstance(OVR.get(s),dict) and OVR[s].get('cph') else R[s].get('cph',55)); lw=R[s]['lw26']; sumlw+=lw
         cells=f'<td style="text-align:left">{SHORT[s]}</td><td>£{cph}</td><td>{GBP(lw)}</td>'
         for wi in range(3):
             ly=R[s].get('ly',[0,0,0,0])[wi+1]; f=_fc(s,wi+1); h=round(f/cph) if cph else 0
