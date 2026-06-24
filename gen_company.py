@@ -4,6 +4,8 @@ from statistics import mean,median
 A=json.load(open('allstores.json')); REC=A['rec']; champ=A['champ']; CATS=A['cats']
 try: DPFOOD=json.load(open('daypart_food.json'))
 except FileNotFoundError: DPFOOD={}
+try: PEAK=json.load(open('mix_peaktime.json'))
+except Exception: PEAK={}
 try: QBENCH=json.load(open('queue_benchmark.json'))
 except FileNotFoundError: QBENCH=None
 def qbench_line(scope):
@@ -194,10 +196,16 @@ def build():
         mix_pp=round(100*csl/tcl-100*psl/tpl,1) if swp else None
         cap_pp=round(mean([R[s]['mix'][c]['cap'] for s in swp])-mean([R[s]['mix_prev'][c]['cap'] for s in swp]),1) if swp else None
         amix[c]={'mix':round(100*cs/area_sales,1),'cap_avg':round(mean(caps),1),'mix_pp':mix_pp,'cap_pp':cap_pp,'mix_lw':round(100*cs_lw/area_lw_sales,1) if area_lw_sales else 0,'cap_lw':round(mean(caps_lw),1) if caps_lw else 0}
+    DPICON={"Morning":"🌅","Lunch":"🥪","Afternoon":"☕","Evening":"🌙"}
+    _PKC=(PEAK.get("categories") or {})
+    def _peakcell(c):
+        p=_PKC.get(c)
+        if not p: return '<td style="text-align:left;color:#9a8a7c">—</td>'
+        return f'<td style="text-align:left"><b>{DPICON.get(p["peak"],"")} {p["peak"]}</b><br><span style="color:#6b5a47;font-size:11px">{p["share"]}% of its sales</span></td>'
     mar=""
     for c in CATS:
         caps=[(s,R[s]['mix'][c]['cap']) for s in stores]; best=max(caps,key=lambda x:x[1]); worst=min(caps,key=lambda x:x[1])
-        mar+=(f'<tr><td>{c}</td><td><b>{amix[c]["mix"]}%</b> <span style="color:#9a8a7c;font-size:10px">4-wk run rate</span>{_mv(amix[c]["mix"],amix[c]["mix_pp"])}<br><span style="color:#6b5a47;font-size:11px">last week {amix[c]["mix_lw"]}%</span></td><td><b>{amix[c]["cap_avg"]}%</b> <span style="color:#9a8a7c;font-size:10px">4-wk run rate</span>{_mv(amix[c]["cap_avg"],amix[c]["cap_pp"],True)}<br><span style="color:#6b5a47;font-size:11px">last week {amix[c]["cap_lw"]}%</span></td><td style="text-align:left;color:#1f8a4c">{SHORT[best[0]]} {best[1]}%</td><td style="text-align:left;color:#c0392b">{SHORT[worst[0]]} {worst[1]}%</td></tr>')
+        mar+=(f'<tr><td>{c}</td><td><b>{amix[c]["mix"]}%</b> <span style="color:#9a8a7c;font-size:10px">4-wk run rate</span>{_mv(amix[c]["mix"],amix[c]["mix_pp"])}<br><span style="color:#6b5a47;font-size:11px">last week {amix[c]["mix_lw"]}%</span></td><td><b>{amix[c]["cap_avg"]}%</b> <span style="color:#9a8a7c;font-size:10px">4-wk run rate</span>{_mv(amix[c]["cap_avg"],amix[c]["cap_pp"],True)}<br><span style="color:#6b5a47;font-size:11px">last week {amix[c]["cap_lw"]}%</span></td>{_peakcell(c)}<td style="text-align:left;color:#1f8a4c">{SHORT[best[0]]} {best[1]}%</td><td style="text-align:left;color:#c0392b">{SHORT[worst[0]]} {worst[1]}%</td></tr>')
     caphdr="".join(f'<th>{c.split(" ")[0]}</th>' for c in CATS)
     capmat=""
     for s in stores:
@@ -209,6 +217,16 @@ def build():
     foodcap=amix['Food']['cap_avg']
     mix_note=f"Hot drinks anchor the mix; <b>Food capture sits at ~{foodcap}%</b> company-wide — the clearest add-on prize. The small note after each figure shows the change vs four weeks ago (like-for-like): capture changes are coloured green (up) / red (down); mix-share changes are neutral grey."
     mix_focus="Food attach is the company-wide prize — prompt a food add-on at the till where the Food column shows red."
+    # ---- bakery-by-product peak selling time (mix_peaktime.json) ----
+    _PKB=[b for b in (PEAK.get("bakery") or []) if not b.get("sparse")]
+    peak_window=PEAK.get("_window","recent weeks")
+    bakery_peak_rows="".join(
+        f'<tr><td style="text-align:left">{b["name"]}</td>'
+        f'<td style="text-align:left"><b>{DPICON.get(b["peak"],"")} {b["peak"]}</b> <span class="mini">~{b["hour"]}</span></td>'
+        f'<td>{b["units"]:,}</td><td>{b["share"]}%</td></tr>' for b in _PKB)
+    if not bakery_peak_rows:
+        bakery_peak_rows='<tr><td colspan="4" style="text-align:left;color:#9a8a7c">No bakery peak-time data this run.</td></tr>'
+
     # ---- F1 ----
     f1tbl=""
     for s in sorted(stores,key=lambda x:R[x]['f1'][0]):
@@ -424,7 +442,7 @@ def build():
      "{{LW_TABLE}}":lw_rows,"{{LW_TOTAL}}":lw_total,"{{SALESTBL}}":salestbl,"{{DPG_ROWS}}":dpg_rows,"{{DOWG_ROWS}}":dowg_rows,
      "{{DPG_NOTE}}":dpg_note,"{{DOWG_NOTE}}":dowg_note,"{{SALES_FOCUS}}":sales_focus,"{{DAYPART_FOOD}}":daypart_food,"{{DAYPART_FOOD_NOTE}}":daypart_food_note,
      "{{YJS}}":json.dumps(yjs),"{{OUTJS}}":json.dumps(outjs),
-     "{{MIX_AREA_ROWS}}":mar,"{{CAPHDR}}":caphdr,"{{CAPMAT}}":capmat,"{{MIX_DS}}":mix_ds,"{{MIX_LBLS}}":mix_lbls,"{{MIX_NOTE}}":mix_note,"{{MIX_FOCUS}}":mix_focus,
+     "{{MIX_AREA_ROWS}}":mar,"{{CAPHDR}}":caphdr,"{{CAPMAT}}":capmat,"{{MIX_DS}}":mix_ds,"{{MIX_LBLS}}":mix_lbls,"{{MIX_NOTE}}":mix_note,"{{MIX_FOCUS}}":mix_focus,"{{BAKERY_PEAK_ROWS}}":bakery_peak_rows,"{{PEAK_WINDOW}}":peak_window,
      "{{F1TBL}}":f1tbl,"{{F1_FIN_DS}}":f1_fin_ds,"{{F1_FIN_LBLS}}":f1_fin_lbls,"{{F1_CHAMP_AVG}}":str(f1_champ_avg),"{{AVG_FIN2}}":str(avg_fin),
      "{{F1_TOP}}":f1_top,"{{F1_TOP_META}}":f1_top_meta,"{{CON_HTML}}":con_html,"{{CON_NOTE}}":con_note,"{{DRV_ROWS}}":drv_rows,"{{F1_NOTE}}":f1_note,"{{F1_FOCUS}}":f1_focus,
      "{{RMS_ROWS}}":rms_rows,"{{HR_ROWS}}":hr_rows,"{{AREA_RMS}}":str(area_rms),"{{AREA_SICK}}":str(area_sick),"{{AREA_SICKFS}}":str(area_sickfs),"{{AREA_LATE}}":str(area_late),

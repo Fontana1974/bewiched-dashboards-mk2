@@ -267,15 +267,20 @@
     <div class="grid2">
       <div class="panel"><div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Area sales mix by category</div><div class="chart-box" style="height:300px"><canvas id="mixChart"></canvas></div></div>
       <div class="panel">
-        <table><thead><tr><th>Category</th><th>Area mix %</th><th>Avg capture %</th><th>Best</th><th>Weakest</th></tr></thead>
+        <table><thead><tr><th>Category</th><th>Area mix %</th><th>Avg capture %</th><th>Peak time</th><th>Best</th><th>Weakest</th></tr></thead>
         <tbody>{{MIX_AREA_ROWS}}</tbody></table>
-        <div class="note"><b>Capture %</b> = share of transactions including the category (attach rate). Each row shows the <b>4-week run rate</b> with <b>last week</b> beneath it. {{MIX_NOTE}}</div>
+        <div class="note"><b>Capture %</b> = share of transactions including the category (attach rate). Each row shows the <b>4-week run rate</b> with <b>last week</b> beneath it. <b>Peak time</b> = the daypart each category sells most company-wide ({{PEAK_WINDOW}}). {{MIX_NOTE}}</div>
       </div>
     </div>
     <div class="section-title" style="margin-top:22px">Capture % by store — green = ahead of area average, red = behind</div>
     <div class="panel">
       <div style="overflow-x:auto"><table class="capmat"><thead><tr><th>Store</th>{{CAPHDR}}</tr></thead><tbody>{{CAPMAT}}</tbody></table></div>
       <div class="note">Each cell is the store's attach rate for the category vs the company average.</div>
+    </div>
+    <div class="section-title" style="margin-top:22px">🧁 Bakery by product — when each line sells</div>
+    <div class="panel">
+      <div style="overflow-x:auto"><table><thead><tr><th>Bakery product</th><th>Peak selling time</th><th>Units (4 wks)</th><th>Share at peak</th></tr></thead><tbody>{{BAKERY_PEAK_ROWS}}</tbody></table></div>
+      <div class="note">Company-wide, {{PEAK_WINDOW}}. <b>Peak selling time</b> is the daypart (with typical clock-hour) when the product sells most; <b>share at peak</b> is the portion of that product’s own sales taken in that daypart. Ranked by units sold. Low-volume lines (under ~10 a week) are left off as too sparse to call a clear peak.</div>
     </div>
     <div class="focus amber"><span class="ar">→</span>{{MIX_FOCUS}}</div>
   </section>
