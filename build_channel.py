@@ -1,1 +1,0 @@
-/tmp/bc_b64.txt
