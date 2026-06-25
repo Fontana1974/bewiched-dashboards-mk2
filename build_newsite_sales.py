@@ -18,7 +18,7 @@ HOURS  = {"Morning":"5am–11am","Lunch":"11am–2pm","Afternoon":"2pm–5pm","E
 DP_ORDER = ["Morning","Lunch","Afternoon","Evening"]
 DOW_MAP = {2:"Mon",3:"Tue",4:"Wed",5:"Thu",6:"Fri",7:"Sat",1:"Sun"}
 DOW_ORDER = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-STORES = ["Olney","Attleborough","Billing Drive Thru","Glenvale Drive Thru","Northampton Drive-Thru"]
+STORES = ["Olney","Attleborough","Billing Drive Thru","Glenvale Drive Thru","Northampton Drive-Thru","Leamington Parade"]
 NEW_MIN = 80           # mature-site "new this year" threshold (£ in 4wk)
 EXCL = ["(Copy)", " SL"]
 WEEKS = 4              # window = 4 complete weeks; DOW average divisor (a typical weekday)

@@ -22,9 +22,14 @@ try: SENT=json.load(open('newsite_sentiment.json'))   # review snippets / RMS tr
 except FileNotFoundError: SENT={}
 try: NS=json.load(open('newsite_sales.json'))          # per-store Sales tab: DOW + daypart + Food&Bakery traction (BigQuery, headless)
 except FileNotFoundError: NS={}
-try: TXQ=json.load(open('txquality_glenvale.json'))   # Glenvale DT-vs-Dine-In transaction quality (BigQuery, last 28d, register split)
-except (FileNotFoundError, ValueError): TXQ=None
-TXQ_STORES={'Glenvale Drive Thru'}
+def _load_txq(fn):
+    try: return json.load(open(fn))
+    except (FileNotFoundError, ValueError): return None
+# Per-store Transaction-quality data (last-28-day BigQuery channel split). Glenvale = Drive Thru vs Dine In
+# (register split); Leamington Parade = Eat-in vs Takeaway (eatin_takeaway split, no drive-thru lane).
+TXQ_BY_STORE={'Glenvale Drive Thru':_load_txq('txquality_glenvale.json'),
+              'Leamington Parade':_load_txq('txquality_leamington.json')}
+TXQ_STORES={k for k,v in TXQ_BY_STORE.items() if v}
 try: STAR=json.load(open('star_rating.json'))          # TEST: Grow composite star rating, gated to stores in this file (Glenvale only for now)
 except FileNotFoundError: STAR={}
 T_RMS=50*13/21.0  # per-store quarterly RMS submission target (area method / store)
@@ -52,6 +57,7 @@ STORES=[
  ('Billing_DriveThru_Forecast.html','Billing Drive Thru','Rich',False),
  ('Northampton_DriveThru_Forecast.html','Northampton-DriveThru','Rich',True),  # key fixed below
  ('Glenvale_Forecast.html','Glenvale Drive Thru','Ian',True),
+ ('Leamington_Parade_Forecast.html','Leamington Parade','Rich',True),  # parade cafe (not drive-thru); eat-in vs takeaway
 ]
 # fix NDT key
 STORES=[(f,('Northampton-DriveThru' and 'Northampton Drive-Thru') if k=='Northampton-DriveThru' else k,c,m) for (f,k,c,m) in STORES]
@@ -151,61 +157,52 @@ def _chip(pct):
     up=pct>=0; bg="#eef3ee" if up else "#fbeae8"; col="var(--green)" if up else "var(--red)"; sign="+" if up else MINUS
     return f'<span style="display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:{bg};color:{col};font-weight:600">{sign}{abs(pct)}%</span>'
 
-def txquality_section():
-    """Glenvale 'Transaction quality - Drive Thru vs Dine In' block, rebuilt from
-    txquality_glenvale.json (build_txquality_glenvale.py / last-28-day BigQuery register split).
-    AUTO from data: per-channel ATV / txns-day / %-of-store / food-attach, and the Channel x Daypart table.
-    STATIC (manual targets / April-2026 P&L, clearly labelled): ATV £6.80 target, PAT £/day current+target,
-    food-attach targets, the PAT tracker cards and the retail-attach coaching note."""
-    t=TXQ; win=t.get("_window","last 28 days"); ch=t["channels"]; dt=ch["DT"]; di=ch["DI"]
-    tgt=t.get("atv_target",6.80); S=t.get("static",{})
-    def acol(c): return "#1c6b3d" if c["atv_target_met"] else "#c0392b"
-    def facol(c): return "#1c6b3d" if c["fa_met"] else ("#b7570a" if c["food_attach"]>=c["fa_target"]-3 else "#c0392b")
-    dt_meta=(f'{dt["txns_day"]:g} txns/day · {dt["pct_store"]:g}% of store<br>'
-             + ("above £%.2f target ✓"%tgt if dt["atv_target_met"] else "target £%.2f · gap −£%.2f"%(tgt,tgt-dt["atv"])))
-    di_meta=(f'{di["txns_day"]:g} txns/day · {di["pct_store"]:g}% of store<br>'
-             + ("above £%.2f target ✓"%tgt if di["atv_target_met"] else "target £%.2f · gap −£%.2f"%(tgt,tgt-di["atv"])))
-    fa_gap=round(di["food_attach"]-dt["food_attach"],1)
-    cards=(f'<div class="cards" style="grid-template-columns:repeat(4,1fr)">'
-           f'<div class="card" style="border-top:3px solid #457b9d"><div class="lbl">🚗 Drive Thru — ATV</div>'
-           f'<div class="val" style="color:{acol(dt)}">£{dt["atv"]:.2f}</div><div class="meta">{dt_meta}</div></div>'
-           f'<div class="card" style="border-top:3px solid #2a9d8f"><div class="lbl">☕ Dine In — ATV</div>'
-           f'<div class="val" style="color:{acol(di)}">£{di["atv"]:.2f}</div><div class="meta">{di_meta}</div></div>'
-           f'<div class="card" style="border-top:3px solid #e63946"><div class="lbl">🥐 DT food attach</div>'
-           f'<div class="val" style="color:{facol(dt)}">{dt["food_attach"]:g}%</div>'
-           f'<div class="meta">vs Dine In {di["food_attach"]:g}% · {fa_gap:+g}pp<br>target {dt["fa_target"]:g}% · biggest lever</div></div>'
-           f'<div class="card" style="border-top:3px solid #2a9d8f"><div class="lbl">🥐 Dine In food attach</div>'
-           f'<div class="val" style="color:{facol(di)}">{di["food_attach"]:g}%</div>'
-           f'<div class="meta">target {di["fa_target"]:g}% · {"on target ✓" if di["fa_met"] else "just below"}<br>protect &amp; hold</div></div></div>')
-    # data-driven lead (accurate vs live numbers): ATV vs target + the food-attach lever
-    both_atv = dt["atv_target_met"] and di["atv_target_met"]
-    lever=(f'<b>The lever is Drive-Thru food attach.</b> '
-           + (f'Both channels clear the £{tgt:.2f} ATV target (DT £{dt["atv"]:.2f}, Dine-In £{di["atv"]:.2f}), so value-per-sale isn\'t the gap — attach is. '
-              if both_atv else
-              f'Drive-Thru ATV is £{dt["atv"]:.2f} vs the £{tgt:.2f} target. ')
-           + f'DT food attach is {dt["food_attach"]:g}% against the {dt["fa_target"]:g}% target ({fa_gap:+g}pp vs Dine-In) — lifting it to {dt["fa_target"]:g}% means suggesting a pastry on more morning-commuter coffees, without touching wages or prices.')
-    lead=(f'<div class="focus amber" style="background:#fff8f0;border-color:#f4a261;color:#444;font-size:12px;line-height:1.7;margin-top:0">'
-          f'<span class="ar">→</span>{lever}</div>')
-    # channel x daypart table
-    trs=""
-    grid=t.get("grid",[]); bydp={}
-    for r in grid: bydp.setdefault(r["daypart"],{})[r["channel"]]=r
-    CHIP={"DT":("#457b9d","Drive Thru"),"DI":("#2a9d8f","Dine In")}
+def txquality_section(store):
+    """Generic 'Transaction quality' block, rebuilt from this store's txquality_<store>.json
+    (last-28-day BigQuery channel split). Works for any two-channel split — Drive Thru vs Dine In
+    (Glenvale) or Eat-in vs Takeaway (Leamington Parade). AUTO from data: per-channel ATV / txns-day /
+    %-of-store / food attach + the Channel x Daypart table. STATIC (manual targets / latest-month P&L,
+    clearly labelled): ATV target, food-attach targets, the PAT tracker cards, the retail-attach note."""
+    t=TXQ_BY_STORE.get(store)
+    if not t: return ""
+    win=t.get("_window","last 28 days"); tgt=t.get("atv_target",6.80); S=t.get("static",{})
+    ch=t["channels"]; order=t.get("order") or list(ch.keys()); split=t.get("split","channel split")
+    def acol(c): return "#1c6b3d" if c.get("atv_target_met") else "#c0392b"
+    def facol(c): return "#1c6b3d" if c.get("fa_met") else ("#b7570a" if c["food_attach"]>=c["fa_target"]-3 else "#c0392b")
+    atv_cards=""
+    for k in order:
+        c=ch[k]
+        meta=(f'{c["txns_day"]:g} txns/day · {c["pct_store"]:g}% of store<br>'
+              + (f'above £{tgt:.2f} target ✓' if c.get("atv_target_met") else f'target £{tgt:.2f} · gap −£{tgt-c["atv"]:.2f}'))
+        atv_cards+=(f'<div class="card" style="border-top:3px solid {c.get("border","#888")}"><div class="lbl">{c.get("icon","")} {c["label"]} — ATV</div>'
+                    f'<div class="val" style="color:{acol(c)}">£{c["atv"]:.2f}</div><div class="meta">{meta}</div></div>')
+    fa_cards=""
+    for k in order:
+        c=ch[k]
+        fa_cards+=(f'<div class="card" style="border-top:3px solid {c.get("border","#888")}"><div class="lbl">🥐 {c["label"]} food attach</div>'
+                   f'<div class="val" style="color:{facol(c)}">{c["food_attach"]:g}%</div>'
+                   f'<div class="meta">target {c["fa_target"]:g}% · {"on target ✓" if c.get("fa_met") else "below target"}'
+                   + (" · sparse" if c.get("sparse") else "") + "</div></div>")
+    cards=f'<div class="cards" style="grid-template-columns:repeat({len(order)*2},1fr)">{atv_cards}{fa_cards}</div>'
+    lever_k=max(order,key=lambda k: ch[k]["fa_target"]-ch[k]["food_attach"]); lk=ch[lever_k]
+    short=round(lk["fa_target"]-lk["food_attach"],1); allatv=all(ch[k].get("atv_target_met") for k in order)
+    lead_txt=(f'<b>{lk["label"]} food attach is the lever.</b> '
+              + (f'Both channels clear the £{tgt:.2f} ATV target, so value-per-sale is not the gap — attach is. ' if allatv else '')
+              + f'{lk["label"]} food attach is {lk["food_attach"]:g}% vs the {lk["fa_target"]:g}% target ({short:+g}pp short) on {lk["txns_day"]:g} checks/day — prompting a cake or pastry here is the cleanest add-on, with no wages or price change.'
+              + (f' It is the smaller channel ({lk["pct_store"]:g}% of the store), so the larger channel remains the bigger prize.' if lk["pct_store"]<30 else ''))
+    lead=f'<div class="focus amber" style="background:#fff8f0;border-color:#f4a261;color:#444;font-size:12px;line-height:1.7;margin-top:0"><span class="ar">→</span>{lead_txt}</div>'
+    bydp={}
+    for r in t.get("grid",[]): bydp.setdefault(r["daypart"],{})[r["ch"]]=r
+    trs=""; any_sparse=False
     for dp in ["Morning","Lunch","Afternoon","Evening"]:
-        pair=bydp.get(dp,{})
-        for i,chk in enumerate(["DT","DI"]):
-            r=pair.get(chk)
-            if not r: continue
-            top=';border-top:2px solid #e8e8de' if i==0 else ''
-            if i==0:
-                lblcell=(f'<td style="padding:7px 9px;vertical-align:top{top}"><b>{r["icon"]} {dp}</b><br>'
-                         f'<span style="font-size:10px;color:var(--grey)">{r["hours"]}</span></td>')
-            else:
-                lblcell='<td style="padding:7px 9px;">&nbsp;</td>'
-            bg,fg=CHIP[chk]
-            vs=r["vs_target"]
-            trs+=(f'<tr>{lblcell}'
-                  f'<td style="padding:7px 9px{top}"><span style="background:{bg};color:#fff;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">{fg}</span></td>'
+        pair=bydp.get(dp,{}); present=[k for k in order if k in pair]
+        for i,k in enumerate(present):
+            r=pair[k]; top=';border-top:2px solid #e8e8de' if i==0 else ''
+            lbl=(f'<td style="padding:7px 9px;vertical-align:top{top}"><b>{r["icon"]} {dp}</b><br><span style="font-size:10px;color:var(--grey)">{r["hours"]}</span></td>') if i==0 else '<td style="padding:7px 9px;">&nbsp;</td>'
+            vs=r["vs_target"]; spk=""
+            if r.get("sparse"): spk=" <span style=\"color:var(--grey)\">*</span>"; any_sparse=True
+            trs+=(f'<tr>{lbl}'
+                  f'<td style="padding:7px 9px{top}"><span style="background:{r["chcol"]};color:#fff;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">{r["chlabel"]}</span>{spk}</td>'
                   f'<td style="padding:7px 9px;text-align:right{top}">{r["txns_day"]:g}</td>'
                   f'<td style="padding:7px 9px;text-align:right;font-weight:700;color:{r["atv_col"]}{top}">£{r["atv"]:.2f}</td>'
                   f'<td style="padding:7px 9px;text-align:right{top}"><span style="color:{r["vs_col"]}">{"+" if vs>=0 else "−"}£{abs(vs):.2f}</span></td>'
@@ -214,29 +211,31 @@ def txquality_section():
                   f'<td style="padding:7px 9px;text-align:right{top}"><span style="color:{r["gap_col"]}">{"+" if r["gap_day"]>=0 else "−"}£{abs(r["gap_day"]):g}</span></td></tr>')
     THEAD="".join(f'<th style="text-align:{a};padding:7px 9px;color:var(--grey);font-size:10px;text-transform:uppercase;letter-spacing:.4px">{h}</th>'
                   for h,a in [("Daypart","left"),("Channel","left"),("Txns/day","right"),("ATV","right"),("vs £%.2f"%tgt,"right"),("Daily sales","right"),("Food attach","right"),("ATV gap £/day","right")])
+    fa_tgts=" · ".join(f'{ch[k]["label"]} {ch[k]["fa_target"]:g}%' for k in order)
+    sparse_note=" <b>*</b> = low volume, treat as a guide." if any_sparse else ""
     table=(f'<div class="section-title" style="margin-top:18px">Channel × Daypart — transactions, ATV &amp; food attach</div>'
            f'<div class="panel" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
            f'<thead><tr style="border-bottom:2px solid var(--line)">{THEAD}</tr></thead><tbody>{trs}</tbody></table>'
-           f'<div class="mini" style="margin-top:6px">Live BigQuery · register-level split · {win}. Target ATV £{tgt:.2f}. '
-           f'Food-attach targets (manual): DT {dt["fa_target"]:g}%, Dine In {di["fa_target"]:g}%. ATV gap = (actual − £{tgt:.2f}) × txns/day.</div></div>')
-    # PAT tracker — STATIC manual P&L inputs (clearly labelled)
-    pat=(f'<div class="section-title" style="margin-top:18px">🎯 Profit after tax — daily target tracker <span class="mini" style="font-weight:400">· manual · April-2026 P&amp;L basis</span></div>'
+           f'<div class="mini" style="margin-top:6px">Live BigQuery · {split} · {win}. Target ATV £{tgt:.2f}. '
+           f'Food-attach targets (manual): {fa_tgts}. ATV gap = (actual − £{tgt:.2f}) × txns/day.{sparse_note}</div></div>')
+    route=f'{lk["label"]} attach → {lk["fa_target"]:g}%'
+    pat=(f'<div class="section-title" style="margin-top:18px">🎯 Profit after tax — daily target tracker <span class="mini" style="font-weight:400">· manual · {S.get("pat_basis","latest P&amp;L")}</span></div>'
          f'<div class="cards" style="grid-template-columns:repeat(3,1fr)">'
-         f'<div class="card"><div class="lbl">Current PAT / day</div><div class="val" style="color:#e67e22">£{S.get("pat_day_current",354):g}</div>'
-         f'<div class="meta">{S.get("pat_day_current_pct",16.6):g}% of daily sales<br>{S.get("pat_basis","April 2026 P&amp;L basis")} · manual</div></div>'
-         f'<div class="card"><div class="lbl">Target PAT / day</div><div class="val" style="color:#2a9d8f">£{S.get("pat_day_target",450):g}</div>'
-         f'<div class="meta">{S.get("pat_pct_target",18):g}% of daily sales<br>gap: £{S.get("gap_day",96):g}/day · manual target</div></div>'
-         f'<div class="card"><div class="lbl">Fastest route</div><div class="val" style="font-size:18px;color:#457b9d">DT attach → {dt["fa_target"]:g}%</div>'
-         f'<div class="meta">DT food attach {dt["food_attach"]:g}% → {dt["fa_target"]:g}% target<br>plus restock beans/cups (retail)</div></div></div>')
+         f'<div class="card"><div class="lbl">Current PAT / day</div><div class="val" style="color:#e67e22">£{S.get("pat_day_current",0):g}</div>'
+         f'<div class="meta">{S.get("pat_day_current_pct",0):g}% of ~£{S.get("daily_sales",0):g} daily sales<br>{S.get("pat_basis","")} · manual</div></div>'
+         f'<div class="card"><div class="lbl">Target PAT / day</div><div class="val" style="color:#2a9d8f">£{S.get("pat_day_target",0):g}</div>'
+         f'<div class="meta">{S.get("pat_pct_target",0):g}% of daily sales<br>gap: £{S.get("gap_day",0):g}/day · manual target</div></div>'
+         f'<div class="card"><div class="lbl">Fastest sales-side route</div><div class="val" style="font-size:17px;color:#457b9d">{route}</div>'
+         f'<div class="meta">{lk["label"]} food attach {lk["food_attach"]:g}% → {lk["fa_target"]:g}%<br>+ retail (beans/cups) on the counter</div></div></div>')
     retail=('<div class="focus amber" style="background:#fffbeb;border-color:#e9c46a;color:#555;font-size:12px;line-height:1.7">'
             '<span class="ar">→</span><b>🫘 Retail attach (coffee beans &amp; reusable cups) is effectively zero.</b> '
-            'This is a stock problem, not a demand problem — restock so beans/cups are visible on the counter. '
-            'Dine-In customers (longer dwell) convert first. <span class="mini">(Manual coaching note — retail SKUs aren\'t cleanly separable in POS, so this isn\'t auto-sourced.)</span></div>')
+            'A stock-visibility problem, not demand — keep beans/cups on the counter; longer-dwell guests convert first. '
+            '<span class="mini">(Manual coaching note — retail SKUs are not cleanly separable in POS, so this is not auto-sourced.)</span></div>')
     return ('  <!-- TXQUALITY START -->\n'
-            '  <div class="section-title">📊 Transaction quality — Drive Thru vs Dine In</div>\n'
-            f'  <div class="note" style="margin-bottom:4px">Live BigQuery · register-level Drive-Thru vs Dine-In split · {win}. '
-            f'Targets are manual: ATV £{tgt:.2f}, food attach DT {dt["fa_target"]:g}% / Dine-In {di["fa_target"]:g}%. '
-            f'The £{tgt:.2f} ATV underpins the 18% PAT target of £{S.get("pat_day_target",450):g}/day; current PAT £{S.get("pat_day_current",354):g}/day is from the April 2026 P&amp;L (manual).</div>\n'
+            f'  <div class="section-title">📊 Transaction quality — {split}</div>\n'
+            f'  <div class="note" style="margin-bottom:4px">Live BigQuery · {split} · {win}. '
+            f'Targets are manual: ATV £{tgt:.2f}, food attach {fa_tgts}. '
+            f'PAT target £{S.get("pat_day_target",0):g}/day ({S.get("pat_pct_target",0):g}%); current PAT £{S.get("pat_day_current",0):g}/day is from the {S.get("pat_basis","latest P&amp;L")} (manual).</div>\n'
             f'  {cards}\n  {lead}\n  {table}\n  {pat}\n  {retail}\n'
             '  <!-- TXQUALITY END -->')
 
@@ -309,9 +308,9 @@ def sales_tab_section(store):
                     f'<div class="meta">share of the store\'s transactions taken at the drive-thru</div></div>'
                     f'</div>\n')
     # GLENVALE: swap the Food & bakery traction panel for the live Transaction-quality block (idempotent).
-    if store in TXQ_STORES and TXQ:
+    if store in TXQ_STORES:
         food_paren=""
-        tail_section=txquality_section()+"\n"
+        tail_section=txquality_section(store)+"\n"
     else:
         food_paren=" (The Food &amp; bakery traction panel below stays as 4-week totals.)"
         tail_section=(f'  <div class="section-title">🥪 Food &amp; bakery gaining traction by daypart</div>\n'

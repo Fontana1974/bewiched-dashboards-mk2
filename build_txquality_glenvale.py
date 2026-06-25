@@ -9,6 +9,8 @@ import json, datetime as dt
 
 TARGET=6.80                 # manual ATV target (£) — also drives the 18% PAT / £450-day target
 FA_TGT={"DT":20,"DI":32}    # manual food-attach targets per channel
+LABELS={"DT":{"name":"Drive Thru","icon":"🚗","border":"#457b9d"},"DI":{"name":"Dine In","icon":"☕","border":"#2a9d8f"}}
+ORDER=["DT","DI"]
 DPS=["Morning","Lunch","Afternoon","Evening"]
 DPMETA={"Morning":("🌅","5am–11am"),"Lunch":("🥪","11am–2pm"),"Afternoon":("☕","2–5pm"),"Evening":("🌙","5pm+")}
 
@@ -28,7 +30,8 @@ for ch in ["DT","DI"]:
     rows=[r for r in g if r["channel"]==ch]
     t=sum(r["txns"] for r in rows); s=sum(r["sales"] for r in rows); f=sum(r["foodtxns"] for r in rows)
     atv=s/t; fa=100*f/t
-    channels[ch]={"txns_day":round(t/days,1),"atv":round(atv,2),"food_attach":round(fa,1),
+    channels[ch]={"label":LABELS[ch]["name"],"icon":LABELS[ch]["icon"],"border":LABELS[ch]["border"],
+                  "txns_day":round(t/days,1),"atv":round(atv,2),"food_attach":round(fa,1),
                   "pct_store":round(100*t/tot_txns),"daily_sales":round(s/days),
                   "atv_target_met":atv>=TARGET,"fa_target":FA_TGT[ch],"fa_met":fa>=FA_TGT[ch]}
 
@@ -40,7 +43,7 @@ for dp in DPS:
         atv=r["sales"]/r["txns"]; tpd=r["txns"]/days; fa=100*r["foodtxns"]/r["txns"]
         gap=(atv-TARGET)*tpd
         bg,fg=fa_badge(fa)
-        grid.append({"daypart":dp,"icon":DPMETA[dp][0],"hours":DPMETA[dp][1],"channel":ch,
+        grid.append({"daypart":dp,"icon":DPMETA[dp][0],"hours":DPMETA[dp][1],"ch":ch,"chlabel":LABELS[ch]["name"],"chcol":LABELS[ch]["border"],
                      "txns_day":round(tpd,1),"atv":round(atv,2),"atv_col":atv_col(atv),
                      "vs_target":round(atv-TARGET,2),"vs_col":signcol(atv-TARGET),
                      "daily_sales":round(r["sales"]/days),"food_attach":round(fa,1),
@@ -52,7 +55,7 @@ start=cur_end-dt.timedelta(days=27)
 def dlbl(d): return f"{d.day} {d.strftime('%b')}"
 window=f"last 28 days ({dlbl(start)} – {dlbl(cur_end)} {cur_end.year})"
 
-out={"_window":window,"days":days,"atv_target":TARGET,"fa_targets":FA_TGT,
+out={"_window":window,"days":days,"atv_target":TARGET,"fa_targets":FA_TGT,"order":ORDER,"split":"Drive Thru vs Dine In",
      "store_daily_sales":round(sum(r['sales'] for r in g)/days),
      "channels":channels,"grid":grid,
      # STATIC manual inputs (P&L / targets) surfaced for the PAT tracker — flagged, not auto-sourced:
