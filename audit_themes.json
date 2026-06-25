@@ -1,0 +1,68 @@
+{
+ "Glenvale Drive Thru": {
+  "qtd": 4.69,
+  "n": 4,
+  "window": "Apr–Jun 2026 · 4 audits",
+  "pillars": {
+   "Store Culture": 4.3,
+   "Shift Management": 4.8,
+   "Cleanliness": 4.81,
+   "Product": 4.9,
+   "Maintenance": 5.0
+  },
+  "weakest": [
+   {
+    "name": "Store Culture",
+    "avg": 4.3
+   },
+   {
+    "name": "Shift Management",
+    "avg": 4.8
+   }
+  ],
+  "themes": [
+   {
+    "text": "Queue calling at peak ('2 is a queue') and consistent hellos &amp; goodbyes",
+    "count": 3,
+    "pillar": "Store Culture"
+   },
+   {
+    "text": "Chewing gum under tables / weekly deep-clean jobs",
+    "count": 3,
+    "pillar": "Cleanliness"
+   }
+  ],
+  "themes_status": "live"
+ },
+ "Leamington Parade": {
+  "qtd": 4.73,
+  "n": 3,
+  "window": "Apr–Jun 2026 · 3 audits",
+  "pillars": {
+   "Store Culture": 4.77,
+   "Shift Management": 4.6,
+   "Cleanliness": 4.62,
+   "Product": 4.82,
+   "Maintenance": 5.0
+  },
+  "weakest": [
+   {
+    "name": "Shift Management",
+    "avg": 4.6
+   },
+   {
+    "name": "Cleanliness",
+    "avg": 4.62
+   }
+  ],
+  "themes": [
+   {
+    "text": "Queue calling at peak ('2 is a queue') and consistent hellos &amp; goodbyes",
+    "count": 3,
+    "pillar": "Store Culture"
+   }
+  ],
+  "themes_status": "live"
+ },
+ "_pulled": "2026-06-25"
+}

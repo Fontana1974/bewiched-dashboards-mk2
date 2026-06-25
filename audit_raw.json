@@ -1,0 +1,18 @@
+{
+  "_pulled": "2026-06-25",
+  "_sheet": "10JL4idTOmcCXnDTLsqHJjrHFnTMiIf7HR5uzVPwrjbM / Brand Audit Date (NEW24/25)",
+  "_cols": ["Store","Date","Culture","ShiftMgmt","Cleanliness","Product","Maintenance","Total","ActionPlan"],
+  "rows": {
+    "Glenvale Drive Thru": [
+      {"date":"6/18/2026","sub":[4.4,4.2,5,5,5],"total":4.74,"action":"Culture: hellos dipped during the view, focus on the door for 90%+; queue calling observed but missed some opportunities; use a tray to clear tables. Shift Management: drive-thru transactions all processed as 'dine in' - adjusted to process as takeaway, check this stays consistent. Maintenance: ice cream machine awaiting engineer."},
+      {"date":"5/19/2026","sub":[4.8,5,4.85,4.8,5],"total":4.85,"action":"Culture: productivity lower than normal, some leaning; flag break cover to the viewer. Cleanliness: syrup pumps/stands sticky, add to daily clean; deck needs jet washing to avoid ants. Product: croissant marked good - black specks from cooking matt, wipe matts down."},
+      {"date":"4/27/2026","sub":[4,5,4.7,5,5],"total":4.61,"action":"Culture: consistent hellos and goodbyes during peak; thorough figure-of-8 incl toilet/outside checks; call the queue when it arises. Cleanliness: chewing gum under a couple of tables, add to weekly schedule."},
+      {"date":"4/27/2026","sub":[4,5,4.7,4.8,5],"total":4.56,"action":"Culture: consistent hellos and goodbyes during peak; thorough figure-of-8 incl toilet/outside checks; call the queue when it arises. Cleanliness: chewing gum under tables, add to weekly schedule."}
+    ],
+    "Leamington Parade": [
+      {"date":"6/1/2026","sub":[4.9,4.8,4.55,4.8,5],"total":4.76,"action":"Culture: queue calling - '2 is a queue', deliver at every opportunity. Shift Management: panini fridge availability under the 90% required. Cleanliness: all freezers due a defrost; poor mopping on close caused build-up - correct solution:water ratio and rinse the mop."},
+      {"date":"5/13/2026","sub":[4.6,4.2,4.85,4.65,5],"total":4.67,"action":"Culture: queue calling - embedding consistent delivery, '2 is a queue'; safe tray stacking. Shift Management: all transactions processed as 'dine in' when there were takeaways - process accurately, VAT implication. Cleanliness: dust/spillages on shelving behind the bar."},
+      {"date":"4/15/2026","sub":[4.8,4.8,4.45,5,5],"total":4.76,"action":"Culture: peak-time consistent delivery of hellos and goodbyes; safe stacking of trays. Shift Management: cash reconciliation outside parameters. Cleanliness: chewing gum under a table; wipe blender after every use; fridge/freezer bases daily."}
+    ]
+  }
+}

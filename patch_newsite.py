@@ -34,6 +34,8 @@ TXQ_STORES={k for k,v in TXQ_BY_STORE.items() if v}
 COMMERCIAL_STORES={'Glenvale Drive Thru','Leamington Parade'}
 try: STAR=json.load(open('star_rating.json'))          # TEST: Grow composite star rating, gated to stores in this file (Glenvale only for now)
 except FileNotFoundError: STAR={}
+try: AUDIT=json.load(open('audit_themes.json'))        # brand-audit QTD score + recurring themes (build_audit.py from the Brand Audit sheet)
+except (FileNotFoundError, ValueError): AUDIT={}
 T_RMS=50*13/21.0  # per-store quarterly RMS submission target (area method / store)
 import html as _html
 def esc(t): return _html.escape((t or "").strip())[:200]
@@ -349,7 +351,11 @@ def inject_sales_tab(h, store):
         h=re.sub(r'\s*<!-- STORESALES START -->.*?<!-- STORESALES END -->', '', h, flags=re.S)
         i=h.find('id="tab-sales">')
         if i<0: return h
-        j=h.find('</section>', i)
+        # fold the Sales body at the END of the Commercial panel but BEFORE the merged-in
+        # Sales-mix block (MIXMERGE) when present, so STORESALES → MIXMERGE order is identical
+        # whether this is the first collapse run or a later re-render (idempotent).
+        mm=h.find('<!-- MIXMERGE START -->', i)
+        j=mm if mm>=0 else h.find('</section>', i)
         if j<0: return h
         k=j
         while k>0 and h[k-1] in ' \t\n': k-=1
@@ -515,9 +521,17 @@ def inject_simply_lunch(h, store):
     h=re.sub(r'\s*<!-- SIMPLYLUNCH START -->.*?<!-- SIMPLYLUNCH END -->', '', h, flags=re.S)
     card=simply_lunch_card(store)
     if not card: return h
-    # insert at the END of the Mix & opportunity tab (id="tab-mix"), before its </section>
+    # Insert at the END of the mix content. In the legacy layout the mix lives in its own
+    # tab (id="tab-mix"); in the 4-tab COMMERCIAL_STORES layout it has been folded into the
+    # Commercial tab, wrapped in MIXMERGE markers — target that marker so this survives the
+    # collapse (retargeted injector). Fall back to tab-mix, then to the Commercial panel end.
+    w=h.find('<!-- MIXMERGE END -->')
+    if w>=0:
+        return h[:w]+card+"\n  "+h[w:]
     i=h.find('id="tab-mix"')
-    if i<0: return h
+    if i<0:
+        i=h.find('id="tab-sales"')
+        if i<0: return h
     j=h.find('</section>', i)
     if j<0: return h
     return h[:j]+"  "+card+"\n  "+h[j:]
@@ -624,6 +638,201 @@ def inject_reviews(h, store):
     h2,n=re.subn(r'(<section class="tab-panel" id="tab-sentiment">)', lambda m:m.group(1)+block, h, count=1)
     return h2 if n else h
 
+# ===== 4-TAB RESTRUCTURE (Glenvale + Leamington only) ============================
+# Collapse the legacy 5 tabs (Commercial · Wastage · Sales mix & capture · Op's
+# Excellence · Sentiment) into exactly FOUR — Commercial · Operations · People ·
+# Customer — entirely through this patcher (no hand-edited published HTML) so it
+# survives the weekly runs. Idempotent: the structural collapse fires only when the
+# page is still in the 5-tab form (detected by the absence of id="tab-people"); once
+# collapsed it is a no-op, and every per-run content/marker injector targets the new
+# panels, so re-running the patch is byte-identical.
+def _section_span(h, pid):
+    """(start_of_<section>, start_of_body, index_of_</section>, end_after_</section>) or None."""
+    i=h.find('id="%s"'%pid)
+    if i<0: return None
+    s=h.rfind('<section',0,i)
+    e=h.find('</section>',i)
+    if s<0 or e<0: return None
+    bs=h.find('>',i)+1
+    return (s,bs,e,e+len('</section>'))
+
+def _div_blocks(s, opener):
+    """Char spans of each top-level `opener` ... matching </div> in s (depth-counted)."""
+    out=[]; i=0; n=len(opener)
+    while True:
+        j=s.find(opener,i)
+        if j<0: break
+        m=s.find('>',j)+1; depth=1
+        while m<len(s) and depth>0:
+            a=s.find('<div',m); b=s.find('</div>',m)
+            if b<0: break
+            if a!=-1 and a<b: depth+=1; m=a+4
+            else: depth-=1; m=b+6
+        out.append((j,m)); i=m
+    return out
+
+def audit_section(store):
+    """Brand-audit QTD score + recurring themes for the Operations tab. Uses audit_themes.json
+    (build_audit.py from the Brand Audit sheet); falls back to allstores audit_qtd with themes
+    flagged 'pending' if the theme breakdown wasn't pulled this run (never silently omitted)."""
+    a=AUDIT.get(store) if isinstance(AUDIT,dict) else None
+    qtd=(a or {}).get('qtd');
+    if qtd is None: qtd=(R.get(store,{}) or {}).get('audit_qtd')
+    if qtd is None: return ''
+    rag=lambda v:'#1f8a4c' if v>=4.5 else ('#b8860b' if v>=4.0 else '#c0392b')
+    win=(a or {}).get('window','quarter to date')
+    bars=''
+    if a and a.get('pillars'):
+        weak={w['name'] for w in (a.get('weakest') or [])[:1]}
+        for name,v in a['pillars'].items():
+            pc=rag(v); w=round(v/5*100)
+            bars+=(f'<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px">'
+                   f'<div style="width:128px;color:#5b4a3e">{name}{" ◄ focus" if name in weak else ""}</div>'
+                   f'<div style="flex:1;height:9px;background:#efe7dd;border-radius:5px;overflow:hidden"><div style="height:100%;width:{w}%;background:{pc};border-radius:5px"></div></div>'
+                   f'<div style="width:34px;text-align:right;font-weight:700;color:{pc}">{v:g}</div></div>')
+    themes=(a or {}).get('themes') or []; status=(a or {}).get('themes_status','pending')
+    if themes and status=='live':
+        ti=''.join(f'<li><b>{t.get("pillar","")}:</b> {t["text"]} <span class="mini">· seen in {t["count"]} of {a.get("n","?")} audits</span></li>' for t in themes)
+        themes_html=(f'<div style="font-size:12.5px;font-weight:700;color:#5b3a29;margin:10px 0 4px">Recurring themes</div>'
+                     f'<ul style="margin:0 0 0 18px;padding:0;font-size:12px;line-height:1.6">{ti}</ul>')
+    else:
+        themes_html=('<div class="note" style="margin-top:8px;background:#fff8ec;border:1px solid #f0e0bf;color:#7a5e1e">'
+                     'Recurring themes: <b>pending</b> — the audit theme breakdown was not pulled this run; QTD score shown from the Brand Audit sheet.</div>')
+    col=rag(qtd)
+    return ('<!-- AUDIT START -->\n'
+            '  <div class="section-title" style="margin-top:18px">\U0001F6E1️ Brand audit — quarter to date</div>\n'
+            '  <div class="panel"><div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">'
+            f'<div><div style="font-size:34px;font-weight:800;line-height:1;color:{col}">{qtd:g}<span style="font-size:15px;color:#9a8a7c">/5</span></div>'
+            f'<div class="mini" style="margin-top:3px">QTD brand-audit score · {win}</div></div>'
+            f'<div style="flex:1;min-width:280px">{bars}</div></div>\n'
+            f'  {themes_html}\n'
+            '  <div class="mini" style="margin-top:8px">Brand-audit average for the calendar quarter (target ≥4.5 green · ≥4.0 amber · below red). '
+            'Themes are the recurring action-plan topics across this quarter’s audits. Source: Brand Audit sheet.</div></div>\n'
+            '  <!-- AUDIT END -->')
+
+def inject_audit(h, store):
+    """(Re)render the brand-audit block on the Operations tab, just above the folded-in
+    wastage block. Idempotent via AUDIT markers; anchors to the WASTEMERGE marker so the
+    order F1 → audit → wastage is identical on every run."""
+    h=re.sub(r'\s*<!-- AUDIT START -->.*?<!-- AUDIT END -->', '', h, flags=re.S)
+    blk=audit_section(store)
+    if not blk: return h
+    w=h.find('<!-- WASTEMERGE START -->')
+    if w>=0:
+        k=w
+        while k>0 and h[k-1] in ' \t\n': k-=1
+        return h[:k]+'\n  '+blk+'\n  '+h[w:]
+    sp=_section_span(h,'tab-f1')
+    if not sp: return h
+    _,_,e,_=sp; k=e
+    while k>0 and h[k-1] in ' \t\n': k-=1
+    return h[:k]+'\n  '+blk+'\n  '+h[e:]
+
+def simplify_mix_table(h):
+    """Make the right-hand category-mix table (#cattbl) match the clean capture table
+    (#peertbl): fewer columns, one value per cell, no last-week/movement clutter. Idempotent."""
+    h=re.sub(r'<table id="cattbl"><thead>.*?</thead>',
+             '<table id="cattbl"><thead><tr><th>Category</th><th>Mix %</th><th>Capture %</th><th>Holiday tilt</th></tr></thead>',
+             h, count=1, flags=re.S)
+    new=('document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{'
+         'const s=r[2]>0?"#1f8a4c":r[2]<0?"#c0392b":"#8a7a6d";'
+         'return "<tr><td>"+r[0]+"</td>'
+         '<td style=\'font-weight:700\'>"+r[1].toFixed(1)+"%</td>'
+         '<td>"+r[3].toFixed(1)+"%</td>'
+         '<td style=\'color:"+s+"\'>"+(r[2]>0?"+":"")+r[2].toFixed(1)+" pts</td></tr>";}).join("");')
+    h=re.sub(r'const DESC=\{.*?document\.querySelector\("#cattbl tbody"\)\.innerHTML=ROWS\.map\(.*?\)\.join\(""\);',
+             lambda m: new, h, count=1, flags=re.S)
+    return h
+
+def _split_sentiment(h, store):
+    """Split the legacy Sentiment panel: Google reviews stay on Customer (id=tab-sentiment),
+    the team/RMS + sickness/lateness/RTW + bench move to a new People panel (id=tab-people)."""
+    sp=_section_span(h,'tab-sentiment')
+    if not sp: return h
+    s,bs,e,ee=sp; inner=h[bs:e]
+    ra=inner.find('<!-- REVIEWS START -->'); rb=inner.find('<!-- REVIEWS END -->')
+    reviews=inner[ra:rb+len('<!-- REVIEWS END -->')] if (ra>=0 and rb>=0) else ''
+    sta=inner.find('<style>'); style=inner[sta:inner.find('</style>',sta)+len('</style>')] if sta>=0 else ''
+    # the 4 summary cards: [0]=Customer(Google) [1]=Team(RMS) [2]=Customer standing [3]=Team trend
+    ci=inner.find('<div class="cards">', (sta if sta>=0 else 0))
+    cb=_div_blocks(inner[ci:],'<div class="cards">'); cs,ce=cb[0]; cs+=ci; ce+=ci
+    cont=inner[inner.find('>',cs)+1:ce-len('</div>')]
+    cardspans=_div_blocks(cont,'<div class="card">'); cards=[cont[a:b] for a,b in cardspans]
+    # sent-grid #1: [0]=Google panel, [1]=RMS panel
+    g1=inner.find('<div class="sent-grid"', ce); gb=_div_blocks(inner[g1:],'<div class="sent-grid"')
+    gs,ge=gb[0]; gs+=g1; ge+=g1
+    gridc=inner[inner.find('>',gs)+1:ge-len('</div>')]
+    panspans=_div_blocks(gridc,'<div class="panel">'); panels=[gridc[a:b] for a,b in panspans]
+    googlePanel=panels[0] if panels else ''; rmsPanel=panels[1] if len(panels)>1 else ''
+    sicki=inner.find('\U0001FA7A')  # 🩺 sickness section-title
+    sicks=inner.rfind('<div class="section-title"',0,sicki)
+    midnotes=inner[ge:sicks]                 # two-lenses note + amber cross-focus
+    foot=inner.find('<footer'); sickblock=inner[sicks:foot if foot>=0 else len(inner)]
+    footer=inner[foot:] if foot>=0 else ''
+    benchCard=('<div class="card"><div class="lbl">Bench &amp; talent</div>'
+               '<div class="val" style="color:var(--muted)">n/a</div>'
+               '<div class="meta">not tracked at store level — HRP/company-level only</div></div>')
+    cov=('<div class="note" style="margin-bottom:4px">Bench depth is held at company level in HRP (not per store). '
+         'Lateness is shown for visibility but <b>not scored</b> — there is no clean per-store lateness target. '
+         'RMS, sickness and return-to-work are per store.</div>')
+    cust_note=('<div class="note" style="margin-top:14px">Customer view = the live Google rating &amp; newest reviews '
+               '(a weekly snapshot). The Overall / QTD / WTD trio above is from the Google-reviews sheet.</div>')
+    customer=(reviews+'\n  '+style+
+              '\n  <div class="section-title" style="margin-top:18px">⭐ Customer — Google rating &amp; latest reviews</div>'
+              '\n  <div class="cards">'+cards[0]+cards[2]+'</div>'
+              '\n  '+googlePanel+
+              '\n  '+cust_note)
+    people=('<div class="section-title">\U0001F465 People — team, attendance &amp; return-to-work</div>'
+            '\n  '+cov+
+            '\n  <div class="cards">'+cards[1]+cards[3]+benchCard+'</div>'
+            '\n  '+rmsPanel+
+            '\n  '+midnotes.strip()+
+            '\n  '+sickblock.strip()+
+            ('\n  '+footer.strip() if footer.strip() else ''))
+    people_sec='<!-- ===== TAB: People ===== -->\n<section class="tab-panel" id="tab-people">\n  '+people+'\n  </section>'
+    cust_sec='<!-- ===== TAB: Customer ===== -->\n<section class="tab-panel" id="tab-sentiment">\n  '+customer.strip()+'\n  </section>'
+    return h[:s]+people_sec+'\n\n  '+cust_sec+h[ee:]
+
+def restructure_tabs(h, store):
+    if store not in COMMERCIAL_STORES: return h
+    if 'id="tab-people"' in h: return h          # already 4-tab — no-op (idempotent)
+    NAV=('<nav class="tabs" role="tablist">\n'
+         '    <button class="tab-btn active" data-tab="sales" role="tab"><span class="dot">\U0001F4C8</span>Commercial</button>\n'
+         '    <button class="tab-btn" data-tab="f1" role="tab"><span class="dot">\U0001F3C1</span>Operations</button>\n'
+         '    <button class="tab-btn" data-tab="people" role="tab"><span class="dot">\U0001F465</span>People</button>\n'
+         '    <button class="tab-btn" data-tab="sentiment" role="tab"><span class="dot">⭐</span>Customer</button>\n'
+         '  </nav>')
+    h=re.sub(r'<nav class="tabs"[^>]*>.*?</nav>', lambda m: NAV, h, count=1, flags=re.S)
+    h=re.sub(r'const TAB_STATUS=\{[^}]*\};',
+             'const TAB_STATUS={sales:"red",f1:"red",people:"red",sentiment:"green"};', h, count=1)
+    # C) fold Sales mix & capture into Commercial (after the STORESALES block)
+    sp=_section_span(h,'tab-mix')
+    if sp:
+        s,bs,e,ee=sp; mixbody=h[bs:e].strip()
+        h=h[:s].rstrip()+'\n  '+h[ee:]
+        anchor=h.find('<!-- STORESALES END -->')
+        block=('\n  <!-- MIXMERGE START -->\n'
+               '  <div class="section-title" style="margin-top:26px">\U0001F9FA Sales mix &amp; capture</div>\n  '
+               +mixbody+'\n  <!-- MIXMERGE END -->')
+        if anchor>=0:
+            ins=anchor+len('<!-- STORESALES END -->')
+            h=h[:ins]+block+h[ins:]
+        else:
+            cp=_section_span(h,'tab-sales')
+            if cp: h=h[:cp[2]]+block+'\n  '+h[cp[2]:]
+    # D) fold Wastage into Operations
+    wp=_section_span(h,'tab-waste')
+    if wp:
+        s,bs,e,ee=wp; wbody=h[bs:e].strip()
+        h=h[:s].rstrip()+'\n  '+h[ee:]
+        op=_section_span(h,'tab-f1')
+        if op:
+            block='\n  <!-- WASTEMERGE START -->\n  '+wbody+'\n  <!-- WASTEMERGE END -->\n  '
+            h=h[:op[2]]+block+h[op[2]:]
+    # E) split Sentiment -> People + Customer
+    h=_split_sentiment(h, store)
+    return h
+
 def patch(fn,store,coach,mature):
     h=open(fn,encoding='utf-8').read(); log=[]
     def sub(pat,repl,n_expected,label,flags=0):
@@ -637,7 +846,10 @@ def patch(fn,store,coach,mature):
     #    mirroring how the star-rating card re-renders). Strip any prior block — marker form
     #    or legacy unmarked kpws+note — then re-inject with current values so the pillars
     #    never go stale.
-    if 'class="kpws"' not in h:
+    # Inject the pillar CSS once. Guard on the CSS itself (not on class="kpws") — the
+    # COMMERCIAL_STORES pages no longer render the kpws widgets, so a kpws-based guard would
+    # re-inject the CSS on every weekly run. Checking the CSS token keeps it idempotent.
+    if '.kpws{display:grid' not in h:
         sub(r'</style>', PILLAR_CSS+"\n</style>",1,"pillar CSS")
     # strip prior pillar block: new marker form first, then legacy unmarked form
     h=re.sub(r'\s*<!-- PILLARS START -->.*?<!-- PILLARS END -->', '', h, flags=re.S)
@@ -808,7 +1020,10 @@ def patch(fn,store,coach,mature):
             out=['<div class="quote" style="color:#9a8a7c">No review text in the Reviews sheet for this store yet (rating &amp; count only).<span class="who"></span></div>']
         return "\n          "+"\n          ".join(out)+"\n        "
     if gj.get('snippets') is not None:
-        sub(r'(scoresub">Google ·[\s\S]*?<div style="margin-top:\d+px">)[\s\S]*?(</div>\s*</div>\s*<div class="panel">)',
+        # close anchor matches either the legacy adjacent RMS panel (pre-split) OR the Customer
+        # note that follows the Google panel after the People/Customer split — so snippet refresh
+        # survives the 4-tab restructure on Glenvale + Leamington.
+        sub(r'(scoresub">Google ·[\s\S]*?<div style="margin-top:\d+px">)[\s\S]*?(</div>\s*</div>\s*<div class="(?:panel|note))',
             lambda m:m.group(1)+quotes(gj['snippets'],True)+m.group(2),1,"customer review snippets")
         # new-site star-distribution chart (custDist) if present
         if gj.get('dist'): sub(r'(custDist[\s\S]{0,300}?data:\[)\d+(?:, ?\d+){4}(\])', rf'\g<1>{",".join(str(x) for x in gj["dist"])}\g<2>',1,"custDist distribution")
@@ -845,6 +1060,14 @@ def patch(fn,store,coach,mature):
     before=('data-tab="storesales"' in h)
     h=inject_sales_tab(h,store)   # rename front tab -> "Forecast / Review" + (re)build store-scoped "Sales" tab
     log.append("  ✓ Sales tab "+("rebuilt" if before else "added")+" + front tab renamed to Forecast / Review")
+    # 4-TAB RESTRUCTURE (Glenvale + Leamington only): collapse to Commercial · Operations ·
+    # People · Customer, fold Sales-mix into Commercial + simplify its mix table, fold wastage
+    # into Operations + add the brand-audit block, split Sentiment into People + Customer.
+    if store in COMMERCIAL_STORES:
+        h=restructure_tabs(h,store)
+        h=inject_audit(h,store)        # brand-audit QTD + recurring themes on Operations (above wastage)
+        h=simplify_mix_table(h)        # clean the category-mix table to match the capture table
+        log.append("  ✓ 4-tab restructure (Commercial · Operations · People · Customer) + audit + mix-table simplified")
     # FOCUS BOX (top of page) — rebuild LAST, from the page's now-current figures.
     _newbox=build_focus_box(h,store,coach)
     h2,_nn=re.subn(r'<div class="focusmod[^"]*">\s*<h2>\U0001F3AF Focus areas[\s\S]*?</ul>\s*</div>', lambda m:_newbox, h, count=1)

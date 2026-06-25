@@ -160,10 +160,9 @@
   <div id="wxnudge_top" style="display:none;margin:14px 0 0;padding:9px 14px;border-radius:11px;font-size:13px;line-height:1.5"></div>
   <nav class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="sales" role="tab"><span class="dot">📈</span>Commercial</button>
-    <button class="tab-btn" data-tab="waste" role="tab"><span class="dot">♻️</span>Wastage</button>
-    <button class="tab-btn" data-tab="mix" role="tab"><span class="dot">🧺</span>Sales mix &amp; capture</button>
-    <button class="tab-btn" data-tab="f1" role="tab"><span class="dot">🏁</span>Op's Excellence</button>
-    <button class="tab-btn" data-tab="sentiment" role="tab"><span class="dot">💬</span>Sentiment</button>
+    <button class="tab-btn" data-tab="f1" role="tab"><span class="dot">🏁</span>Operations</button>
+    <button class="tab-btn" data-tab="people" role="tab"><span class="dot">👥</span>People</button>
+    <button class="tab-btn" data-tab="sentiment" role="tab"><span class="dot">⭐</span>Customer</button>
   </nav>
 
   <!-- ===== Tab status dots (red = needs attention last week, green = on track) ===== -->
@@ -176,7 +175,7 @@
   <script>
   (function(){
     /* Per-tab health for the previous complete week. Generator resets these each Monday. */
-    const TAB_STATUS={sales:"red",waste:"green",mix:"green",f1:"red",sentiment:"red"};
+    const TAB_STATUS={sales:"red",f1:"red",people:"red",sentiment:"green"};
     document.querySelectorAll(".tab-btn").forEach(b=>{
       const s=TAB_STATUS[b.dataset.tab]; if(!s) return;
       const d=document.createElement("span");
@@ -305,46 +304,9 @@
   <div class="focus amber" style="background:#fffbeb;border-color:#e9c46a;color:#555;font-size:12px;line-height:1.7"><span class="ar">→</span><b>🫘 Retail attach (coffee beans &amp; reusable cups) is effectively zero.</b> A stock-visibility problem, not demand — keep beans/cups on the counter; longer-dwell guests convert first. <span class="mini">(Manual coaching note — retail SKUs are not cleanly separable in POS, so this is not auto-sourced.)</span></div>
   <!-- TXQUALITY END -->
   <!-- STORESALES END -->
-  </section>
-
-    <div class="focus green"><span class="ar">→</span>Focus this week: £17,342 at £63 needs ~275 hrs — you ran ~286 (£60.6/hr); trim ~11 hrs to hit the £63 target.</div>
-
-
-  <!-- ===== TAB 2: Wastage ===== -->
-  <section class="tab-panel" id="tab-waste">
-    <div id="wxfood" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>
-    <div class="cards">
-      <div class="card"><div class="lbl">Wastage %</div>
-        <div style="display:flex;gap:18px;align-items:flex-end;margin:3px 0 4px">
-          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--green)">2.6%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
-          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--green)">2.7%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week run rate</div></div>
-        </div><div class="meta">target 3%</div></div>
-      <div class="card"><div class="lbl">Waste &pound; (retail lost)</div>
-        <div style="display:flex;gap:18px;align-items:flex-end;margin:3px 0 4px">
-          <div><div style="font-size:20px;font-weight:800;line-height:1">£462</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
-          <div><div style="font-size:20px;font-weight:800;line-height:1">£489</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week weekly avg</div></div>
-        </div><div class="meta">over-production &middot; item tables below are last 4 weeks</div></div>
-    </div>
-
-    <div class="section-title">⚠️ Wastage — creeping above target</div>
-    <div class="grid2">
-      <div class="panel"><div class="chart-box" style="height:300px"><canvas id="waste"></canvas></div></div>
-      <div class="panel"><div class="note red" style="margin-top:0"><strong>Glenvale's wastage has drifted up.</strong> After holding ~1.3–1.7% through April it has run <strong>3.5% → 3.0% → 3.3%</strong> for the last three weeks — now just above the 3% target. It is not yet a problem, but the trend is the wrong way: the egg &amp; spinach pot, bacon bap and breakfast bagel are over-producing on the food range. Tighten those par levels to pull it back under 3%.</div></div>
-    </div>
-
-    <div class="focus red"><span class="ar">→</span>Focus this week: wastage 3.3% (3 weeks over target) — tighten the egg pot, bacon bap &amp; bagel par.</div>
-    <div class="section-title">Outlier items — biggest over-production (last 4 weeks)</div>
-    <div class="panel">
-      <table id="items"><thead><tr><th>Product</th><th>Waste £</th><th>Wasted</th><th>Sold</th><th>Waste rate</th><th style="text-align:left">Action</th></tr></thead><tbody></tbody></table>
-      <div class="note">Waste rate = wasted ÷ (wasted + sold). The <strong>Egg &amp; Spinach Pot (70%)</strong>, <strong>Bacon Bap (41%)</strong> and <strong>Croissant Pastry (41%)</strong> waste heavily vs what they sell; the <strong>Breakfast Bagel</strong> is the biggest single £ loss (£218 / 4 wks). Cut these par levels first. Top 10 items ≈ £320/wk of waste retail.</div>
-    </div>
-  </section>
-
-    <div class="focus amber"><span class="ar">→</span>Focus this week: cut par on the egg pot, bacon bap &amp; croissant pastry — the worst over-producers.</div>
-
-  <!-- ===== TAB 3: Sales mix & capture ===== -->
-  <section class="tab-panel" id="tab-mix">
-    <div class="section-title">Sales mix &amp; capture vs the estate</div>
+  <!-- MIXMERGE START -->
+  <div class="section-title" style="margin-top:26px">🧺 Sales mix &amp; capture</div>
+  <div class="section-title">Sales mix &amp; capture vs the estate</div>
     <div id="wxnudge" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>
 <script>(function(){
 var LOCS=[[52.32, -0.66]], ANALOG=[[22.0, 16.9, 40.6, 14.6, 27.3], [26.2, 23.4, 33.0, 17.0, 28.9], [24.8, 18.3, 38.7, 14.2, 25.9], [24.1, 19.1, 38.4, 14.1, 27.1], [25.5, 23.0, 33.6, 16.0, 28.2], [22.8, 15.4, 42.9, 12.4, 25.9], [21.7, 14.9, 42.6, 13.4, 27.6], [22.0, 14.2, 43.0, 13.7, 27.2], [23.2, 16.2, 40.3, 14.3, 28.2], [27.2, 20.6, 35.6, 15.6, 30.0], [21.0, 13.2, 43.8, 13.3, 28.7], [22.4, 14.5, 41.9, 13.5, 29.1], [20.7, 11.9, 45.5, 12.4, 28.0], [18.0, 10.5, 49.7, 10.0, 26.7], [19.4, 9.9, 50.8, 9.5, 27.3], [16.4, 9.1, 51.4, 9.7, 25.8], [17.1, 8.1, 52.1, 9.2, 25.5], [15.8, 8.9, 53.7, 8.6, 25.5], [13.9, 8.4, 55.6, 8.2, 26.0], [12.5, 8.0, 55.5, 8.0, 26.1], [12.8, 8.6, 53.6, 9.5, 27.7], [15.2, 8.6, 55.6, 8.3, 25.4], [12.8, 7.2, 57.4, 7.2, 25.2], [6.1, 5.4, 60.4, 5.7, 22.9], [9.1, 6.2, 58.8, 6.4, 23.1], [10.1, 6.4, 58.9, 6.4, 23.1], [11.5, 6.6, 58.4, 6.4, 23.8], [10.0, 6.6, 57.0, 6.7, 24.1], [6.8, 7.1, 57.2, 8.2, 22.8], [3.9, 6.7, 58.6, 8.4, 26.0], [4.1, 6.3, 60.6, 6.9, 24.7], [8.8, 7.4, 57.9, 7.5, 24.9], [8.7, 7.4, 58.4, 7.7, 25.9], [7.7, 7.7, 57.2, 7.7, 25.4], [8.5, 7.6, 56.9, 8.0, 26.2], [8.3, 7.8, 56.8, 7.9, 25.2], [8.6, 8.6, 52.8, 10.4, 26.5], [13.0, 9.8, 54.0, 8.8, 25.0], [12.1, 10.1, 53.3, 9.4, 23.1], [11.3, 10.3, 52.8, 9.2, 24.4], [13.4, 13.9, 49.0, 11.3, 23.5], [10.3, 10.0, 54.1, 8.5, 23.8], [13.1, 12.7, 49.7, 11.6, 24.7], [14.9, 16.6, 45.5, 12.6, 26.0], [14.9, 14.9, 49.5, 10.0, 27.5], [16.1, 18.4, 44.6, 12.0, 24.3], [18.7, 19.2, 43.4, 11.8, 24.8], [15.0, 16.6, 46.4, 11.1, 25.6], [12.9, 13.0, 51.2, 9.2, 24.3], [21.2, 22.1, 39.9, 12.9, 26.0], [26.4, 29.6, 28.8, 17.6, 29.3], [18.4, 16.2, 47.3, 10.2, 23.8]], RECENT={"cold": 24.7, "hot": 38.1, "milk": 13.3, "coldfood": 25.9, "temp": 19.7};
@@ -384,7 +346,7 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
     <div class="grid2">
       <div class="panel"><div style="font-size:13px;font-weight:700;color:#5b3a29;margin-bottom:8px">Capture % ranked vs the estate (21 stores)</div><table id="peertbl"><thead><tr><th>Category</th><th>Glenvale</th><th>Rank</th><th>Estate avg</th><th>Best in estate</th></tr></thead><tbody></tbody></table><div class="mini" style="margin-top:8px">Capture = share of transactions including the category (last ~5 wks). Value green = above estate average; rank chip green = top third, red = bottom third.</div></div>
       <div class="panel">
-        <table id="cattbl"><thead><tr><th>Category</th><th>Mix % &mdash; 4-wk run rate &amp; last week</th><th>Holiday tilt</th><th>Capture % &mdash; 4-wk run rate &amp; last week</th></tr></thead><tbody></tbody></table>
+        <table id="cattbl"><thead><tr><th>Category</th><th>Mix %</th><th>Capture %</th><th>Holiday tilt</th></tr></thead><tbody></tbody></table>
         <div class="note" style="margin-top:10px"><strong>Mix holds through the holidays.</strong> In the mature drive-thru/destination stores last summer the split barely moved from term into the school holidays — cold drinks + milkshakes were ~37% of sales in term vs ~35% in holidays (milkshakes flat, cold easing ~2 percentage points as the early-summer heat passed). The cold-drink peak is <strong>weather-led (Jun–Jul), not the school calendar</strong>; total volume rose ~5%. So £ grows across all categories with only a small holiday tilt. <strong>Capture %</strong> = the share of transactions that include the category (attach rate, recent weeks) — a truer read of penetration than £.</div>
       </div>
     </div>
@@ -423,17 +385,24 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
 </tbody></table>
 <div class="note" style="margin-top:12px"><b>Method.</b> For each item we take the average units sold on each day of the week (last 8 complete weeks) and add up the days a delivery must cover: <b>Mon</b> covers Mon–Tue (2 days), <b>Wed</b> covers Wed–Fri (3 days), <b>Sat</b> covers Sat–Sun (2 days). Longest run is 3 days — within the 3-day shelf life. We then add a <b>15% buffer</b> and round up. The buffer is a balance: too small and you risk lunchtime stockouts, too large and you waste stock given the 3-day life. <span style="color:var(--amber)">†</span> = demand too sparse to forecast reliably (under 10/week) — treat these as a guide and adjust by eye.</div>
 <!-- SIMPLYLUNCH END -->
+  <!-- MIXMERGE END -->
   </section>
+
+    <div class="focus green"><span class="ar">→</span>Focus this week: £17,342 at £63 needs ~275 hrs — you ran ~286 (£60.6/hr); trim ~11 hrs to hit the £63 target.</div>
+
+
+  <!-- ===== TAB 2: Wastage ===== -->
+  
+
+    <div class="focus amber"><span class="ar">→</span>Focus this week: cut par on the egg pot, bacon bap &amp; croissant pastry — the worst over-producers.</div>
+
+  <!-- ===== TAB 3: Sales mix & capture ===== -->
+  
 
     <div class="focus amber"><span class="ar">→</span>Focus this week: bakery attach 14% (17th/21) — push a cake/pastry add-on at the window.</div>
 
   <!-- ===== TAB 4: Op's Excellence (F1) ===== -->
   <section class="tab-panel" id="tab-f1">
-  <!-- COMPLIANCE START -->
-<div class="section-title" style="margin-top:4px">🛡️ Operations &amp; compliance — quarter to date</div>
-<div class="cards" style="grid-template-columns:repeat(4,1fr)"><div class="card"><div class="lbl">Brand audit</div><div class="val">4.67<span style="font-size:15px;color:var(--muted)">/5</span></div><div class="meta">QTD · feeds Operations</div></div><div class="card"><div class="lbl">Remote audit</div><div class="val">89<span style="font-size:15px;color:var(--muted)">/100</span></div><div class="meta">avg of 10 QTD · feeds Operations</div></div><div class="card"><div class="lbl">Compliance</div><div class="val">90%</div><div class="meta">coaching 80.6% + open/close 100% (50/50) · feeds Operations</div></div><div class="card"><div class="lbl">Return-to-work (RTW)</div><div class="val">45%</div><div class="meta">5 of 11 sickness absences with an RTW logged (QTD) · feeds People</div></div></div>
-<div class="note" style="margin-top:8px">The <b>Operations</b> star is now an equal-thirds blend of <b>brand audit</b>, <b>remote audit</b> and <b>compliance</b> (coaching 80.6% + open/close 100%, from the Process Street → HRP feed: 57 open &amp; 56 close vs 56 trading days (20 Apr–14 Jun), Process Street feed). The <b>F1 race score below now feeds the Customer star</b> (50/50 with Google health), not Operations. RTW feeds People.</div>
-<!-- COMPLIANCE END -->
     <div class="section-title">🏁 F1 Operational Excellence — Qualifying &amp; Race</div>
     <div class="cards">
       <div class="card"><div class="lbl">Latest Quali rank</div><div class="val" style="color:var(--green)">7 / 21</div><div class="meta">W/C 15 Jun · P1 two weeks running</div></div>
@@ -650,44 +619,49 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
       <div class="mini" style="margin-top:11px">“Due” = active team members (anyone with a coaching record this quarter) who don’t yet have that checklist logged in June. Source: HRP ‘CS and Br %’.</div>
     </div>
     <div class="focus green"><span class="ar">→</span>Focus this week: Estate-leading on the quarter — keep it up by clearing the names still due their June checklists below.</div>
+  <!-- AUDIT START -->
+  <div class="section-title" style="margin-top:18px">🛡️ Brand audit — quarter to date</div>
+  <div class="panel"><div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><div><div style="font-size:34px;font-weight:800;line-height:1;color:#1f8a4c">4.69<span style="font-size:15px;color:#9a8a7c">/5</span></div><div class="mini" style="margin-top:3px">QTD brand-audit score · Apr–Jun 2026 · 4 audits</div></div><div style="flex:1;min-width:280px"><div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><div style="width:128px;color:#5b4a3e">Store Culture ◄ focus</div><div style="flex:1;height:9px;background:#efe7dd;border-radius:5px;overflow:hidden"><div style="height:100%;width:86%;background:#b8860b;border-radius:5px"></div></div><div style="width:34px;text-align:right;font-weight:700;color:#b8860b">4.3</div></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><div style="width:128px;color:#5b4a3e">Shift Management</div><div style="flex:1;height:9px;background:#efe7dd;border-radius:5px;overflow:hidden"><div style="height:100%;width:96%;background:#1f8a4c;border-radius:5px"></div></div><div style="width:34px;text-align:right;font-weight:700;color:#1f8a4c">4.8</div></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><div style="width:128px;color:#5b4a3e">Cleanliness</div><div style="flex:1;height:9px;background:#efe7dd;border-radius:5px;overflow:hidden"><div style="height:100%;width:96%;background:#1f8a4c;border-radius:5px"></div></div><div style="width:34px;text-align:right;font-weight:700;color:#1f8a4c">4.81</div></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><div style="width:128px;color:#5b4a3e">Product</div><div style="flex:1;height:9px;background:#efe7dd;border-radius:5px;overflow:hidden"><div style="height:100%;width:98%;background:#1f8a4c;border-radius:5px"></div></div><div style="width:34px;text-align:right;font-weight:700;color:#1f8a4c">4.9</div></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><div style="width:128px;color:#5b4a3e">Maintenance</div><div style="flex:1;height:9px;background:#efe7dd;border-radius:5px;overflow:hidden"><div style="height:100%;width:100%;background:#1f8a4c;border-radius:5px"></div></div><div style="width:34px;text-align:right;font-weight:700;color:#1f8a4c">5</div></div></div></div>
+  <div style="font-size:12.5px;font-weight:700;color:#5b3a29;margin:10px 0 4px">Recurring themes</div><ul style="margin:0 0 0 18px;padding:0;font-size:12px;line-height:1.6"><li><b>Store Culture:</b> Queue calling at peak ('2 is a queue') and consistent hellos &amp; goodbyes <span class="mini">· seen in 3 of 4 audits</span></li><li><b>Cleanliness:</b> Chewing gum under tables / weekly deep-clean jobs <span class="mini">· seen in 3 of 4 audits</span></li></ul>
+  <div class="mini" style="margin-top:8px">Brand-audit average for the calendar quarter (target ≥4.5 green · ≥4.0 amber · below red). Themes are the recurring action-plan topics across this quarter’s audits. Source: Brand Audit sheet.</div></div>
+  <!-- AUDIT END -->
+  <!-- WASTEMERGE START -->
+  <div id="wxfood" style="display:none;margin:2px 0 14px;padding:11px 15px;border-radius:12px;font-size:13.5px;line-height:1.55"></div>
+    <div class="cards">
+      <div class="card"><div class="lbl">Wastage %</div>
+        <div style="display:flex;gap:18px;align-items:flex-end;margin:3px 0 4px">
+          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--green)">2.6%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
+          <div><div style="font-size:20px;font-weight:800;line-height:1;color:var(--green)">2.7%</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week run rate</div></div>
+        </div><div class="meta">target 3%</div></div>
+      <div class="card"><div class="lbl">Waste &pound; (retail lost)</div>
+        <div style="display:flex;gap:18px;align-items:flex-end;margin:3px 0 4px">
+          <div><div style="font-size:20px;font-weight:800;line-height:1">£462</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">last week</div></div>
+          <div><div style="font-size:20px;font-weight:800;line-height:1">£489</div><div style="font-size:10px;color:#9a8a7c;margin-top:2px">4-week weekly avg</div></div>
+        </div><div class="meta">over-production &middot; item tables below are last 4 weeks</div></div>
+    </div>
 
+    <div class="section-title">⚠️ Wastage — creeping above target</div>
+    <div class="grid2">
+      <div class="panel"><div class="chart-box" style="height:300px"><canvas id="waste"></canvas></div></div>
+      <div class="panel"><div class="note red" style="margin-top:0"><strong>Glenvale's wastage has drifted up.</strong> After holding ~1.3–1.7% through April it has run <strong>3.5% → 3.0% → 3.3%</strong> for the last three weeks — now just above the 3% target. It is not yet a problem, but the trend is the wrong way: the egg &amp; spinach pot, bacon bap and breakfast bagel are over-producing on the food range. Tighten those par levels to pull it back under 3%.</div></div>
+    </div>
+
+    <div class="focus red"><span class="ar">→</span>Focus this week: wastage 3.3% (3 weeks over target) — tighten the egg pot, bacon bap &amp; bagel par.</div>
+    <div class="section-title">Outlier items — biggest over-production (last 4 weeks)</div>
+    <div class="panel">
+      <table id="items"><thead><tr><th>Product</th><th>Waste £</th><th>Wasted</th><th>Sold</th><th>Waste rate</th><th style="text-align:left">Action</th></tr></thead><tbody></tbody></table>
+      <div class="note">Waste rate = wasted ÷ (wasted + sold). The <strong>Egg &amp; Spinach Pot (70%)</strong>, <strong>Bacon Bap (41%)</strong> and <strong>Croissant Pastry (41%)</strong> waste heavily vs what they sell; the <strong>Breakfast Bagel</strong> is the biggest single £ loss (£218 / 4 wks). Cut these par levels first. Top 10 items ≈ £320/wk of waste retail.</div>
+    </div>
+  <!-- WASTEMERGE END -->
   </section>
 
   <!-- ===== TAB 5: Sentiment ===== -->
-  <section class="tab-panel" id="tab-sentiment">
-  <!-- REVIEWS START -->
-  <div class="panel" style="margin:0 0 14px"><div class="section-title">⭐ Customer — Google reviews <span style="font-weight:400;font-size:11px;color:#9a8a7c">· Overall (lifetime) · QTD · WTD — live from the Google-reviews sheet</span></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px"><div style="flex:1;min-width:96px;border:1px solid #ece3d6;border-radius:10px;padding:8px 10px"><div style="font-size:11px;color:#9a8a7c">Overall · lifetime</div><div style="font-size:18px;font-weight:700;color:#1f8a4c">4.85★</div><div style="font-size:11px;color:#9a8a7c">155 reviews</div></div><div style="flex:1;min-width:96px;border:1px solid #ece3d6;border-radius:10px;padding:8px 10px"><div style="font-size:11px;color:#9a8a7c">QTD · Q2 2026</div><div style="font-size:18px;font-weight:700;color:#b8860b">4.67★</div><div style="font-size:11px;color:#9a8a7c">36 reviews</div></div><div style="flex:1;min-width:96px;border:1px solid #ece3d6;border-radius:10px;padding:8px 10px"><div style="font-size:11px;color:#9a8a7c">WTD</div><div style="font-size:18px;font-weight:700;color:#b8860b">4.50★</div><div style="font-size:11px;color:#9a8a7c">2 reviews</div></div></div><div style="margin-top:10px"><span style="font-weight:700;color:#1f8a4c">Customer voice: Positive</span><span style="font-size:12px;color:#9a8a7c"> · Friendly service · Great coffee · Atmosphere & clean</span><div class="quote" style="margin-top:5px">“Went to Bewiched Cafe post Queensway Parkrun and it definitely hit the spot. I had a toffee nut iced latte and it was delicious. Can’t wait to try the…” <span class="who">— 5★ · 14 Jun</span></div><div class="quote" style="margin-top:5px">“Our venue for Sunday coffee and lunch. Wouldn&#x27;t go anywhere else! Brilliant staff, atmosphere and welcome.” <span class="who">— 5★ · 14 Jun</span></div><div class="quote" style="margin-top:5px">“Love the new drive through at billing. Beautiful setting over the lake. Friendly welcome Sarah made an excellent latte and a laugh. Pooches was pampered…” <span class="who">— 5★ · 13 Jun</span></div></div></div>
-  <!-- REVIEWS END -->
-    <style>
-      .sent-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
-      .scorebig{font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1}
-      .scoresub{font-size:12.5px;color:var(--muted);margin-top:4px}
-      .quote{border-left:3px solid #e7ddd2;padding:5px 0 5px 12px;margin:11px 0;font-size:12.5px;color:#5b4a3e;line-height:1.5}
-      .quote .who{display:block;font-size:11px;color:var(--muted);margin-top:5px;font-weight:600}
-      .stars{color:#e0a32e;letter-spacing:1px}
-      @media(max-width:860px){.sent-grid{grid-template-columns:1fr}}
-    </style>
-    <div class="section-title">💬 Sentiment — customers &amp; team</div>
-    <div class="cards">
-      <div class="card"><div class="lbl">Customer (Google)</div><div class="val" style="color:var(--green)">4.8★</div><div class="meta">302 reviews · live</div></div>
-      <div class="card"><div class="lbl">Team (RMS · /5)</div><div class="val" style="color:var(--red)">3.54</div><div class="meta">71 shift ratings</div></div>
-      <div class="card"><div class="lbl">Customer standing</div><div class="val" style="color:var(--green)">Top DT</div><div class="meta">highest-rated big-base drive-thru</div></div>
-      <div class="card"><div class="lbl">Team trend — June</div><div class="val" style="color:var(--red)">2.78 ▼</div><div class="meta">down from 3.75 (May) · 9 ratings</div></div>
-    </div>
-
-    <div class="sent-grid" style="margin-top:16px">
-      <div class="panel">
-        <div style="display:flex;align-items:baseline;gap:10px">
-          <div class="scorebig" style="color:var(--green)">4.8<span style="font-size:20px">★</span></div>
-          <div class="scoresub">Google · 302 reviews · the estate's highest-rated drive-thru on a big review base</div>
-        </div>
-        <div style="margin-top:12px">
-          <div class="quote">Our venue for Sunday coffee and lunch. Wouldn&#x27;t go anywhere else! Brilliant staff, atmosphere and welcome.<span class="who">14 Jun 2026 · <span class="stars">★★★★★</span></span></div>
-          <div class="quote">Went to Bewiched Cafe post Queensway Parkrun and it definitely hit the spot. I had a toffee nut iced latte and it was delicious.<span class="who">14 Jun 2026 · <span class="stars">★★★★★</span></span></div>
-          <div class="quote">great new Bewiched at billing so I had to try it. Everything new and clean with a great view of the marina and Aquadrome.<span class="who">13 Jun 2026 · <span class="stars">★★★★★</span></span></div>
-        </div>
-      </div>
-      <div class="panel">
+  <!-- ===== TAB: People ===== -->
+<section class="tab-panel" id="tab-people">
+  <div class="section-title">👥 People — team, attendance &amp; return-to-work</div>
+  <div class="note" style="margin-bottom:4px">Bench depth is held at company level in HRP (not per store). Lateness is shown for visibility but <b>not scored</b> — there is no clean per-store lateness target. RMS, sickness and return-to-work are per store.</div>
+  <div class="cards"><div class="card"><div class="lbl">Team (RMS · /5)</div><div class="val" style="color:var(--red)">3.54</div><div class="meta">71 shift ratings</div></div><div class="card"><div class="lbl">Team trend — June</div><div class="val" style="color:var(--red)">2.78 ▼</div><div class="meta">down from 3.75 (May) · 9 ratings</div></div><div class="card"><div class="lbl">Bench &amp; talent</div><div class="val" style="color:var(--muted)">n/a</div><div class="meta">not tracked at store level — HRP/company-level only</div></div></div>
+  <div class="panel">
         <div style="display:flex;align-items:baseline;gap:10px">
           <div class="scorebig" style="color:var(--red)">3.54<span style="font-size:20px">/5</span></div>
           <div class="scoresub">RMS “Rate My Shift” · 71 ratings · June softened to 2.78 on 9 ratings</div>
@@ -700,12 +674,10 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
         </div>
         <div class="note" style="margin-top:6px">The team score is the one to watch (3.5, June 2.78), but the comments point at <strong>kit and facilities, not morale</strong> — a drive-thru canopy, bags with handles, full bins and broken outside furniture. These are fixable estate-jobs that would lift shift scores quickly while customers already rate it 4.9★.</div>
       </div>
-    </div>
-
-    <div class="note" style="margin-top:14px"><strong>Two lenses on how it feels.</strong> Customer = the live Google rating &amp; newest reviews (a snapshot, refreshed weekly). Team = RMS “Rate My Shift”, where the crew score each shift 1–5 with a one-line comment. Google doesn’t publish a rating-over-time series, so the customer view shows the current score + recent reviews; the team chart is the monthly average from RMS.</div>
+  <div class="note" style="margin-top:14px"><strong>Two lenses on how it feels.</strong> Customer = the live Google rating &amp; newest reviews (a snapshot, refreshed weekly). Team = RMS “Rate My Shift”, where the crew score each shift 1–5 with a one-line comment. Google doesn’t publish a rating-over-time series, so the customer view shows the current score + recent reviews; the team chart is the monthly average from RMS.</div>
 
     <div class="focus amber"><span class="ar">→</span>Focus this week: 4.9★ customers but team at 3.5 — knock off the facilities niggles (canopy, bags, furniture) to lift shift scores.</div>
-    <div class="section-title" style="margin-top:26px">🩺 Sickness &amp; return-to-work</div>
+  <div class="section-title" style="margin-top:26px">🩺 Sickness &amp; return-to-work</div>
     <div class="cards">
       <div class="card"><div class="lbl">Sick absences</div><div class="val">11</div><div class="meta">Feb–Jun 2026</div></div>
       <div class="card"><div class="lbl">Lateness</div><div class="val">6</div><div class="meta">tracked separately</div></div>
@@ -728,7 +700,37 @@ else{bg=warm?"#fdf3e6":"#eef4fb";bd=warm?"#f0d8b0":"#cfe0f2";fg="#4a3a2a";
     </div>
 
     <div class="focus red"><span class="ar">→</span>Focus this week: RTW just 1/11 logged — make the return-to-work chat mandatory after every absence.</div>
-    <footer style="margin-top:18px">Customer: live Google reviews (Bewiched Coffee Wellingborough Drive-Thru) · pulled Jun 2026. Team: RMS Shift Ratings · Sickness &amp; RTW cross-referenced from the HRP sheet (‘Sickness / late’ → ‘RTW’).</footer>
+  <footer style="margin-top:18px">Customer: live Google reviews (Bewiched Coffee Wellingborough Drive-Thru) · pulled Jun 2026. Team: RMS Shift Ratings · Sickness &amp; RTW cross-referenced from the HRP sheet (‘Sickness / late’ → ‘RTW’).</footer>
+  </section>
+
+  <!-- ===== TAB: Customer ===== -->
+<section class="tab-panel" id="tab-sentiment">
+  <!-- REVIEWS START -->
+  <div class="panel" style="margin:0 0 14px"><div class="section-title">⭐ Customer — Google reviews <span style="font-weight:400;font-size:11px;color:#9a8a7c">· Overall (lifetime) · QTD · WTD — live from the Google-reviews sheet</span></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px"><div style="flex:1;min-width:96px;border:1px solid #ece3d6;border-radius:10px;padding:8px 10px"><div style="font-size:11px;color:#9a8a7c">Overall · lifetime</div><div style="font-size:18px;font-weight:700;color:#1f8a4c">4.85★</div><div style="font-size:11px;color:#9a8a7c">155 reviews</div></div><div style="flex:1;min-width:96px;border:1px solid #ece3d6;border-radius:10px;padding:8px 10px"><div style="font-size:11px;color:#9a8a7c">QTD · Q2 2026</div><div style="font-size:18px;font-weight:700;color:#b8860b">4.67★</div><div style="font-size:11px;color:#9a8a7c">36 reviews</div></div><div style="flex:1;min-width:96px;border:1px solid #ece3d6;border-radius:10px;padding:8px 10px"><div style="font-size:11px;color:#9a8a7c">WTD</div><div style="font-size:18px;font-weight:700;color:#b8860b">4.50★</div><div style="font-size:11px;color:#9a8a7c">2 reviews</div></div></div><div style="margin-top:10px"><span style="font-weight:700;color:#1f8a4c">Customer voice: Positive</span><span style="font-size:12px;color:#9a8a7c"> · Friendly service · Great coffee · Atmosphere & clean</span><div class="quote" style="margin-top:5px">“Went to Bewiched Cafe post Queensway Parkrun and it definitely hit the spot. I had a toffee nut iced latte and it was delicious. Can’t wait to try the…” <span class="who">— 5★ · 14 Jun</span></div><div class="quote" style="margin-top:5px">“Our venue for Sunday coffee and lunch. Wouldn&#x27;t go anywhere else! Brilliant staff, atmosphere and welcome.” <span class="who">— 5★ · 14 Jun</span></div><div class="quote" style="margin-top:5px">“Love the new drive through at billing. Beautiful setting over the lake. Friendly welcome Sarah made an excellent latte and a laugh. Pooches was pampered…” <span class="who">— 5★ · 13 Jun</span></div></div></div>
+  <!-- REVIEWS END -->
+  <style>
+      .sent-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+      .scorebig{font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1}
+      .scoresub{font-size:12.5px;color:var(--muted);margin-top:4px}
+      .quote{border-left:3px solid #e7ddd2;padding:5px 0 5px 12px;margin:11px 0;font-size:12.5px;color:#5b4a3e;line-height:1.5}
+      .quote .who{display:block;font-size:11px;color:var(--muted);margin-top:5px;font-weight:600}
+      .stars{color:#e0a32e;letter-spacing:1px}
+      @media(max-width:860px){.sent-grid{grid-template-columns:1fr}}
+    </style>
+  <div class="section-title" style="margin-top:18px">⭐ Customer — Google rating &amp; latest reviews</div>
+  <div class="cards"><div class="card"><div class="lbl">Customer (Google)</div><div class="val" style="color:var(--green)">4.8★</div><div class="meta">302 reviews · live</div></div><div class="card"><div class="lbl">Customer standing</div><div class="val" style="color:var(--green)">Top DT</div><div class="meta">highest-rated big-base drive-thru</div></div></div>
+  <div class="panel">
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <div class="scorebig" style="color:var(--green)">4.8<span style="font-size:20px">★</span></div>
+          <div class="scoresub">Google · 302 reviews · the estate's highest-rated drive-thru on a big review base</div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="quote">Our venue for Sunday coffee and lunch. Wouldn&#x27;t go anywhere else! Brilliant staff, atmosphere and welcome.<span class="who">14 Jun 2026 · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">Went to Bewiched Cafe post Queensway Parkrun and it definitely hit the spot. I had a toffee nut iced latte and it was delicious.<span class="who">14 Jun 2026 · <span class="stars">★★★★★</span></span></div>
+          <div class="quote">great new Bewiched at billing so I had to try it. Everything new and clean with a great view of the marina and Aquadrome.<span class="who">13 Jun 2026 · <span class="stars">★★★★★</span></span></div>
+        </div>
+      </div>
+  <div class="note" style="margin-top:14px">Customer view = the live Google rating &amp; newest reviews (a weekly snapshot). The Overall / QTD / WTD trio above is from the Google-reviews sheet.</div>
   </section>
 
   <footer id="foot"></footer>
@@ -809,8 +811,7 @@ const ROWS=[["Hot drinks", 37.2, 0.4, 52.9, -4.2, -5.2, 36.5, 51.7], ["Cold drin
 const PEER=[["Hot drinks", 52.9, 17, 21, 58.9, "Wellingborough 70.1%"], ["Cold drinks", 33.1, 3, 21, 25.6, "Rushden Lakes 37%"], ["Milkshakes", 15.0, 10, 21, 13.9, "Rushden Lakes 27.2%"], ["Food", 14.9, 8, 21, 13.9, "P'boro Fletton 24.6%"], ["Bakery", 13.5, 17, 21, 17.1, "P'boro Bridge St 22.9%"]];
 document.querySelector("#peertbl tbody").innerHTML=PEER.map(r=>{const top=r[2]<=r[3]/3,bot=r[2]>r[3]*2/3;const rc=top?["#e6f4ec","#1f8a4c"]:bot?["#fbeae8","#c0392b"]:["#f7f0dd","#b8860b"];const vc=r[1]>=r[4]?"#1f8a4c":"#c0392b";
 return "<tr><td>"+r[0]+"</td><td style=\"font-weight:700;color:"+vc+"\">"+r[1].toFixed(1)+"%</td><td><span style=\"display:inline-block;padding:2px 7px;border-radius:6px;font-weight:700;font-size:12px;background:"+rc[0]+";color:"+rc[1]+"\">"+r[2]+"/"+r[3]+"</span></td><td>"+r[4].toFixed(1)+"%</td><td style=\"text-align:left;font-size:11.5px;color:#8a7a6d\">"+r[5]+"</td></tr>";}).join("");
-const DESC={"Hot drinks":"lattes, cappuccinos, americanos, flat whites, hot choc, tea","Cold drinks":"iced lattes, frozen lemonade, iced matcha, frappés, cold brew","Milkshakes":"Oreo, Biscoff, vanilla, chocolate, strawberry shakes","Food":"croques, ciabattas, baps, wraps, salads, meal deals","Bakery":"traybakes, croissants, brownies, cookies, cakes","Other & retail":"bottled & soft drinks, beans, sundries"};
-document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{const s=r[2]>0?"#1f8a4c":r[2]<0?"#c0392b":"#8a7a6d";function mv(cur,pp,val){if(pp===null||pp===undefined)return ' <span style=\"color:#9a8a7c;font-size:10px\">(new this period)</span>';if(Math.abs(pp)<0.05)return ' <span style=\"color:#9a8a7c;font-size:10px\">(about the same as four weeks ago)</span>';var prior=(cur-pp).toFixed(1),up=pp>0,col=val?(up?"#1f8a4c":"#c0392b"):"#6b7785",word=up?"up":"down";return ' <span style=\"color:'+col+';font-size:10px\">('+word+' from '+prior+'% four weeks ago)</span>';}return "<tr><td>"+r[0]+"<br><span style=\"font-size:10.5px;color:#9a8a7c;font-weight:400\">"+(DESC[r[0]]||"")+"</span></td><td>"+"<b>"+r[1].toFixed(1)+"%</b> <span style=\"color:#9a8a7c;font-size:9px\">4-wk run rate</span>"+mv(r[1],r[4],false)+"<br><span style=\"color:#6b5a47;font-size:10.5px\">last week "+r[6].toFixed(1)+"%</span>"+"</td><td style=\"color:"+s+"\">"+(r[2]>0?"+":"")+r[2].toFixed(1)+" pts</td><td>"+"<b>"+r[3].toFixed(1)+"%</b> <span style=\"color:#9a8a7c;font-size:9px\">4-wk run rate</span>"+mv(r[3],r[5],true)+"<br><span style=\"color:#6b5a47;font-size:10.5px\">last week "+r[7].toFixed(1)+"%</span>"+"</td></tr>";}).join("");
+document.querySelector("#cattbl tbody").innerHTML=ROWS.map(r=>{const s=r[2]>0?"#1f8a4c":r[2]<0?"#c0392b":"#8a7a6d";return "<tr><td>"+r[0]+"</td><td style='font-weight:700'>"+r[1].toFixed(1)+"%</td><td>"+r[3].toFixed(1)+"%</td><td style='color:"+s+"'>"+(r[2]>0?"+":"")+r[2].toFixed(1)+" pts</td></tr>";}).join("");
 })();
 </script>
 
