@@ -8,6 +8,7 @@ def relocate_coaching(h):
     """Ensure the 'Documented coaching' block lives ONLY on the Op's Excellence (tab-f1)
     tab, not Sentiment. Sickness/RTW stay on Sentiment. Idempotent / self-healing."""
     sidx=h.find('id="tab-sentiment"'); cidx=h.find('Documented coaching')
+    if sidx<0: return h                            # new layout (no Sentiment tab) — leave coaching where it is
     if cidx<0 or (0<=cidx<sidx): return h          # missing, or already pre-sentiment (on f1)
     m=re.search(r'(\s*<div class="section-title"[^>]*>\U0001F4CB Documented coaching[\s\S]*?)(\n\s*<footer style="margin-top:18px">Customer:)', h)
     if not m: return h
@@ -312,8 +313,13 @@ def sales_tab_section(store):
                     f'<div class="card"><div class="lbl">🚗 Drive-thru mix</div><div class="val">{dt["mix"]:g}%</div>'
                     f'<div class="meta">share of the store\'s transactions taken at the drive-thru</div></div>'
                     f'</div>\n')
-    # GLENVALE: swap the Food & bakery traction panel for the live Transaction-quality block (idempotent).
-    if store in TXQ_STORES:
+    # NEW-LAYOUT stores (Glenvale + Leamington): the Sales tab is sales-only — the Transaction-quality
+    # block + PAT live on the Commercial tab (inject_txquality / inject_pat_card), so no tail here.
+    if store in COMMERCIAL_STORES:
+        food_paren=""
+        tail_section=""
+    # Other TXQ stores: swap the Food & bakery traction panel for the live Transaction-quality block.
+    elif store in TXQ_STORES:
         food_paren=""
         tail_section=txquality_section(store)+"\n"
     else:
@@ -337,25 +343,13 @@ def inject_sales_tab(h, store):
     body=sales_tab_section(store)
     DOT="\U0001F4C8"
     if store in COMMERCIAL_STORES:
-        # 1) first tab button -> "Commercial"
-        h=re.sub(r'(data-tab="sales" role="tab"><span class="dot">'+DOT+r'</span>)[^<]*(</button>)',
-                 r'\g<1>Commercial\g<2>', h, count=1)
-        # 2) drop the standalone Sales nav button (if present)
-        h=re.sub(r'\s*<button class="tab-btn"[^>]*data-tab="storesales"[^>]*>.*?</button>', '', h, flags=re.S)
-        # 3) drop storesales from the TAB_STATUS dot map
-        for frag in (',storesales:"green"','storesales:"green",','storesales:"green"'):
-            h=h.replace(frag,'')
-        # 4) strip any prior Sales block (standalone tab OR already folded), then fold INTO the
-        #    Commercial (tab-sales) panel before its </section> — back up over trailing whitespace
-        #    first so re-running is byte-identical (no indent drift).
+        # NEW 4-tab layout: the nav/panels are owned by restructure_tabs(). Here we only (re)render
+        # the sales-only STORESALES body and fold it at the END of the Sales panel (id=tab-sales),
+        # idempotent via the markers. (TXQUALITY + PAT + mix live on the Commercial tab.)
         h=re.sub(r'\s*<!-- STORESALES START -->.*?<!-- STORESALES END -->', '', h, flags=re.S)
         i=h.find('id="tab-sales">')
         if i<0: return h
-        # fold the Sales body at the END of the Commercial panel but BEFORE the merged-in
-        # Sales-mix block (MIXMERGE) when present, so STORESALES → MIXMERGE order is identical
-        # whether this is the first collapse run or a later re-render (idempotent).
-        mm=h.find('<!-- MIXMERGE START -->', i)
-        j=mm if mm>=0 else h.find('</section>', i)
+        j=h.find('</section>', i)
         if j<0: return h
         k=j
         while k>0 and h[k-1] in ' \t\n': k-=1
@@ -401,10 +395,10 @@ def star_card(store):
             for m in p.get("metrics",[]))
         rows+=(f'<div style="padding:6px 0;border-top:1px solid #efe7d6">'
                f'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3f2d22">'
-               f'<span style="width:96px;font-weight:800">{p["name"]}</span>{_stars(p["star"],14)}'
+               f'<span style="width:124px;font-weight:800">{p["name"]}</span>{_stars(p["star"],14)}'
                f'<span style="font-weight:800;width:30px;color:{pcol}">{p["star"]:g}</span>'
                f'<span style="font-weight:700;color:{pcol};font-size:11px">{"on" if pon else "off"} target</span></div>'
-               f'<div class="mini" style="margin:2px 0 0 96px;line-height:1.5">Blend: {blend}</div></div>')
+               f'<div class="mini" style="margin:2px 0 0 124px;line-height:1.5">Blend: {blend}</div></div>')
     # headline stars with a 4.6 target marker drawn over the row
     pct_tgt=round(tgt/5*100,1)
     head_stars=(f'<span style="position:relative;display:inline-block">{_stars(comp,34)}'
@@ -416,7 +410,7 @@ def star_card(store):
             f'<div style="display:flex;align-items:center;gap:12px;margin-top:6px">{head_stars}'
             f'<div style="font-size:30px;font-weight:800;color:{head_col}">{comp:g} <span style="font-size:15px;color:#9a8a7c">/ 5 · target {tgt:g}</span></div></div></div>'
             f'<div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:0">{rows}</div></div>'
-            f'<div class="mini" style="margin-top:10px">Four pillars aligned to the tabs — <b>Commercial · Operations · People · Customer</b> — each the mean of the metrics shown (every metric scored 0–5 vs its target: target=3★, stretch=5★). Composite = the four-pillar average. <b>Grow target = {tgt:g}★</b> — below {tgt:g} is off target (the red line marks {tgt:g}★).</div>'
+            f'<div class="mini" style="margin-top:10px">Four pillars aligned to the tabs — <b>Sales · Commercial · Operations · People &amp; Customer</b> — each the mean of the metrics shown (every metric scored 0–5 vs its target: target=3★, stretch=5★). <b>Commercial</b> now blends <b>Profit after tax</b> + <b>CPH</b> vs each store’s own target. Composite = the four-pillar average. <b>Grow target = {tgt:g}★</b> — below {tgt:g} is off target (the red line marks {tgt:g}★).</div>'
             f'</div>\n<!-- STARRATING END -->')
 
 def inject_star(h, store):
@@ -428,30 +422,48 @@ def inject_star(h, store):
     return re.sub(r'(</header>)', lambda m: m.group(1)+"\n  "+sc, h, count=1)
 
 def compliance_panel(store):
+    """Operations compliance block: remote audit, compliance %, coaching (CS & Barista), RTW %.
+    Reads st['ops'] (build_star). When ops isn't pulled for a store (e.g. Leamington), returns a
+    clearly-flagged 'pending' block rather than nothing — so the metrics are never silently dropped."""
+    if store not in COMMERCIAL_STORES: return ""
     st=(STAR.get("stores") or {}).get(store) if STAR else None
     c=st and st.get("ops")
-    if not c: return ""
+    if not c:
+        return ('<!-- COMPLIANCE START -->\n'
+                '  <div class="section-title" style="margin-top:18px">🛡️ Operations &amp; compliance — quarter to date</div>\n'
+                '  <div class="note" style="background:#fff8ec;border:1px solid #f0e0bf;color:#7a5e1e">'
+                'Remote audit, compliance %, coaching completion (CS &amp; Barista) and RTW % are <b>pending</b> for this store — '
+                'the remote-assessment, Process Street open/close and HRP coaching feeds are not yet wired in (star_inputs is null). '
+                'Brand audit (above) and RTW are shown where available; the rest will populate once those slow feeds are filled.</div>\n'
+                '  <!-- COMPLIANCE END -->')
+    cs=c.get("coaching_cs_pct"); ba=c.get("coaching_barista_pct")
+    coach_disp=(f'{cs:g}%' if cs is not None else 'n/a')+(f' · Barista {ba:g}%' if ba is not None else '')
     return (f'<!-- COMPLIANCE START -->\n'
-            f'<div class="section-title" style="margin-top:4px">🛡️ Operations &amp; compliance — quarter to date</div>\n'
-            f'<div class="cards" style="grid-template-columns:repeat(4,1fr)">'
-            f'<div class="card"><div class="lbl">Brand audit</div><div class="val">{c.get("brand_audit"):g}<span style="font-size:15px;color:var(--muted)">/5</span></div>'
-            f'<div class="meta">QTD · feeds Operations</div></div>'
+            f'  <div class="section-title" style="margin-top:18px">🛡️ Operations &amp; compliance — quarter to date</div>\n'
+            f'  <div class="cards" style="grid-template-columns:repeat(4,1fr)">'
             f'<div class="card"><div class="lbl">Remote audit</div><div class="val">{c.get("remote_audit"):g}<span style="font-size:15px;color:var(--muted)">/100</span></div>'
-            f'<div class="meta">avg of {c.get("remote_n")} QTD · feeds Operations</div></div>'
+            f'<div class="meta">avg of {c.get("remote_n")} QTD</div></div>'
             f'<div class="card"><div class="lbl">Compliance</div><div class="val">{c.get("compliance_pct"):g}%</div>'
-            f'<div class="meta">coaching {c.get("coaching_cs_pct"):g}% + open/close {c.get("openclose_pct"):g}% (50/50) · feeds Operations</div></div>'
+            f'<div class="meta">coaching {coach_disp} + open/close {c.get("openclose_pct"):g}% (50/50)</div></div>'
+            f'<div class="card"><div class="lbl">Coaching completion</div><div class="val">{coach_disp}</div>'
+            f'<div class="meta">Customer Service &amp; Barista checklists · QTD</div></div>'
             f'<div class="card"><div class="lbl">Return-to-work (RTW)</div><div class="val">{c.get("rtw_pct"):g}%</div>'
-            f'<div class="meta">{esc(c.get("rtw_detail",""))} · feeds People</div></div>'
+            f'<div class="meta">{esc(c.get("rtw_detail",""))}</div></div>'
             f'</div>\n'
-            f'<div class="note" style="margin-top:8px">The <b>Operations</b> star is now an equal-thirds blend of <b>brand audit</b>, <b>remote audit</b> and <b>compliance</b> (coaching {c.get("coaching_cs_pct"):g}% + open/close {c.get("openclose_pct"):g}%, from the Process Street → HRP feed: {esc(c.get("openclose_detail",""))}). The <b>F1 race score below now feeds the Customer star</b> (50/50 with Google health), not Operations. RTW feeds People.</div>\n'
-            f'<!-- COMPLIANCE END -->')
+            f'  <div class="note" style="margin-top:8px">Remote audit, compliance (coaching CS {coach_disp.split(" · ")[0]} + open/close {c.get("openclose_pct"):g}%, from the Process Street → HRP feed: {esc(c.get("openclose_detail",""))}) and RTW sit on Operations alongside the brand audit &amp; F1. RTW also feeds the People &amp; Customer star.</div>\n'
+            f'  <!-- COMPLIANCE END -->')
 
 def inject_compliance(h, store):
     h=re.sub(r'\s*<!-- COMPLIANCE START -->.*?<!-- COMPLIANCE END -->', '', h, flags=re.S)
     cp=compliance_panel(store)
     if not cp: return h
-    # insert at the very top of the Op's Excellence tab (id="tab-f1")
-    return re.sub(r'(<section class="tab-panel"[^>]*id="tab-f1">)', lambda m: m.group(1)+"\n  "+cp, h, count=1)
+    # Operations tab (id="tab-f1"): place at the END of the panel; inject_audit anchors the brand-audit
+    # block just before COMPLIANCE START, giving the stable order F1 → audit → compliance every run.
+    sp=_section_span(h,'tab-f1')
+    if not sp: return h
+    _,_,e,_=sp; k=e
+    while k>0 and h[k-1] in ' \t\n': k-=1
+    return h[:k]+'\n  '+cp+'\n  '+h[e:]
 
 # ---- Simply Lunch food order forecast (chilled food-to-go) -------------------
 # Gated to stores with a simply_lunch_<key>.json file (Glenvale only for now).
@@ -631,12 +643,15 @@ def reviews_block(store):
             f'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px">{trio}</div>{voice}</div>')
 
 def inject_reviews(h, store):
-    """Idempotent: strip any prior REVIEWS block, then (re)insert at the top of the
-    Sentiment tab so the Overall/QTD/WTD trio + Customer Voice re-render cleanly each run."""
+    """Idempotent: strip any prior REVIEWS block, then (re)insert at the TOP of the Customer
+    panel. In the new layout that panel is the merged 'People & Customer' tab (id=tab-people);
+    before the merge it is the legacy Customer tab (id=tab-sentiment). Target whichever exists."""
     h=re.sub(r'\s*<!-- REVIEWS START -->.*?<!-- REVIEWS END -->', '', h, flags=re.S)
     block='\n  <!-- REVIEWS START -->\n  '+reviews_block(store)+'\n  <!-- REVIEWS END -->'
-    h2,n=re.subn(r'(<section class="tab-panel" id="tab-sentiment">)', lambda m:m.group(1)+block, h, count=1)
-    return h2 if n else h
+    for pid in ('tab-sentiment','tab-people'):
+        h2,n=re.subn(r'(<section class="tab-panel[^"]*" id="'+pid+r'">)', lambda m:m.group(1)+block, h, count=1)
+        if n: return h2
+    return h
 
 # ===== 4-TAB RESTRUCTURE (Glenvale + Leamington only) ============================
 # Collapse the legacy 5 tabs (Commercial · Wastage · Sales mix & capture · Op's
@@ -711,17 +726,17 @@ def audit_section(store):
             '  <!-- AUDIT END -->')
 
 def inject_audit(h, store):
-    """(Re)render the brand-audit block on the Operations tab, just above the folded-in
-    wastage block. Idempotent via AUDIT markers; anchors to the WASTEMERGE marker so the
-    order F1 → audit → wastage is identical on every run."""
+    """(Re)render the brand-audit block on the Operations tab (id=tab-f1), just before the
+    compliance block. Idempotent via AUDIT markers; anchors to COMPLIANCE START so the order
+    F1 → audit → compliance is identical on every run."""
     h=re.sub(r'\s*<!-- AUDIT START -->.*?<!-- AUDIT END -->', '', h, flags=re.S)
     blk=audit_section(store)
     if not blk: return h
-    w=h.find('<!-- WASTEMERGE START -->')
-    if w>=0:
-        k=w
+    c=h.find('<!-- COMPLIANCE START -->')
+    if c>=0:
+        k=c
         while k>0 and h[k-1] in ' \t\n': k-=1
-        return h[:k]+'\n  '+blk+'\n  '+h[w:]
+        return h[:k]+'\n  '+blk+'\n  '+h[c:]
     sp=_section_span(h,'tab-f1')
     if not sp: return h
     _,_,e,_=sp; k=e
@@ -744,93 +759,157 @@ def simplify_mix_table(h):
              lambda m: new, h, count=1, flags=re.S)
     return h
 
-def _split_sentiment(h, store):
-    """Split the legacy Sentiment panel: Google reviews stay on Customer (id=tab-sentiment),
-    the team/RMS + sickness/lateness/RTW + bench move to a new People panel (id=tab-people)."""
+def _cut_marker(h, name):
+    """Remove the first <!-- NAME START --> … <!-- NAME END --> block (and its leading whitespace).
+    Returns (h_without, block_text or None)."""
+    m=re.search(r'\s*<!-- '+name+r' START -->.*?<!-- '+name+r' END -->', h, flags=re.S)
+    if not m: return h, None
+    return h[:m.start()]+h[m.end():], m.group(0).strip()
+
+def pat_card(store):
+    """Profit-after-tax KPI card for the Commercial tab — surfaced visibly (£/day, % of sales, vs
+    target), fed from the same manual PAT input that feeds the Commercial Grow pillar (txquality static)."""
+    t=TXQ_BY_STORE.get(store)
+    if not t: return ""
+    S=t.get("static",{}); cur=S.get("pat_day_current"); tgt=S.get("pat_day_target")
+    if cur is None: return ""
+    curpct=S.get("pat_day_current_pct"); tgtpct=S.get("pat_pct_target",18); gap=S.get("gap_day")
+    basis=S.get("pat_basis","latest P&amp;L"); met=(tgt is None) or (cur>=tgt); col="#1f8a4c" if met else "#c0392b"
+    vs=(cur-tgt) if tgt is not None else 0
+    return ('<!-- PATCARD START -->\n'
+            '  <div class="section-title">💰 Profit after tax — headline KPI</div>\n'
+            '  <div class="cards" style="grid-template-columns:repeat(3,1fr)">'
+            f'<div class="card"><div class="lbl">Profit after tax / day</div><div class="val" style="color:{col}">£{cur:g}</div>'
+            f'<div class="meta">{curpct:g}% of sales · {basis} · manual</div></div>'
+            f'<div class="card"><div class="lbl">PAT target / day</div><div class="val" style="color:#2a9d8f">£{tgt:g}</div>'
+            f'<div class="meta">{tgtpct:g}% of sales · gap −£{abs(gap) if gap is not None else abs(vs):g}/day</div></div>'
+            f'<div class="card"><div class="lbl">vs target</div><div class="val" style="color:{col}">{"+" if vs>=0 else "−"}£{abs(vs):g}/day</div>'
+            f'<div class="meta">feeds the Commercial Grow pillar (PAT + CPH)</div></div>'
+            '</div>\n'
+            f'  <div class="note" style="margin-bottom:4px">Profit after tax is a <b>manual</b> input from the {basis} (not POS). '
+            'It is surfaced here as a headline KPI and also feeds the <b>Commercial</b> Grow-score pillar (blended with CPH vs target). Target = 18% of sales.</div>\n'
+            '  <!-- PATCARD END -->')
+
+def inject_pat_card(h, store):
+    h=re.sub(r'\s*<!-- PATCARD START -->.*?<!-- PATCARD END -->', '', h, flags=re.S)
+    blk=pat_card(store)
+    if not blk: return h
+    i=h.find('id="tab-commercial">')
+    if i<0: return h
+    ins=h.find('>',i)+1
+    return h[:ins]+'\n  '+blk+h[ins:]
+
+def inject_txquality(h, store):
+    """(Re)render the transaction-quality block (incl. the PAT daily tracker) at the END of the
+    Commercial tab. Idempotent via the TXQUALITY markers."""
+    h=re.sub(r'\s*<!-- TXQUALITY START -->.*?<!-- TXQUALITY END -->', '', h, flags=re.S)
+    if store not in COMMERCIAL_STORES: return h
+    blk=txquality_section(store)
+    if not blk: return h
+    sp=_section_span(h,'tab-commercial')
+    if not sp: return h
+    _,_,e,_=sp; k=e
+    while k>0 and h[k-1] in ' \t\n': k-=1
+    return h[:k]+'\n  '+blk+'\n  '+h[e:]
+
+def coaching_due_block():
+    return ('<!-- COACHINGDUE START -->\n'
+            '  <div class="section-title" style="margin-top:18px">🎓 Coaching due — by name</div>\n'
+            '  <div class="note" style="background:#fff8ec;border:1px solid #f0e0bf;color:#7a5e1e">A per-name coaching-due list is '
+            '<b>pending</b> — the HRP coaching-checklist feed is not yet wired per person. Coaching <b>completion %</b> (Customer Service '
+            '&amp; Barista) is shown on the Operations tab.</div>\n'
+            '  <!-- COACHINGDUE END -->')
+
+def _cut_documented_coaching(h):
+    """Lift the '📋 Documented coaching' block (CS & Barista checklists + who's still due by name)
+    out of the Operations tab so it can move to People & Customer. Coaching completion % stays on
+    Operations via the compliance panel. Returns (h_without, block or None)."""
+    i=h.find('\U0001F4CB Documented coaching')
+    if i<0: return h, None
+    s=h.rfind('<div class="section-title"',0,i)
+    a=h.find('<!-- AUDIT START -->', s)
+    e=a if a>=0 else h.find('</section>', s)
+    if s<0 or e<0: return h, None
+    block=h[s:e].rstrip()
+    k=s
+    while k>0 and h[k-1] in ' \t\n': k-=1
+    return h[:k]+'\n  '+h[e:], block
+
+def _merge_customer_into_people(h, coaching=None):
+    """Merge the Customer panel (id=tab-sentiment: Google reviews + rating/snippets) into the
+    People panel to form 'People & Customer' (id=tab-people). Customer content goes on TOP; the
+    documented-coaching (due-by-name) block — or a flagged placeholder — goes at the end."""
     sp=_section_span(h,'tab-sentiment')
     if not sp: return h
-    s,bs,e,ee=sp; inner=h[bs:e]
-    ra=inner.find('<!-- REVIEWS START -->'); rb=inner.find('<!-- REVIEWS END -->')
-    reviews=inner[ra:rb+len('<!-- REVIEWS END -->')] if (ra>=0 and rb>=0) else ''
-    sta=inner.find('<style>'); style=inner[sta:inner.find('</style>',sta)+len('</style>')] if sta>=0 else ''
-    # the 4 summary cards: [0]=Customer(Google) [1]=Team(RMS) [2]=Customer standing [3]=Team trend
-    ci=inner.find('<div class="cards">', (sta if sta>=0 else 0))
-    cb=_div_blocks(inner[ci:],'<div class="cards">'); cs,ce=cb[0]; cs+=ci; ce+=ci
-    cont=inner[inner.find('>',cs)+1:ce-len('</div>')]
-    cardspans=_div_blocks(cont,'<div class="card">'); cards=[cont[a:b] for a,b in cardspans]
-    # sent-grid #1: [0]=Google panel, [1]=RMS panel
-    g1=inner.find('<div class="sent-grid"', ce); gb=_div_blocks(inner[g1:],'<div class="sent-grid"')
-    gs,ge=gb[0]; gs+=g1; ge+=g1
-    gridc=inner[inner.find('>',gs)+1:ge-len('</div>')]
-    panspans=_div_blocks(gridc,'<div class="panel">'); panels=[gridc[a:b] for a,b in panspans]
-    googlePanel=panels[0] if panels else ''; rmsPanel=panels[1] if len(panels)>1 else ''
-    sicki=inner.find('\U0001FA7A')  # 🩺 sickness section-title
-    sicks=inner.rfind('<div class="section-title"',0,sicki)
-    midnotes=inner[ge:sicks]                 # two-lenses note + amber cross-focus
-    foot=inner.find('<footer'); sickblock=inner[sicks:foot if foot>=0 else len(inner)]
-    footer=inner[foot:] if foot>=0 else ''
-    benchCard=('<div class="card"><div class="lbl">Bench &amp; talent</div>'
-               '<div class="val" style="color:var(--muted)">n/a</div>'
-               '<div class="meta">not tracked at store level — HRP/company-level only</div></div>')
-    cov=('<div class="note" style="margin-bottom:4px">Bench depth is held at company level in HRP (not per store). '
-         'Lateness is shown for visibility but <b>not scored</b> — there is no clean per-store lateness target. '
-         'RMS, sickness and return-to-work are per store.</div>')
-    cust_note=('<div class="note" style="margin-top:14px">Customer view = the live Google rating &amp; newest reviews '
-               '(a weekly snapshot). The Overall / QTD / WTD trio above is from the Google-reviews sheet.</div>')
-    customer=(reviews+'\n  '+style+
-              '\n  <div class="section-title" style="margin-top:18px">⭐ Customer — Google rating &amp; latest reviews</div>'
-              '\n  <div class="cards">'+cards[0]+cards[2]+'</div>'
-              '\n  '+googlePanel+
-              '\n  '+cust_note)
-    people=('<div class="section-title">\U0001F465 People — team, attendance &amp; return-to-work</div>'
-            '\n  '+cov+
-            '\n  <div class="cards">'+cards[1]+cards[3]+benchCard+'</div>'
-            '\n  '+rmsPanel+
-            '\n  '+midnotes.strip()+
-            '\n  '+sickblock.strip()+
-            ('\n  '+footer.strip() if footer.strip() else ''))
-    people_sec='<!-- ===== TAB: People ===== -->\n<section class="tab-panel" id="tab-people">\n  '+people+'\n  </section>'
-    cust_sec='<!-- ===== TAB: Customer ===== -->\n<section class="tab-panel" id="tab-sentiment">\n  '+customer.strip()+'\n  </section>'
-    return h[:s]+people_sec+'\n\n  '+cust_sec+h[ee:]
+    s,bs,e,ee=sp; cust=h[bs:e].strip()
+    h=h[:s].rstrip()+'\n  '+h[ee:]                    # drop the Customer section
+    pp=_section_span(h,'tab-people')
+    if not pp: return h
+    _,pbs,_,_=pp
+    h=h[:pbs]+'\n  '+cust+'\n  '+h[pbs:]              # prepend Customer content to People
+    pp=_section_span(h,'tab-people'); _,_,pe,_=pp
+    tail=('<!-- COACHINGDUE START -->\n  '+coaching.strip()+'\n  <!-- COACHINGDUE END -->') if coaching else coaching_due_block()
+    k=pe
+    while k>0 and h[k-1] in ' \t\n': k-=1
+    return h[:k]+'\n  '+tail+'\n  '+h[pe:]
 
 def restructure_tabs(h, store):
+    """Rebuild the two store dashboards into FOUR tabs — 📈 Sales · 💰 Commercial · 🏁 Operations ·
+    👥 People & Customer — entirely in-patcher. Idempotent: the move fires only when the page is
+    still in the previous layout (detected by the ABSENCE of id="tab-commercial") and is a no-op
+    afterwards; every per-run injector then targets the new panels."""
     if store not in COMMERCIAL_STORES: return h
-    if 'id="tab-people"' in h: return h          # already 4-tab — no-op (idempotent)
+    if 'id="tab-commercial"' in h: return h          # already new layout — no-op (idempotent)
+    # 1) cut the movable marker blocks out of their current homes
+    h, waste = _cut_marker(h, 'WASTEMERGE')          # wastage  (Operations -> Commercial)
+    h, mixm  = _cut_marker(h, 'MIXMERGE')            # mix & capture + Simply Lunch (-> Commercial)
+    h, coaching = _cut_documented_coaching(h)        # documented coaching / due-by-name (Operations -> People & Customer)
+    # 2) carve the current first panel (tab-sales) into Sales-keep vs Commercial-move
+    sp=_section_span(h,'tab-sales')
+    if not sp: return h
+    s,bs,e,ee=sp; body=h[bs:e]
+    curve_i=body.find('<div class="section-title">Weekly sales')
+    fc_i   =body.find('<div class="section-title">Forward forecast')
+    sch_t  =body.find('\U0001F9EE Schedule builder'); sch_i=body.rfind('<div class="section-title"',0,sch_t) if sch_t>=0 else -1
+    ss_i   =body.find('<!-- STORESALES START -->')
+    if min(curve_i,fc_i,sch_i,ss_i)<0: return h      # unexpected shape — bail safely
+    header=body[:curve_i]                            # actbox + the 4 KPI cards
+    curve =body[curve_i:fc_i]                        # 13-week sales trend chart   -> Sales
+    fc    =body[fc_i:sch_i]                          # forward forecast & hours    -> Commercial
+    sched =body[sch_i:ss_i]                          # schedule builder            -> Commercial
+    storesales=body[ss_i:]                           # sales-by-day/records/drive-thru/daypart -> Sales
+    # split the 4-card KPI row: pull the CPH card out to Commercial, keep the rest in Sales
+    cb=_div_blocks(header,'<div class="cards">')
+    if cb:
+        cs0,ce0=cb[0]; cont=header[header.find('>',cs0)+1:ce0-len('</div>')]
+        cspans=_div_blocks(cont,'<div class="card">'); ccards=[cont[a:b] for a,b in cspans]
+        ci=next((k for k,c in enumerate(ccards) if 'CPH' in c), None)
+        cph=ccards.pop(ci) if ci is not None else ''
+        sales_cards='<div class="cards">'+''.join(ccards)+'</div>'
+        header=header[:cs0]+sales_cards+header[ce0:]
+    else:
+        cph=''
+    cph_block=('<div class="cards" style="grid-template-columns:repeat(2,1fr)">'+cph+'</div>\n  ') if cph else ''
+    # normalise the STORESALES marker to a 2-space indent so the migration run is itself a fixed
+    # point (matches how inject_sales_tab re-folds it on later runs).
+    sales_body=(header+curve.rstrip()+'\n  '+storesales.lstrip()).strip()
+    commercial_body=(cph_block+fc+sched+((waste+'\n  ') if waste else '')+(mixm or '')).strip()
+    sales_sec='<section class="tab-panel active" id="tab-sales">\n  '+sales_body+'\n  </section>'
+    comm_sec=('<!-- ===== TAB: Commercial ===== -->\n<section class="tab-panel" id="tab-commercial">\n  '
+              +commercial_body+'\n  </section>')
+    h=h[:s]+sales_sec+'\n\n  '+comm_sec+h[ee:]
+    # 3) merge Customer into People & Customer (+ documented-coaching due-by-name block)
+    h=_merge_customer_into_people(h, coaching)
+    # 4) nav + TAB_STATUS dots
     NAV=('<nav class="tabs" role="tablist">\n'
-         '    <button class="tab-btn active" data-tab="sales" role="tab"><span class="dot">\U0001F4C8</span>Commercial</button>\n'
+         '    <button class="tab-btn active" data-tab="sales" role="tab"><span class="dot">\U0001F4C8</span>Sales</button>\n'
+         '    <button class="tab-btn" data-tab="commercial" role="tab"><span class="dot">\U0001F4B0</span>Commercial</button>\n'
          '    <button class="tab-btn" data-tab="f1" role="tab"><span class="dot">\U0001F3C1</span>Operations</button>\n'
-         '    <button class="tab-btn" data-tab="people" role="tab"><span class="dot">\U0001F465</span>People</button>\n'
-         '    <button class="tab-btn" data-tab="sentiment" role="tab"><span class="dot">⭐</span>Customer</button>\n'
+         '    <button class="tab-btn" data-tab="people" role="tab"><span class="dot">\U0001F465</span>People &amp; Customer</button>\n'
          '  </nav>')
     h=re.sub(r'<nav class="tabs"[^>]*>.*?</nav>', lambda m: NAV, h, count=1, flags=re.S)
     h=re.sub(r'const TAB_STATUS=\{[^}]*\};',
-             'const TAB_STATUS={sales:"red",f1:"red",people:"red",sentiment:"green"};', h, count=1)
-    # C) fold Sales mix & capture into Commercial (after the STORESALES block)
-    sp=_section_span(h,'tab-mix')
-    if sp:
-        s,bs,e,ee=sp; mixbody=h[bs:e].strip()
-        h=h[:s].rstrip()+'\n  '+h[ee:]
-        anchor=h.find('<!-- STORESALES END -->')
-        block=('\n  <!-- MIXMERGE START -->\n'
-               '  <div class="section-title" style="margin-top:26px">\U0001F9FA Sales mix &amp; capture</div>\n  '
-               +mixbody+'\n  <!-- MIXMERGE END -->')
-        if anchor>=0:
-            ins=anchor+len('<!-- STORESALES END -->')
-            h=h[:ins]+block+h[ins:]
-        else:
-            cp=_section_span(h,'tab-sales')
-            if cp: h=h[:cp[2]]+block+'\n  '+h[cp[2]:]
-    # D) fold Wastage into Operations
-    wp=_section_span(h,'tab-waste')
-    if wp:
-        s,bs,e,ee=wp; wbody=h[bs:e].strip()
-        h=h[:s].rstrip()+'\n  '+h[ee:]
-        op=_section_span(h,'tab-f1')
-        if op:
-            block='\n  <!-- WASTEMERGE START -->\n  '+wbody+'\n  <!-- WASTEMERGE END -->\n  '
-            h=h[:op[2]]+block+h[op[2]:]
-    # E) split Sentiment -> People + Customer
-    h=_split_sentiment(h, store)
+             'const TAB_STATUS={sales:"red",commercial:"red",f1:"red",people:"green"};', h, count=1)
     return h
 
 def patch(fn,store,coach,mature):
@@ -1060,14 +1139,17 @@ def patch(fn,store,coach,mature):
     before=('data-tab="storesales"' in h)
     h=inject_sales_tab(h,store)   # rename front tab -> "Forecast / Review" + (re)build store-scoped "Sales" tab
     log.append("  ✓ Sales tab "+("rebuilt" if before else "added")+" + front tab renamed to Forecast / Review")
-    # 4-TAB RESTRUCTURE (Glenvale + Leamington only): collapse to Commercial · Operations ·
-    # People · Customer, fold Sales-mix into Commercial + simplify its mix table, fold wastage
-    # into Operations + add the brand-audit block, split Sentiment into People + Customer.
+    # 4-TAB RESTRUCTURE (Glenvale + Leamington only): Sales · Commercial · Operations ·
+    # People & Customer. restructure_tabs moves the blocks; then the audit/compliance, PAT card,
+    # transaction-quality and simplified mix table re-render into their new homes (idempotent).
     if store in COMMERCIAL_STORES:
         h=restructure_tabs(h,store)
-        h=inject_audit(h,store)        # brand-audit QTD + recurring themes on Operations (above wastage)
+        h=inject_audit(h,store)        # brand-audit QTD + themes on Operations (before compliance)
+        h=inject_compliance(h,store)   # full Operations & compliance panel on Operations (pending-flagged if no feed)
+        h=inject_pat_card(h,store)     # Profit-after-tax KPI card at the top of Commercial
+        h=inject_txquality(h,store)    # transaction-quality + PAT tracker on Commercial
         h=simplify_mix_table(h)        # clean the category-mix table to match the capture table
-        log.append("  ✓ 4-tab restructure (Commercial · Operations · People · Customer) + audit + mix-table simplified")
+        log.append("  ✓ 4-tab restructure (Sales · Commercial · Operations · People & Customer) + PAT card + audit/compliance")
     # FOCUS BOX (top of page) — rebuild LAST, from the page's now-current figures.
     _newbox=build_focus_box(h,store,coach)
     h2,_nn=re.subn(r'<div class="focusmod[^"]*">\s*<h2>\U0001F3AF Focus areas[\s\S]*?</ul>\s*</div>', lambda m:_newbox, h, count=1)
