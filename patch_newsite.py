@@ -88,6 +88,8 @@ PILLAR_CSS="""
   @media(max-width:760px){.kpws{grid-template-columns:repeat(2,1fr)}}"""
 
 def pillars(store):
+    if store in COMMERCIAL_STORES:
+        return '  <!-- PILLARS START -->\n  <!-- PILLARS END -->\n'
     r=R[store]; sh=STH.get(store,{})
     # SALES
     y=r.get('yoy_lw')
@@ -380,21 +382,35 @@ def _stars(score, size):
 def star_card(store):
     st=(STAR.get("stores") or {}).get(store) if STAR else None
     if not st: return ""
-    comp=st["composite"]
+    comp=st["composite"]; tgt=st.get("target",4.6); on=comp>=tgt
+    head_col="#1f8a4c" if on else "#c0392b"
+    badge=(f'<span style="background:{"#e6f4ec" if on else "#fdecea"};color:{head_col};font-weight:800;'
+           f'border:1px solid {"#bfe3cd" if on else "#f0ccc5"};border-radius:999px;padding:2px 10px;font-size:11px;'
+           f'margin-left:10px">{"ON TARGET" if on else "OFF TARGET"} · target {tgt:g}★</span>')
     rows=""
     for p in st["pillars"]:
-        rows+=(f'<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#3f2d22">'
-               f'<span style="width:74px;font-weight:700">{p["name"]}</span>{_stars(p["star"],14)}'
-               f'<span style="font-weight:800;width:26px">{p["star"]:g}</span>'
-               f'<span class="mini">· {p["qtd"]} <span style="opacity:.7">({p["target"]})</span></span></div>')
+        pon=p.get("on_target", p["star"]>=tgt); pcol="#1f8a4c" if pon else "#c0392b"
+        blend=" · ".join(
+            (f'{m["label"]} {m["value"]}'+(f' <span style="opacity:.65">({m["star"]:g}★)</span>' if m.get("star") is not None else ' <span style="opacity:.55">(shown, not scored)</span>'))
+            for m in p.get("metrics",[]))
+        rows+=(f'<div style="padding:6px 0;border-top:1px solid #efe7d6">'
+               f'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3f2d22">'
+               f'<span style="width:96px;font-weight:800">{p["name"]}</span>{_stars(p["star"],14)}'
+               f'<span style="font-weight:800;width:30px;color:{pcol}">{p["star"]:g}</span>'
+               f'<span style="font-weight:700;color:{pcol};font-size:11px">{"on" if pon else "off"} target</span></div>'
+               f'<div class="mini" style="margin:2px 0 0 96px;line-height:1.5">Blend: {blend}</div></div>')
+    # headline stars with a 4.6 target marker drawn over the row
+    pct_tgt=round(tgt/5*100,1)
+    head_stars=(f'<span style="position:relative;display:inline-block">{_stars(comp,34)}'
+                f'<span title="target {tgt:g}★" style="position:absolute;top:-3px;bottom:-3px;left:{pct_tgt}%;width:2px;background:#c0392b"></span></span>')
     return (f'<!-- STARRATING START -->\n'
-            f'<div class="card" style="border:1.5px solid #e8b923;background:linear-gradient(180deg,#fffdf5,#fff);margin:16px 0 6px;padding:16px 18px">'
+            f'<div class="card" style="border:1.5px solid {"#e8b923" if on else "#e0a59a"};background:linear-gradient(180deg,{"#fffdf5" if on else "#fff7f5"},#fff);margin:16px 0 6px;padding:16px 18px">'
             f'<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">'
-            f'<div><div class="lbl" style="color:#8a6d1e">⭐ {store} Grow score · quarter-to-date</div>'
-            f'<div style="display:flex;align-items:center;gap:12px;margin-top:6px">{_stars(comp,34)}'
-            f'<div style="font-size:30px;font-weight:800;color:#5b3a29">{comp:g} <span style="font-size:15px;color:#9a8a7c">/ 5</span></div></div></div>'
-            f'<div style="flex:1;min-width:300px;display:flex;flex-direction:column;gap:5px">{rows}</div></div>'
-            f'<div class="mini" style="margin-top:10px">Composite of the four pillars on a quarter-to-date basis. Each pillar scored 0–5 vs its target (target = 3★, stretch = 5★, miss pulls toward 0); the four are averaged. A Starbucks-Grow-style snapshot — TEST on Glenvale only.</div>'
+            f'<div><div class="lbl" style="color:#8a6d1e">⭐ {store} Grow score · quarter-to-date{badge}</div>'
+            f'<div style="display:flex;align-items:center;gap:12px;margin-top:6px">{head_stars}'
+            f'<div style="font-size:30px;font-weight:800;color:{head_col}">{comp:g} <span style="font-size:15px;color:#9a8a7c">/ 5 · target {tgt:g}</span></div></div></div>'
+            f'<div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:0">{rows}</div></div>'
+            f'<div class="mini" style="margin-top:10px">Four pillars aligned to the tabs — <b>Commercial · Operations · People · Customer</b> — each the mean of the metrics shown (every metric scored 0–5 vs its target: target=3★, stretch=5★). Composite = the four-pillar average. <b>Grow target = {tgt:g}★</b> — below {tgt:g} is off target (the red line marks {tgt:g}★).</div>'
             f'</div>\n<!-- STARRATING END -->')
 
 def inject_star(h, store):

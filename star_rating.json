@@ -1,76 +1,173 @@
 {
- "_method": "Grow composite star rating. Each pillar scored 0-5 vs target by linear interpolation between anchors floor=0 / target=3 / stretch=5 stars (clamped). Anchors — Sales YoY (4-wk): floor -8 / target +8 / stretch +20. CUSTOMER = 50/50 of Google-health (1.66/3.32/5.0) and F1 race score (320/190/130, lower better). PEOPLE = 50/50 of RMS-health (1.66/3.32/5.0) and RTW% (0/80/100). OPERATIONS = equal blend of brand audit /5 (4.0/4.5/5.0), remote audit /100 (50/85/100) and COMPLIANCE (50/50 coaching-% and open/close-%, 50/85/100); where remote/compliance are not yet pulled for a store, Operations falls back to the brand audit alone (flagged). Composite = average of the four pillars. All QTD (Q2 2026). Google-health falls back to the store's live all-time rating when its QTD review feed is stale (flagged).",
+ "_method": "Grow composite, pillars REALIGNED to the four tabs (Commercial · Operations · People · Customer). Each metric scored 0-5 between anchors floor=0/target=3/stretch=5 (clamped); pillar = mean of its metrics; composite = mean of the four pillars. Commercial = Sales YoY(-8/8/20) + ATV vs £6.80(5.5/6.8/8.0). Operations = F1 race(320/190/130, lower better) + brand audit /5(4.0/4.5/5.0) + wastage %(5/3/1, lower better). People = RMS health(1.66/3.32/5.0) + RTW%(0/80/100); lateness is shown but not scored, bench is not tracked per store. Customer = Google health(1.66/3.32/5.0), QTD or live-rating fallback when the QTD feed is stale. GROW TARGET = 4.6 stars (below 4.6 = OFF TARGET); the per-metric 0/3/5 anchors are kept, 4.6 is the headline target line.",
  "_window": "quarter-to-date · Q2 2026 (rebuilt weekly)",
+ "target": 4.6,
  "stores": {
   "Glenvale Drive Thru": {
-   "composite": 3.4,
+   "composite": 3.5,
+   "target": 4.6,
+   "on_target": false,
    "pillars": [
     {
-     "name": "Sales",
-     "star": 5.0,
-     "qtd": "+30.1% YoY",
-     "target": "target +8%"
+     "name": "Commercial",
+     "star": 4.8,
+     "target": 4.6,
+     "on_target": true,
+     "metrics": [
+      {
+       "label": "Sales YoY (4-wk)",
+       "value": "+30.1%",
+       "star": 5.0
+      },
+      {
+       "label": "ATV vs £6.80",
+       "value": "£7.7",
+       "star": 4.5
+      }
+     ]
     },
     {
      "name": "Operations",
-     "star": 3.7,
-     "qtd": "audit 4.69 + remote 89 + compliance 90%",
-     "target": "equal blend: audit·remote·compliance"
-    },
-    {
-     "name": "Customer",
-     "star": 2.5,
-     "qtd": "Google health 4.17 (QTD feed) + F1 274",
-     "target": "Google health + F1 race (50/50)"
+     "star": 2.7,
+     "target": 4.6,
+     "on_target": false,
+     "metrics": [
+      {
+       "label": "F1 race score",
+       "value": "274",
+       "star": 1.1
+      },
+      {
+       "label": "Brand audit /5",
+       "value": "4.69",
+       "star": 3.8
+      },
+      {
+       "label": "Wastage %",
+       "value": "2.7%",
+       "star": 3.3
+      }
+     ]
     },
     {
      "name": "People",
      "star": 2.3,
-     "qtd": "3.29 RMS + 45% RTW",
-     "target": "RMS health + RTW% (50/50)"
-    }
-   ],
-   "ops": {
-    "brand_audit": 4.69,
-    "remote_audit": 89,
-    "remote_n": 10,
-    "compliance_pct": 90,
-    "coaching_cs_pct": 80.6,
-    "coaching_barista_pct": 80.6,
-    "open_pct": 100,
-    "close_pct": 100,
-    "openclose_pct": 100,
-    "openclose_detail": "57 open & 56 close vs 56 trading days (20 Apr–14 Jun), Process Street feed",
-    "rtw_pct": 45,
-    "rtw_detail": "RTW% from HRP sickness/RTW (Glenvale, QTD)"
-   }
-  },
-  "Leamington Parade": {
-   "composite": 4.1,
-   "pillars": [
-    {
-     "name": "Sales",
-     "star": 5.0,
-     "qtd": "+24.3% YoY",
-     "target": "target +8%"
-    },
-    {
-     "name": "Operations",
-     "star": 3.9,
-     "qtd": "audit 4.73 · remote & compliance pending",
-     "target": "brand audit only (remote/compliance not yet pulled)"
+     "target": 4.6,
+     "on_target": false,
+     "metrics": [
+      {
+       "label": "RMS health /5",
+       "value": "3.29",
+       "star": 2.9
+      },
+      {
+       "label": "RTW completion",
+       "value": "45%",
+       "star": 1.7
+      },
+      {
+       "label": "Lateness (shown, not scored)",
+       "value": "7 late",
+       "star": null
+      }
+     ]
     },
     {
      "name": "Customer",
-     "star": 3.9,
-     "qtd": "Google health 4.91 (live rating 4.82★/71) + F1 196",
-     "target": "Google health + F1 race (50/50)"
+     "star": 4.0,
+     "target": 4.6,
+     "on_target": false,
+     "metrics": [
+      {
+       "label": "Google health",
+       "value": "4.17 (QTD)",
+       "star": 4.0
+      }
+     ]
+    }
+   ]
+  },
+  "Leamington Parade": {
+   "composite": 4.1,
+   "target": 4.6,
+   "on_target": false,
+   "pillars": [
+    {
+     "name": "Commercial",
+     "star": 4.4,
+     "target": 4.6,
+     "on_target": false,
+     "metrics": [
+      {
+       "label": "Sales YoY (4-wk)",
+       "value": "+24.3%",
+       "star": 5.0
+      },
+      {
+       "label": "ATV vs £6.80",
+       "value": "£7.27",
+       "star": 3.8
+      }
+     ]
+    },
+    {
+     "name": "Operations",
+     "star": 3.5,
+     "target": 4.6,
+     "on_target": false,
+     "metrics": [
+      {
+       "label": "F1 race score",
+       "value": "196",
+       "star": 2.9
+      },
+      {
+       "label": "Brand audit /5",
+       "value": "4.73",
+       "star": 3.9
+      },
+      {
+       "label": "Wastage %",
+       "value": "2.2%",
+       "star": 3.8
+      }
+     ]
     },
     {
      "name": "People",
      "star": 3.7,
-     "qtd": "4.7 RMS + 73% RTW",
-     "target": "RMS health + RTW% (50/50)"
+     "target": 4.6,
+     "on_target": false,
+     "metrics": [
+      {
+       "label": "RMS health /5",
+       "value": "4.7",
+       "star": 4.6
+      },
+      {
+       "label": "RTW completion",
+       "value": "73%",
+       "star": 2.7
+      },
+      {
+       "label": "Lateness (shown, not scored)",
+       "value": "11 late",
+       "star": null
+      }
+     ]
+    },
+    {
+     "name": "Customer",
+     "star": 4.9,
+     "target": 4.6,
+     "on_target": true,
+     "metrics": [
+      {
+       "label": "Google health",
+       "value": "4.91 (live 4.82★/71 all-time (QTD feed stale))",
+       "star": 4.9
+      }
+     ]
     }
    ]
   }
