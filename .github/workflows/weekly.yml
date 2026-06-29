@@ -6,9 +6,9 @@ name: Weekly dashboard refresh
 # Leave schedule commented until run_weekly.py is finished + a manual run is green.
 on:
   workflow_dispatch: {}          # on-demand "Run workflow" button for testing
-  # schedule:
-  #   - cron: '0 20 * * 0'      # Sun 21:00 UK (BST) — full
-  #   - cron: '30 8 * * 1'      # Mon 09:30 UK (BST) — hours
+  schedule:
+    - cron: '0 20 * * 0'      # Sun 21:00 UK (BST) — full
+    - cron: '30 8 * * 1'      # Mon 09:30 UK (BST) — hours
 permissions:
   contents: write
 concurrency: { group: weekly-refresh, cancel-in-progress: false }
