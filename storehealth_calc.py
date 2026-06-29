@@ -1,20 +1,26 @@
-import json
-# Google live (Q2-to-date) raw->canon
-g_raw={"Train Station":(98,4.969),"Burton":(16,4.938),"Corby":(10,4.8),"Glenvale Drive Thru":(34,4.676),"Billing Drive Thru":(14,5.0),"Olney":(2,5.0),"Attleborough":(1,5.0)}
-g_map={"Train Station":"Wellingborough Train Station","Burton":"Burton Latimer","Corby":"Corby","Glenvale Drive Thru":"Glenvale Drive Thru","Billing Drive Thru":"Billing Drive Thru","Olney":"Olney","Attleborough":"Attleborough"}
-# RMS Q2-to-date raw->canon
-rms_raw={"Corby":(60,3.533),"Glenvale Drive Thru":(51,3.294),"Npton Grosvenor":(28,4.679),"Kettering":(24,4.583),"Balsall":(36,4.917),"Npton Drive Thru":(41,4.146),"Fletton":(15,4.333),"Rugby":(62,4.919),"Market Harborough":(14,4.286),"Rothwell":(16,4.25),"W'boro Market St":(11,4.636),"Lakes":(19,3.368),"Peterborough":(19,4.789),"Leamington Parade":(120,4.692),"Lower Heathcote":(18,4.222),"Burton":(18,4.889),"Train Station":(13,1.846),"Higham":(8,4.625),"Billing Drive Thru":(22,4.818),"Olney":(3,5.0),"Attleborough":(32,4.688)}
-rms_map={"Corby":"Corby","Glenvale Drive Thru":"Glenvale Drive Thru","Npton Grosvenor":"Northampton","Kettering":"Kettering","Balsall":"HOE Balsall Common","Npton Drive Thru":"Northampton Drive-Thru","Fletton":"Peterborough Fletton Quays","Rugby":"Rugby","Market Harborough":"Market Harborough","Rothwell":"Rothwell","W'boro Market St":"Wellingborough","Lakes":"Rushden Lakes","Peterborough":"Peterborough Bridge Street","Leamington Parade":"Leamington Parade","Lower Heathcote":"Lower Heathcote","Burton":"Burton Latimer","Train Station":"Wellingborough Train Station","Higham":"Higham Ferrers","Billing Drive Thru":"Billing Drive Thru","Olney":"Olney","Attleborough":"Attleborough"}
+import json, os
+# Reads storehealth_raw.json (written by run_weekly.py from the F1 'Shift Ratings' tab + Google
+# reviews QTD, ALREADY canonical-keyed) -> storehealth.json. No Zapier, no hand-pasted dicts.
+# Falls back to the last committed hand-pasted snapshot only if the raw file is absent (legacy run).
 targets={"Northampton Drive-Thru":49,"Kettering":24,"Burton Latimer":10,"Rothwell":12,"Northampton":15,"Wellingborough":18,"Wellingborough Train Station":10,"Rushden Lakes":49,"Peterborough Fletton Quays":15,"Higham Ferrers":10,"Peterborough Bridge Street":18,"Lower Heathcote":8,"Leamington Parade":15,"Market Harborough":24,"Rugby":25,"Corby":25,"Glenvale Drive Thru":49,"HOE Balsall Common":15,"Billing Drive Thru":49,"Attleborough":15,"Olney":10}
 OLNEY_DEFAULT=True
 stores=["Attleborough","Billing Drive Thru","Burton Latimer","Corby","Glenvale Drive Thru","HOE Balsall Common","Higham Ferrers","Kettering","Leamington Parade","Lower Heathcote","Market Harborough","Northampton","Northampton Drive-Thru","Olney","Peterborough Bridge Street","Peterborough Fletton Quays","Rothwell","Rugby","Rushden Lakes","Wellingborough","Wellingborough Train Station"]
-g_canon={g_map[k]:v for k,v in g_raw.items()}
-rms_canon={rms_map[k]:v for k,v in rms_raw.items()}
+
+if os.path.exists("storehealth_raw.json"):
+    RAW=json.load(open("storehealth_raw.json"))
+    # raw values are [n, avg] lists, canonical-keyed
+    g_canon={k:tuple(v) for k,v in (RAW.get("google") or {}).items()}
+    rms_canon={k:tuple(v) for k,v in (RAW.get("rms") or {}).items()}
+    _UPDATED=RAW.get("_updated","")
+else:   # legacy fallback (last hand-pasted snapshot) — only used if run_weekly didn't write the raw
+    g_canon={"Wellingborough Train Station":(98,4.969),"Burton Latimer":(16,4.938),"Corby":(10,4.8),"Glenvale Drive Thru":(34,4.676),"Billing Drive Thru":(14,5.0),"Olney":(2,5.0),"Attleborough":(1,5.0)}
+    rms_canon={"Corby":(60,3.533),"Glenvale Drive Thru":(51,3.294),"Northampton":(28,4.679),"Kettering":(24,4.583),"HOE Balsall Common":(36,4.917),"Northampton Drive-Thru":(41,4.146),"Peterborough Fletton Quays":(15,4.333),"Rugby":(62,4.919),"Market Harborough":(14,4.286),"Rothwell":(16,4.25),"Wellingborough":(11,4.636),"Rushden Lakes":(19,3.368),"Peterborough Bridge Street":(19,4.789),"Leamington Parade":(120,4.692),"Lower Heathcote":(18,4.222),"Burton Latimer":(18,4.889),"Wellingborough Train Station":(13,1.846),"Higham Ferrers":(8,4.625),"Billing Drive Thru":(22,4.818),"Olney":(3,5.0),"Attleborough":(32,4.688)}
+    _UPDATED=""
 def grag(h):
     return 'green' if h>=3.32 else 'red'
 def rrag(a):
     return 'green' if a>=4.5 else ('amber' if a>=4.0 else 'red')
-out={"_basis":"Quarter-to-date (Q2 2026: 1 Apr - 16 Jun). NOT last week.","_updated":"2026-06-16",
+out={"_basis":"Quarter-to-date. NOT last week.","_updated":_UPDATED or "2026-06-16",
      "_google_formula":"google_health = avg_star*0.5 + min(reviews/quarterly_target,1)*2.5 ; green>=3.32",
      "_rms_formula":"rms_avg = quarterly mean shift rating (1-5); green>=4.5 amber>=4.0 red<4.0",
      "_google_feed_note":"Reviews scraper only live for 7 stores; 14 stale since ~Jul 2025 -> google_health null (shown as no-feed).",

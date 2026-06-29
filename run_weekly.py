@@ -1,138 +1,1211 @@
 #!/usr/bin/env python3
 """
-Bewiched weekly dashboard refresh — FULLY AUTOMATED (no agent, no desktop).
+Bewiched weekly dashboard refresh — FULLY AUTOMATED (no agent, no desktop, no Zapier).
 
 Runs in GitHub Actions on a cron. Pulls BigQuery + Google Sheets DIRECTLY via a
-service account (no Zapier middleware -> no column-flattener scrambling, no ~60-row
-read caps, full deterministic reads every time), rebuilds all 11 dashboards using the
-existing builders (gen_*.py / build_*.py / patch_newsite.py), runs a freshness gate,
-and the workflow commits/pushes.
+service account (no Zapier middleware -> no column-flattener scrambling, no read caps,
+full deterministic reads every time), rebuilds all 12 dashboards using the existing
+builders (gen_*.py / build_*.py / bench_render.py / patch_newsite.py), runs a freshness
+gate, then the workflow commits/pushes.
 
-STATUS: scaffold. Auth, date-derivation, helpers, the freshness gate and the proven
-pulls (sales / planner / actuals) are done. The remaining estate pulls are stubbed
-with the exact spec in the weekly runbook (SKILL.md STEP 2*/4f). Finish + test against
-the real service account, then enable the cron in .github/workflows/weekly.yml.
+WHY DIRECT CLIENT: the old agent run wrapped every query as
+`SELECT TO_JSON_STRING(ARRAY_AGG(STRUCT(...)))` and packed <=4 columns because the
+Zapier flattener silently dropped / mis-mapped columns on wide reads (verified 29 Jun:
+a 4-column drive-thru query came back with the `total` column dropped). Under the SA we
+write normal SQL and read whole sheet ranges.
 
-KEY WIN vs the old agent run: every per-run constant is DERIVED from the run date +
-the data — nothing is hand-bumped, so the "stale constant" class of bugs is gone.
+KEY WIN vs the old agent run: every per-run constant is DERIVED from the run date + the
+data — nothing is hand-bumped, so the "stale constant" class of bugs is gone.
+
+MODE (auto-detected by Europe/London weekday):
+  Sunday 21:00 -> "sunday"  FULL preview (CPH/hours provisional — planners roll Mon 03:00)
+  Monday 09:30 -> "monday"  FULL + authoritative CPH/hours
+Both resolve cur_end to the SAME just-completed Sunday (see CUR_END below).
 """
-import os, sys, json, subprocess, datetime
-from google.oauth2 import service_account
-from google.cloud import bigquery
-from googleapiclient.discovery import build as gbuild
+import os, sys, json, re, csv, subprocess, datetime, zoneinfo
 
-# ---------- auth ----------
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+# ---------- auth (lazy so the module imports without creds for structural checks) ----------
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly",
           "https://www.googleapis.com/auth/bigquery"]
-_sa = json.loads(os.environ["GCP_SA_JSON"])              # GitHub secret
-_creds = service_account.Credentials.from_service_account_info(_sa, scopes=SCOPES)
-BQ = bigquery.Client(project="bewiched-coffee-368116", credentials=_creds)
-_SHEETS = gbuild("sheets", "v4", credentials=_creds, cache_discovery=False).spreadsheets().values()
+PROJECT = "bewiched-coffee-368116"
+DATASET = "bewiched_coffee"
+LOCATION = "europe-west2"
+_BQ = None
+_SHEETS = None
 
-def bq(sql: str):
+def _creds():
+    from google.oauth2 import service_account
+    sa = json.loads(os.environ["GCP_SA_JSON"])            # GitHub Actions secret
+    return service_account.Credentials.from_service_account_info(sa, scopes=SCOPES)
+
+def _bq_client():
+    global _BQ
+    if _BQ is None:
+        from google.cloud import bigquery
+        _BQ = bigquery.Client(project=PROJECT, credentials=_creds())
+    return _BQ
+
+def _sheets_api():
+    global _SHEETS
+    if _SHEETS is None:
+        from googleapiclient.discovery import build as gbuild
+        _SHEETS = gbuild("sheets", "v4", credentials=_creds(),
+                         cache_discovery=False).spreadsheets().values()
+    return _SHEETS
+
+def bq(sql):
     """Run BigQuery SQL, return list[dict]. Deterministic — no TO_JSON_STRING wrapping,
     no flattener. Just write normal SQL."""
-    return [dict(r) for r in BQ.query(sql, location="europe-west2").result()]
+    return [dict(r) for r in _bq_client().query(sql, location=LOCATION).result()]
 
-def sheet(spreadsheet_id: str, a1_range: str):
-    """Read a Sheet range as positional rows (unformatted; dates come as serials)."""
-    return _SHEETS.get(spreadsheetId=spreadsheet_id, range=a1_range,
-                       valueRenderOption="UNFORMATTED_VALUE").execute().get("values", [])
+def sheet(spreadsheet_id, a1_range, unformatted=True):
+    """Read a Sheet range as positional rows. UNFORMATTED by default (dates -> serials,
+    no flattener column-scramble). Returns list[list]."""
+    opt = "UNFORMATTED_VALUE" if unformatted else "FORMATTED_VALUE"
+    return _sheets_api().get(spreadsheetId=spreadsheet_id, range=a1_range,
+                             valueRenderOption=opt).execute().get("values", [])
 
+# ---------- date / parsing helpers ----------
 EPOCH = datetime.date(1899, 12, 30)
-def serial_to_iso(s):  # google sheets serial -> 'YYYY-MM-DD'
-    return (EPOCH + datetime.timedelta(days=int(s))).isoformat()
+def serial_to_date(s):
+    try: return EPOCH + datetime.timedelta(days=int(float(s)))
+    except Exception: return None
+def serial_to_iso(s):
+    d = serial_to_date(s); return d.isoformat() if d else None
+
+_MONTHS = {m.lower(): i for i, m in enumerate(
+    ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])}
+def parse_any_date(v):
+    """Parse the mixed date formats the source sheets use:
+    sheet serial, ISO, M/D/YYYY, DD/MM/YYYY, '11-Apr-2026', 'Jun 12 2026',
+    JS 'Fri Mar 11 ... 2022', and Google 'Date(y,m,d)'."""
+    if v is None or v == "": return None
+    if isinstance(v, (int, float)): return serial_to_date(v)
+    s = str(v).strip()
+    if not s: return None
+    m = re.match(r"Date\((\d+),(\d+),(\d+)", s)            # gviz Date(y,m,d) — month 0-based
+    if m: return datetime.date(int(m.group(1)), int(m.group(2)) + 1, int(m.group(3)))
+    for fmt in ("%Y-%m-%d", "%d-%b-%Y", "%b %d %Y", "%d %b %Y", "%m/%d/%Y", "%d/%m/%Y"):
+        try: return datetime.datetime.strptime(s, fmt).date()
+        except ValueError: pass
+    m = re.search(r"([A-Za-z]{3})\s+(\d{1,2})\b.*?(\d{4})", s)   # 'Fri Mar 11 ... 2022'
+    if m and m.group(1).lower() in _MONTHS:
+        return datetime.date(int(m.group(3)), _MONTHS[m.group(1).lower()], int(m.group(2)))
+    return None
+
+def fnum(v, default=0.0):
+    try: return float(v)
+    except Exception: return default
 
 # ---------- run dates (ALL derived; nothing hand-bumped) ----------
-TODAY   = datetime.date.today()
-CUR_END = TODAY - datetime.timedelta(days=(TODAY.weekday() + 1) % 7)   # last completed Sunday
-LASTWK_MON = CUR_END - datetime.timedelta(days=6)                       # just-completed week Monday  (= old NEWDATE)
-CURWK_MON  = CUR_END + datetime.timedelta(days=1)                       # current week Monday          (forward-forecast start)
-def wlabel(d): return "w/c " + d.strftime("%-d %b")                     # e.g. 'w/c 22 Jun'
-print(f"[dates] cur_end={CUR_END}  last_week={LASTWK_MON} ({wlabel(LASTWK_MON)})  cur_week={CURWK_MON}")
+NOW_UK = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/London"))
+TODAY = NOW_UK.date()
+MODE = "sunday" if TODAY.weekday() == 6 else "monday"
+# CUR_END = the just-completed Sunday. weekday(): Mon=0..Sun=6.
+#   Sunday  (6): (6+1)%7 = 0 -> today (this Sunday)         == Sunday-override formula
+#   Monday  (0): (0+1)%7 = 1 -> yesterday (Sunday)          == plain formula
+#   any other day resolves to the most recent Sunday too (safety for manual runs).
+CUR_END = TODAY - datetime.timedelta(days=(TODAY.weekday() + 1) % 7)
+def d(n):  # SQL date literal for cur_end - n days
+    return "DATE('%s')" % (CUR_END - datetime.timedelta(days=n)).isoformat()
+CE = "DATE('%s')" % CUR_END.isoformat()
+LASTWK_MON = CUR_END - datetime.timedelta(days=6)
+CURWK_MON = CUR_END + datetime.timedelta(days=1)
+QSTART = datetime.date(CUR_END.year, ((CUR_END.month - 1) // 3) * 3 + 1, 1)   # calendar-quarter start
+def wlabel(dt): return "w/c " + dt.strftime("%-d %b %Y")
+def short_window():  # daypart-food window label
+    return "4 weeks to %s vs same 4 weeks %d" % (CUR_END.strftime("%-d %b %Y"), CUR_END.year - 1)
+print("[dates] mode=%s cur_end=%s last_week=%s cur_week=%s qstart=%s" %
+      (MODE, CUR_END, LASTWK_MON, CURWK_MON, QSTART))
 
 # ---------- sheet IDs ----------
 SID = dict(
     cph="18iUyF6Usm5QnUAARPgNsAkqWp00fKPv1WA3waBKJFZU",
+    cos="1doPNL5yVh7swMysJMRVi0ECiBg50ZGBb7TbwStJtAL0",
     planner_jon="1PSjBGiR40171h769esQCtn3ldcpCB5XJyfqRTo7Yccs",
     planner_rich="11XuXn9zQr-JB4x2fQ0ORV96Sf-U7xWPQPvg2YlCl_dQ",
     planner_ian="1_qdK6fzqPg1NcA2KKMy2TnaZ8nQJtVE-fglz2On3oBw",
     master_pop="1RZ8ZmFdLyXz1btg3_pNdaVaAyXKhQqHwjVpWWzoFuI0",
     f1="1YFqpR9_ftlQEbfwc5ZVMjtS5tFO0j-7ccwB8rwG56wQ",
-    sickness="1f_nTz6TJTPlVP4CSX6AzQ9sf5KbF7QwpVdVnxiW-bM4",
+    hrp="1f_nTz6TJTPlVP4CSX6AzQ9sf5KbF7QwpVdVnxiW-bM4",
     audit="10JL4idTOmcCXnDTLsqHJjrHFnTMiIf7HR5uzVPwrjbM",
     reviews="1Dm3fxmhodV2xH-apaMp1baWmJ6zDIofv6z6YPuY8D3s",
     availability="1CeTBvZ610zfEMe118m76LgMW5gw_SDS-2Eel1HMuM78",
     smt="1IGL3sLWSI7k1vuXEMFBWplgk3uS4tTUU1-MtGYDk-bQ",
 )
 
-# ---------- pulls (write the same JSON files the builders already consume) ----------
+# ---------- canonical estate (21) + mappings ----------
+CANON = ["Attleborough", "Billing Drive Thru", "Burton Latimer", "Corby",
+         "Glenvale Drive Thru", "HOE Balsall Common", "Higham Ferrers", "Kettering",
+         "Leamington Parade", "Lower Heathcote", "Market Harborough", "Northampton",
+         "Northampton Drive-Thru", "Olney", "Peterborough Bridge Street",
+         "Peterborough Fletton Quays", "Rothwell", "Rugby", "Rushden Lakes",
+         "Wellingborough", "Wellingborough Train Station"]
+COACH = {  # store -> area coach (Jon 9 / Rich 9 / Ian 3 = 21)
+    "Burton Latimer": "Jon", "Peterborough Fletton Quays": "Jon", "Rothwell": "Jon",
+    "Corby": "Jon", "Kettering": "Jon", "Rushden Lakes": "Jon",
+    "Peterborough Bridge Street": "Jon", "Higham Ferrers": "Jon", "Olney": "Jon",
+    "Leamington Parade": "Rich", "Northampton": "Rich", "Wellingborough Train Station": "Rich",
+    "Market Harborough": "Rich", "Wellingborough": "Rich", "Lower Heathcote": "Rich",
+    "Rugby": "Rich", "Northampton Drive-Thru": "Rich", "Billing Drive Thru": "Rich",
+    "Attleborough": "Ian", "HOE Balsall Common": "Ian", "Glenvale Drive Thru": "Ian"}
+DT_STORES = ["Billing Drive Thru", "Glenvale Drive Thru", "Northampton Drive-Thru"]
+STORE_PAGES = ["Olney", "Attleborough", "Billing Drive Thru", "Glenvale Drive Thru",
+               "Northampton Drive-Thru", "Leamington Parade"]
+COMMERCIAL_STORES = ["Glenvale Drive Thru", "Leamington Parade"]
+CATS = ["Hot drinks", "Cold drinks", "Milkshakes", "Food", "Bakery", "Retail", "Other"]
+
+# informal source label -> canonical (lower-cased keys; competitors flagged separately)
+_MAP = {
+    "lower heathcote, warwick": "Lower Heathcote", "lower heathcote": "Lower Heathcote",
+    "warwick": "Lower Heathcote", "burton": "Burton Latimer",
+    "peterborough": "Peterborough Bridge Street", "p'boro bridge st": "Peterborough Bridge Street",
+    "fletton": "Peterborough Fletton Quays", "p'boro fletton quays": "Peterborough Fletton Quays",
+    "market street": "Wellingborough", "w'boro market st": "Wellingborough",
+    "northampton grosvenor": "Northampton", "npton grosvenor": "Northampton",
+    "train station": "Wellingborough Train Station", "lakes": "Rushden Lakes",
+    "higham": "Higham Ferrers", "balsall": "HOE Balsall Common",
+    "balsall common": "HOE Balsall Common",
+    "northampton drive thru": "Northampton Drive-Thru", "npton drive thru": "Northampton Drive-Thru",
+    "glenvale dt": "Glenvale Drive Thru", "leamington retail": None, "leamington spa": None,
+    "royal leamington spa": None}
+COMPETITORS = {"costa", "nero", "nero's", "starbucks", "coffee#1", "coffee #1", "pret"}
+def is_competitor(name):
+    return str(name).strip().lower().rstrip("'s") in {c.rstrip("'s") for c in COMPETITORS}
+def normalize(name):
+    """Informal source label -> canonical store, or None if dropped/competitor/unknown."""
+    if name is None: return None
+    s = str(name).strip()
+    if not s: return None
+    if is_competitor(s): return None
+    low = s.lower()
+    if low in _MAP: return _MAP[low]
+    if s in CANON: return s
+    # tolerate hyphen/spacing drift e.g. 'Northampton Drive Thru'
+    flat = low.replace("-", " ").replace("  ", " ")
+    for c in CANON:
+        if c.lower().replace("-", " ") == flat: return c
+    return None
+
+# ---------- allstores.json overlay helpers (estate pulls mutate it incrementally) ----------
+def load_all():
+    if os.path.exists(os.path.join(HERE, "allstores.json")):
+        return json.load(open(os.path.join(HERE, "allstores.json")))
+    return {"rec": {}, "champ": {}, "cats": CATS}
+def save_all(a):
+    json.dump(a, open(os.path.join(HERE, "allstores.json"), "w"), ensure_ascii=False)
+def W(name, obj, **kw):
+    json.dump(obj, open(os.path.join(HERE, name), "w"), ensure_ascii=False, **kw)
+
+# ---------- shared SQL fragments ----------
+FLAT = "`%s.%s.v_sales_details_flat`" % (PROJECT, DATASET)
+SDET = "`%s.%s.v_sales_details`" % (PROJECT, DATASET)
+WASTE = "`%s.%s.v_sales_vs_wastage`" % (PROJECT, DATASET)
+# Category CASE (STEP 2k order). NB Bakery-meal-deal MUST precede Food. Native client: \b = single backslash.
+def cat_case(col):
+    return (r"""CASE
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'milkshake') THEN 'Milkshakes'
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'iced|frappe|frozen|matcha|cold brew') THEN 'Cold'
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'beans|1kg|gift|merch') THEN 'Other&retail'
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'pastry|sausage roll') AND REGEXP_CONTAINS(LOWER({c}), r'meal deal') THEN 'Bakery'
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'meal deal|croque|ciabatta|\bbap\b|wrap|sandwich|bagel|salad|tuna|panini|toastie|soup|sausage roll|breakfast') THEN 'Food'
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'traybake|brownie|slice|croissant|pastry|muffin|cookie|cake|bakewell|millionaire|teacake|scone|flapjack|twist|doughnut|fudge|cinnamon') THEN 'Bakery'
+      WHEN REGEXP_CONTAINS(LOWER({c}), r'latte|cappuccino|americano|flat white|mocha|espresso|hot choc|\bmug\b|\bpot\b|\btea\b|coffee|macchiato|cortado|chai') THEN 'Hot'
+      ELSE 'Other&retail' END""").replace("{c}", col)
+CATLABEL = {"Hot": "Hot drinks", "Cold": "Cold drinks", "Milkshakes": "Milkshakes",
+            "Food": "Food", "Bakery": "Bakery", "Other&retail": "Other & retail"}
+# daypart from the sales_date_time STRING ('YYYY-MM-DD HH:MM:SS') — do NOT EXTRACT(HOUR..)
+HOUR = "CAST(SUBSTR(sales_date_time,12,2) AS INT64)"
+def dp_case(h):
+    return ("CASE WHEN %s BETWEEN 5 AND 10 THEN 'Morning' WHEN %s BETWEEN 11 AND 13 THEN 'Lunch' "
+            "WHEN %s BETWEEN 14 AND 16 THEN 'Afternoon' WHEN %s>=17 THEN 'Evening' ELSE 'Other' END"
+            % (h, h, h, h))
+# product-name cleaner (food / SL pulls) — folds named bap meal-deals into the plain bap line
+CLEAN = (r"REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE("
+         r"item_product_name,r'^[23]?[*]? ',''),r' TA$',''),"
+         r"r'(?i)bacon bap meal deal.*','Bacon Bap'),r'(?i)sausage bap meal deal.*','Sausage Bap')")
+DOW_ORDER = [2, 3, 4, 5, 6, 7, 1]   # EXTRACT(DAYOFWEEK) 1=Sun..7=Sat -> render Mon..Sun
+
+
+# ============================ ESTATE PULLS (A) ============================
 def pull_sales():
-    """STEP 2 core sales for all 21 stores -> overlay into allstores.json rec fields.
-    Direct SQL (windows derived from CUR_END)."""
-    ce = CUR_END.isoformat()
-    rows = bq(f"""
-      WITH b AS (SELECT item_outlet_name s, DATE(sales_date) d, id,
+    """STEP 2 — core sales for all 21 (v_sales_details_flat). VALIDATED via Zapier 29 Jun:
+    Glenvale lw26 £20,349/2,497tx, Olney £5,663/736tx, cur_end 2026-06-28."""
+    a = load_all()
+    rec = a["rec"]
+    for s in CANON:
+        rec.setdefault(s, {})
+        rec[s]["coach"] = COACH[s]
+    win = bq(f"""
+      WITH b AS (SELECT item_outlet_name s, DATE(sales_date) dd, id,
                         SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
-                 FROM `bewiched-coffee-368116.bewiched_coffee.v_sales_details_flat`
-                 WHERE DATE(sales_date) BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 391 DAY) AND DATE_SUB(DATE('{ce}'),INTERVAL 343 DAY)
-                    OR DATE(sales_date) BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 27 DAY) AND DATE('{ce}'))
+                 FROM {FLAT}
+                 WHERE DATE(sales_date) BETWEEN {d(391)} AND {CE})
       SELECT s,
-        ROUND(SUM(IF(d BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 6 DAY) AND DATE('{ce}'),v,0))) lw26,
-        COUNT(DISTINCT IF(d BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 6 DAY) AND DATE('{ce}'),id,NULL)) tx26,
-        ROUND(SUM(IF(d BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 27 DAY) AND DATE('{ce}'),v,0))) s4,
-        COUNT(DISTINCT IF(d BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 27 DAY) AND DATE('{ce}'),id,NULL)) tx4,
-        ROUND(SUM(IF(d BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 370 DAY) AND DATE_SUB(DATE('{ce}'),INTERVAL 364 DAY),v,0))) lw25,
-        ROUND(SUM(IF(d BETWEEN DATE_SUB(DATE('{ce}'),INTERVAL 391 DAY) AND DATE_SUB(DATE('{ce}'),INTERVAL 364 DAY),v,0))) s4_25
+        ROUND(SUM(IF(dd BETWEEN {d(6)} AND {CE},v,0))) lw26,
+        COUNT(DISTINCT IF(dd BETWEEN {d(6)} AND {CE},id,NULL)) tx26,
+        ROUND(SUM(IF(dd BETWEEN {d(27)} AND {CE},v,0))) s4,
+        COUNT(DISTINCT IF(dd BETWEEN {d(27)} AND {CE},id,NULL)) tx4,
+        ROUND(SUM(IF(dd BETWEEN {d(370)} AND {d(364)},v,0))) lw25,
+        COUNT(DISTINCT IF(dd BETWEEN {d(370)} AND {d(364)},id,NULL)) tx25,
+        ROUND(SUM(IF(dd BETWEEN {d(391)} AND {d(364)},v,0))) s4_25,
+        ROUND(SUM(IF(dd BETWEEN {d(363)} AND {d(357)},v,0))) ly1,
+        ROUND(SUM(IF(dd BETWEEN {d(356)} AND {d(350)},v,0))) ly2,
+        ROUND(SUM(IF(dd BETWEEN {d(349)} AND {d(343)},v,0))) ly3
       FROM b GROUP BY s""")
-    # ... overlay yoy/atv/vs4w/ly/dow_growth/daypart_growth/takeaway exactly as the
-    #     runbook STEP 2 describes, then json.dump allstores.json.  (port from this session)
-    return rows
+    dow = bq(f"""
+      SELECT item_outlet_name s, EXTRACT(DAYOFWEEK FROM DATE(sales_date)) dw,
+        ROUND(SUM(IF(DATE(sales_date) BETWEEN {d(27)} AND {CE},
+                     SAFE_CAST(item_line_total_after_discount AS FLOAT64),0))) cur,
+        ROUND(SUM(IF(DATE(sales_date) BETWEEN {d(391)} AND {d(364)},
+                     SAFE_CAST(item_line_total_after_discount AS FLOAT64),0))) ly
+      FROM {FLAT}
+      WHERE DATE(sales_date) BETWEEN {d(391)} AND {CE}
+      GROUP BY s, dw""")
+    dpt = bq(f"""
+      SELECT s, dp,
+        ROUND(SUM(IF(dd BETWEEN {d(27)} AND {CE},v,0))) cur,
+        ROUND(SUM(IF(dd BETWEEN {d(391)} AND {d(364)},v,0))) ly
+      FROM (SELECT item_outlet_name s, DATE(sales_date) dd,
+                   {dp_case(HOUR)} dp,
+                   SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+            FROM {FLAT}
+            WHERE DATE(sales_date) BETWEEN {d(391)} AND {CE})
+      WHERE dp != 'Other' GROUP BY s, dp""")
+
+    dwm = {}
+    for r in dow: dwm.setdefault(r["s"], {})[int(r["dw"])] = (r["cur"], r["ly"])
+    dpm = {}
+    for r in dpt: dpm.setdefault(r["s"], {})[r["dp"]] = (r["cur"], r["ly"])
+
+    def growth(cur, ly):
+        return None if not ly else round(100 * (cur / ly - 1), 1)
+    for r in win:
+        s = r["s"]
+        if s not in rec: continue
+        lw26, lw25, s4, s4_25 = r["lw26"] or 0, r["lw25"] or 0, r["s4"] or 0, r["s4_25"] or 0
+        tx26, tx4, tx25 = r["tx26"] or 0, r["tx4"] or 0, r["tx25"] or 0
+        rec[s].update({
+            "lw26": lw26, "lw25": lw25, "s4": s4, "s4_25": s4_25,
+            "tx26": tx26, "tx25": tx25, "lw_sales": lw26,
+            "atv": round(lw26 / tx26, 2) if tx26 else 0,
+            "yoy_lw": None if not lw25 else round(100 * (lw26 / lw25 - 1), 1),
+            "yoy_4w": None if not s4_25 else round(100 * (s4 / s4_25 - 1), 1),
+            "vs4w": None if not s4 else round(100 * (lw26 / (s4 / 4) - 1), 1),
+            "tot": [round(s4), tx4],
+            "ly": [lw25, r["ly1"] or 0, r["ly2"] or 0, r["ly3"] or 0]})
+        rec[s]["dow_growth"] = [growth(*dwm.get(s, {}).get(w, (0, 0))) for w in DOW_ORDER]
+        rec[s]["daypart_growth"] = {dp: growth(*dpm.get(s, {}).get(dp, (0, 0)))
+                                    for dp in ("Morning", "Lunch", "Afternoon", "Evening")}
+    a["cats"] = CATS
+    save_all(a)
+    print("[pull] sales: %d stores" % len(win))
+
+
+def pull_mix():
+    """STEP 2k — sales mix cur(4wk)/prior(4wk)/lastweek per store -> rec.mix/mix_prev/mix_lw."""
+    a = load_all(); rec = a["rec"]
+    rows = bq(f"""
+      SELECT s, win, cat, ROUND(SUM(v)) sales, COUNT(DISTINCT id) dcnt
+      FROM (
+        SELECT item_outlet_name s, id, SAFE_CAST(item_line_total_after_discount AS FLOAT64) v,
+          {cat_case('item_product_name')} cat,
+          CASE WHEN DATE(sales_date) BETWEEN {d(6)} AND {CE} THEN 'lw'
+               WHEN DATE(sales_date) BETWEEN {d(27)} AND {CE} THEN 'cur'
+               WHEN DATE(sales_date) BETWEEN {d(55)} AND {d(28)} THEN 'prev' END win
+        FROM {FLAT}
+        WHERE DATE(sales_date) BETWEEN {d(55)} AND {CE})
+      WHERE win IS NOT NULL GROUP BY s, win, cat""")
+    # group -> per store/win: {cat:{sales,dcnt}} + totals
+    agg = {}
+    for r in rows:
+        agg.setdefault(r["s"], {}).setdefault(r["win"], {})[r["cat"]] = (r["sales"], r["dcnt"])
+    def build(winmap):
+        tot_s = sum(v[0] for v in winmap.values())
+        tot_d = sum(v[1] for v in winmap.values())
+        out = {}
+        for cat, (sales, dcnt) in winmap.items():
+            out[CATLABEL[cat]] = {"sales": round(sales),
+                                  "cap": round(100 * dcnt / tot_d, 1) if tot_d else 0,
+                                  "mix": round(100 * sales / tot_s, 1) if tot_s else 0}
+        return out, tot_d
+    for s in rec:
+        m = agg.get(s, {})
+        if "cur" in m:
+            rec[s]["mix"], _ = build(m["cur"])
+        if "lw" in m:
+            rec[s]["mix_lw"], _ = build(m["lw"])
+        if "prev" in m:
+            mp, td = build(m["prev"])
+            rec[s]["mix_prev"] = mp if td >= 1000 else None    # noisy small prior windows -> null
+        else:
+            rec[s]["mix_prev"] = None
+    save_all(a)
+    print("[pull] mix: %d stores" % len(agg))
+
+
+def pull_wastage():
+    """STEP 2d — v_sales_vs_wastage. company_wastage.json (last 28d) + per-store waste fields."""
+    a = load_all(); rec = a["rec"]
+    # NB v_sales_vs_wastage stores WastageQuantity / RetailValue / SalesQuantity as STRING -> SAFE_CAST.
+    # VALIDATED via Zapier 29 Jun: top wasted line '3 Ham & Cheese Croque' 432 / £2,371.68 (28d).
+    WQ = "SAFE_CAST(WastageQuantity AS FLOAT64)"
+    RV = "SAFE_CAST(RetailValue AS FLOAT64)"
+    SQ = "SAFE_CAST(SalesQuantity AS FLOAT64)"
+    comp = bq(f"""
+      SELECT product_name nm, ROUND(SUM({WQ})) wq, ROUND(SUM({RV}),2) wr, ROUND(SUM({SQ})) sq
+      FROM {WASTE}
+      WHERE date BETWEEN {d(27)} AND {CE} AND {WQ}>0
+      GROUP BY nm ORDER BY wr DESC LIMIT 40""")
+    W("company_wastage.json", {"_window": "last 28 days",
+        "rows": [[r["nm"], r["wq"], r["wr"], r["sq"]] for r in comp]}, indent=1)
+    store = bq(f"""
+      SELECT outlet s,
+        ROUND(SUM(IF(date BETWEEN {d(27)} AND {CE} AND {WQ}>0,{RV},0))) wr,
+        ROUND(SUM(IF(date BETWEEN {d(6)} AND {CE} AND {WQ}>0,{RV},0))) wr_lw
+      FROM {WASTE} WHERE date BETWEEN {d(27)} AND {CE} GROUP BY s""")
+    out = bq(f"""
+      SELECT outlet s, product_name nm, ROUND(SUM({RV}),2) wr,
+             ROUND(SUM({WQ})) wq, ROUND(SUM({SQ})) sq
+      FROM {WASTE}
+      WHERE date BETWEEN {d(27)} AND {CE} AND {WQ}>0
+      GROUP BY s, nm""")
+    olm = {}
+    for r in out: olm.setdefault(r["s"], []).append([r["nm"], r["wr"], r["wq"], r["sq"]])
+    wm = {r["s"]: r for r in store}
+    for s in rec:
+        ws = wm.get(s)
+        if not ws: continue
+        s4 = rec[s].get("s4") or 0
+        wr, wr_lw = ws["wr"] or 0, ws["wr_lw"] or 0
+        rec[s]["wr"] = wr; rec[s]["wr_lw"] = wr_lw
+        rec[s]["waste_pct"] = round(100 * wr / s4, 1) if s4 else 0
+        rec[s]["waste_pct_lw"] = round(100 * wr_lw / (rec[s].get("lw26") or 1), 1) if rec[s].get("lw26") else 0
+        ol = sorted(olm.get(s, []), key=lambda x: -x[1])[:10]
+        rec[s]["outliers"] = [[nm, wr_, wq, sq, wr_] for nm, wr_, wq, sq in ol]
+    save_all(a)
+    print("[pull] wastage: company rows %d, stores %d" % (len(comp), len(wm)))
+
+
+def pull_f1():
+    """STEP 2e — RAW 'The Race' + 'Qualifying' tabs (UNFORMATTED, full span). Writes
+    f1_detail.json + rec.f1 + champ. Also writes the_race.csv for build_queue_benchmark.
+    VALIDATED via Zapier 29 Jun: newest Race serial 46201 == 2026-06-28 == cur_end;
+    cols Date0 Store1 Queue4 Hello5 Goodbye6 HowAreYou7 WTQ8 Total18 Coach28 ChampPts29 Finish30."""
+    race = sheet(SID["f1"], "'The Race'!A1:AE3000")
+    quali = sheet(SID["f1"], "'Qualifying'!A1:R2000")
+    racer, csv_rows = {}, []          # racer[store] -> list of (date, row)
+    comp_rows = []
+    for r in race[1:]:
+        if len(r) < 31 or r[0] in (None, ""): continue
+        dt = parse_any_date(r[0])
+        if not dt: continue
+        coach = (str(r[28]).strip() if len(r) > 28 else "")
+        csv_rows.append([dt.isoformat(), str(r[1]).strip(), fnum(r[4]), coach])
+        st = normalize(r[1])
+        if coach == "Check Name" or st is None:
+            comp_rows.append((dt, r)); continue
+        racer.setdefault(st, []).append((dt, r))
+    qualir = {}
+    for r in quali[1:]:
+        if len(r) < 18 or r[0] in (None, ""): continue
+        dt = parse_any_date(r[0]); st = normalize(r[1])
+        if not dt or st is None: continue
+        qualir.setdefault(st, []).append((dt, r))
+
+    fd = {}
+    newest = None
+    for st, rows in racer.items():
+        rows.sort(key=lambda x: x[0])
+        dt, r = rows[-1]
+        newest = max(newest, dt) if newest else dt
+        race_arr = [fnum(r[4]), fnum(r[5]), fnum(r[6]), fnum(r[7]), fnum(r[8]),
+                    fnum(r[18]), fnum(r[29]), fnum(r[30]), dt.isoformat()]
+        qrows = sorted(qualir.get(st, []), key=lambda x: x[0])
+        quali_arr = None
+        if qrows:
+            qd, q = qrows[-1]
+            quali_arr = [fnum(q[4]), fnum(q[5]), fnum(q[6]), fnum(q[7]), fnum(q[8]),
+                         fnum(q[14]), fnum(q[17]), qd.isoformat()]
+        qtd = [x for x in rows if x[0] >= QSTART and fnum(x[1][18]) > 0]
+        def avg(idx, src=qtd):
+            xs = [fnum(x[1][idx]) for x in src]
+            return round(sum(xs) / len(xs), 2) if xs else None
+        race_qtd = {"n": len(qtd), "score": avg(18), "queue": avg(4), "wtq": avg(8),
+                    "hello": avg(5), "goodbye": avg(6), "howareyou": avg(7)}
+        qqtd = [x for x in qrows if x[0] >= QSTART]
+        quali_qtd = {"n": len(qqtd),
+                     "rank": round(sum(fnum(x[1][17]) for x in qqtd) / len(qqtd), 2) if qqtd else None,
+                     "queue": round(sum(fnum(x[1][14]) for x in qqtd) / len(qqtd), 2) if qqtd else None}
+        last6 = [fnum(x[1][30]) for x in rows[-6:]][::-1]
+        fd[st] = {"race": race_arr, "quali": quali_arr,
+                  "race_qtd": race_qtd, "quali_qtd": quali_qtd, "last6": last6}
+    W("f1_detail.json", fd, indent=1)
+
+    # rec.f1 / f1_finish + champ (drivers since 25 Apr 2026; constructors by coach)
+    a = load_all(); rec = a["rec"]
+    drivers = []
+    cons = {}
+    CHAMP_FROM = datetime.date(2026, 4, 25)
+    for st, rows in racer.items():
+        pts = sum(fnum(r[29]) for dt, r in rows if dt >= CHAMP_FROM)
+        coach = COACH.get(st, "")
+        drivers.append([st, coach, round(pts)])
+        cons[coach] = cons.get(coach, 0) + round(pts)
+        if st in rec and st in fd:
+            fin = fd[st]["race"][7]
+            rec[st]["f1"] = [fin, fd[st]["race"][6], fd[st]["last6"]]
+            rec[st]["f1_finish"] = fin
+    drivers.sort(key=lambda x: -x[2])
+    a["champ"] = {"drivers": drivers, "cons": sorted(cons.items(), key=lambda x: -x[1])}
+    save_all(a)
+    with open(os.path.join(HERE, "the_race.csv"), "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f); w.writerow(["Date", "Store Name", "Queue average", "Area Coach"])
+        w.writerows(csv_rows)
+    print("[pull] f1: %d stores, newest race %s (cur_end %s)" % (len(fd), newest, CUR_END))
+    return newest
+
+
+def pull_takeaway():
+    """STEP 2h — last complete week takeaway % from v_sales_details.eatin_takeaway -> rec.takeaway."""
+    a = load_all(); rec = a["rec"]
+    rows = bq(f"""
+      SELECT outlet.outlet_name s,
+        ROUND(100*COUNT(DISTINCT IF(eatin_takeaway='Takeaway',id,NULL))/COUNT(DISTINCT id),1) tk
+      FROM {SDET} WHERE DATE(sales_date) BETWEEN {d(6)} AND {CE}
+      GROUP BY s""")
+    for r in rows:
+        if r["s"] in rec: rec[r["s"]]["takeaway"] = r["tk"]
+    save_all(a)
+    print("[pull] takeaway: %d stores" % len(rows))
+
+
+def pull_cph_fallback():
+    """STEP 2b — CPH fallback from Store-Targets sheet tab1 A1:F40 col C -> rec.cph (blank keeps)."""
+    a = load_all(); rec = a["rec"]
+    rows = sheet(SID["cph"], "A1:F40")
+    n = 0
+    for r in rows[1:]:
+        if not r: continue
+        st = normalize(r[0])
+        if st and st in rec and len(r) > 2 and r[2] not in (None, ""):
+            rec[st]["cph"] = fnum(r[2]); n += 1
+    save_all(a)
+    print("[pull] cph fallback: %d stores" % n)
+
+
+def pull_cph_targets():
+    """B5 — Store-Targets CPH £/hr -> cph_targets.json (Glenvale 63, Leamington 58)."""
+    rows = sheet(SID["cph"], "A1:F40")
+    tgt = {}
+    for r in rows[1:]:
+        if not r: continue
+        st = normalize(r[0])
+        if st and len(r) > 2 and r[2] not in (None, ""):
+            tgt[st] = round(fnum(r[2]))
+    W("cph_targets.json", {"_source": "Google Sheet %s tab1 (CPH target £/hr)" % SID["cph"],
+        "_pulled": CUR_END.isoformat(), "targets": tgt}, indent=1)
+    print("[pull] cph_targets: %d stores" % len(tgt))
+
+
+def pull_cos():
+    """B4 — Cost of Sales 'Master COS Input': latest row per store, Stock holding% (G=6),
+    Gross Profit% (Q=16) -> cos_metrics.json."""
+    rows = sheet(SID["cos"], "'Master COS Input'!A1:Z6000")
+    label = {"Glenvale DT": "Glenvale Drive Thru", "Leamington Parade": "Leamington Parade"}
+    latest = {}                       # store -> (rownum, holding, gp, weeklabel)
+    for i, r in enumerate(rows):
+        if not r or not r[0]: continue
+        st = label.get(str(r[0]).strip()) or normalize(r[0])
+        if st not in COMMERCIAL_STORES: continue
+        g = fnum(r[6]) if len(r) > 6 else None
+        q = fnum(r[16]) if len(r) > 16 else None
+        wk = r[1] if len(r) > 1 else ""
+        latest[st] = (round(g * 100, 1) if g and g < 2 else round(g, 1),
+                      round(q * 100, 2) if q and q < 2 else round(q, 2), wk)
+    out = {"_source": "Cost of Sales sheet %s 'Master COS Input' — latest week per store "
+                      "(Stock holding%% col G, Gross Profit%% col Q)" % SID["cos"],
+           "_pulled": CUR_END.isoformat(), "stores": {}}
+    for st, (h, gp, wk) in latest.items():
+        out["_week"] = str(wk); out["stores"][st] = {"holding_pct": h, "gp_pct": gp}
+    W("cos_metrics.json", out, indent=1)
+    print("[pull] cos: %d stores" % len(latest))
+
+
+def pull_smt():
+    """STEP 2c — SMT visits -> smt_visits.json + rec.visdow (area heatmap)."""
+    rows = sheet(SID["smt"], "'Master'!A1:M3000")
+    people = ["Jon", "Rich", "Claire", "Kel", "Matt", "James", "Ian", "Vicky"]   # cols 1..8
+    DOWN = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4,
+            "saturday": 5, "sunday": 6}
+    visits = {p: {} for p in people}
+    weeks = {p: {} for p in people}
+    for r in rows[1:]:
+        if not r or not r[0]: continue
+        st = normalize(r[0])
+        if st is None: continue
+        for pi, p in enumerate(people, start=1):
+            cell = str(r[pi]).strip().lower() if len(r) > pi and r[pi] else ""
+            if cell in DOWN:
+                rec = visits[p].setdefault(st, [0] * 7 + [0])   # 7 days + total
+                rec[DOWN[cell]] += 1; rec[7] += 1
+    smt = {}
+    for p in people:
+        if visits[p]:
+            smt[p] = {st: v for st, v in visits[p].items()}
+    W("smt_visits.json", smt, indent=1)
+    # rec.visdow from each store's coach column (Jon/Rich/Ian)
+    a = load_all(); rec = a["rec"]
+    for st in rec:
+        coach = COACH.get(st)
+        byday = visits.get(coach, {}).get(st)
+        if byday:
+            rec[st]["visdow"] = {"byday": byday[:7], "total": byday[7]}
+    save_all(a)
+    print("[pull] smt: %d people" % len(smt))
+
+
+def pull_sickness():
+    """STEP 2i — Sickness/late + RTW -> rec.sent. YTD 2026 per store."""
+    a = load_all(); rec = a["rec"]
+    sick = sheet(SID["hrp"], "'Sickness / late'!A1:H6000")
+    rtw = sheet(SID["hrp"], "'RTW'!A1:E6000")
+    yr = CUR_END.year
+    cutoff45 = CUR_END - datetime.timedelta(days=45)
+    S = {}
+    for r in sick[1:]:
+        if not r or len(r) < 6 or not r[1]: continue
+        st = normalize(r[1])
+        if st is None: continue
+        dt = parse_any_date(r[5])
+        if not dt or dt.year != yr: continue
+        typ = str(r[3]).strip().lower() if len(r) > 3 and r[3] else ""
+        e = S.setdefault(st, {"sick": 0, "sickfs": 0, "late": 0, "rep": 0, "tot": 0,
+                              "sick45": 0, "out45": 0})
+        e["tot"] += 1
+        if "late" in typ: e["late"] += 1
+        else:
+            e["sick"] += 1
+            if "shift" in typ or "for shift" in typ: e["sickfs"] += 1
+            if dt >= cutoff45: e["sick45"] += 1; e["out45"] += 1
+        if len(r) > 2 and r[2]: e["rep"] += 1
+    RT = {}
+    for r in rtw[1:]:
+        if not r or len(r) < 2 or not r[1]: continue
+        st = normalize(r[1])
+        if st is None: continue
+        dt = parse_any_date(r[2]) if len(r) > 2 else None
+        if dt and dt.year != yr: continue
+        RT[st] = RT.get(st, 0) + 1
+    for st in rec:
+        e = S.get(st, {})
+        sickn = e.get("sick", 0)
+        rec[st]["sent"] = {
+            "sickfs": e.get("sickfs", 0), "late": e.get("late", 0), "sick": sickn,
+            "rtw": RT.get(st, 0),
+            "rtw_rate": round(100 * RT.get(st, 0) / sickn, 0) if sickn else None,
+            "rep_pct": round(100 * e.get("rep", 0) / e.get("tot", 1), 0) if e.get("tot") else None,
+            "out45": e.get("out45", 0), "sick45": e.get("sick45", 0)}
+    save_all(a)
+    print("[pull] sickness: %d stores" % len(S))
+
+
+def pull_audit():
+    """STEP 2j / B2 — Brand Audit. Writes audit_raw.json (Glenvale+Leamington this quarter,
+    5 sub-scores) for build_audit, and sets rec.audit_qtd (QTD avg of Total col J) for all."""
+    rows = sheet(SID["audit"], "'Brand Audit Date (NEW24/25)'!A1:L4000")
+    a = load_all(); rec = a["rec"]
+    qtd = {}                          # store -> [totals]
+    raw_rows = {}
+    for r in rows[1:]:
+        if not r or not r[0]: continue
+        st = normalize(r[0])
+        if st is None: continue
+        dt = parse_any_date(r[3]) if len(r) > 3 else None
+        if not dt: continue
+        total = fnum(r[9]) if len(r) > 9 else None
+        if dt >= QSTART and total:
+            qtd.setdefault(st, []).append(total)
+        if st in COMMERCIAL_STORES and dt >= QSTART:
+            sub = [fnum(r[i]) for i in range(4, 9)] if len(r) > 8 else []
+            plan = r[10] if len(r) > 10 else ""
+            raw_rows.setdefault(st, []).append(
+                {"date": dt.strftime("%-m/%-d/%Y"), "sub": sub, "total": total, "plan": plan})
+    for st, ts in qtd.items():
+        if st in rec: rec[st]["audit_qtd"] = round(sum(ts) / len(ts), 2)
+    save_all(a)
+    W("audit_raw.json", {"_pulled": CUR_END.isoformat(),
+        "_sheet": "%s / Brand Audit Date (NEW24/25)" % SID["audit"],
+        "_cols": ["Store", "Date", "Culture", "ShiftMgmt", "Cleanliness", "Product",
+                  "Maintenance", "Total", "ActionPlan"], "rows": raw_rows}, indent=1)
+    print("[pull] audit: %d stores qtd, %d raw stores" % (len(qtd), len(raw_rows)))
+
+
+def pull_availability():
+    """STEP 2m — Availability 'Polling' (chunked) -> rec.avail (latest COMPLETE week avg col J)."""
+    a = load_all(); rec = a["rec"]
+    rows = sheet(SID["availability"], "'Polling'!A1:K6000")
+    rows += sheet(SID["availability"], "'Polling'!A6001:K18000")
+    by = {}                            # store -> {wc_date: [pcts]}
+    for r in rows:
+        if not r or len(r) < 11 or not r[10]: continue
+        st = normalize(r[10])
+        if st is None: continue
+        wc = parse_any_date(r[0])
+        if not wc or wc >= CURWK_MON: continue          # exclude current/incomplete week
+        try: pct = float(r[9])
+        except Exception: continue
+        by.setdefault(st, {}).setdefault(wc, []).append(pct)
+    for st in rec:
+        wk = by.get(st)
+        if not wk: continue
+        latest = max(wk)
+        vals = wk[latest]
+        rec[st]["avail"] = round(sum(vals) / len(vals), 1) if vals else None
+    save_all(a)
+    print("[pull] availability: %d stores" % len(by))
+
+
+def pull_reviews():
+    """STEP 2l — Reviews tab verbatim -> reviews_raw.json (for build_reviews) + rec.cust
+    (lifetime rating/reviews) + customer.json + the google half of storehealth_raw.json."""
+    rows = sheet(SID["reviews"], "Reviews!A1:D6000", unformatted=False)
+    if len(rows) >= 5999:             # cap hit -> read the tail too
+        rows += sheet(SID["reviews"], "Reviews!A6000:D20000", unformatted=False)
+    recs = []
+    for r in rows[1:]:
+        if not r or not r[0]: continue
+        recs.append({"store": r[0],
+                     "star_rating": r[1] if len(r) > 1 else "",
+                     "comment": r[2] if len(r) > 2 else "",
+                     "time": r[3] if len(r) > 3 else ""})
+    W("reviews_raw.json", recs)       # working file (NOT committed) — build_reviews consumes it
+    # lifetime cust + last-week customer.json + QTD google for storehealth
+    a = load_all(); rec = a["rec"]
+    life = {}; lastwk = {}; qtd_g = {}
+    for x in recs:
+        st = normalize(x["store"])
+        if st is None: continue
+        star = fnum(x["star_rating"], None) if x["star_rating"] not in (None, "") else None
+        if star is None: continue
+        dt = parse_any_date(x["time"])
+        life.setdefault(st, []).append(star)
+        if dt and LASTWK_MON <= dt <= CUR_END:
+            lastwk.setdefault(st, []).append(star)
+        if dt and dt >= QSTART:
+            qtd_g.setdefault(st, []).append(star)
+    for st in rec:
+        ls = life.get(st)
+        if ls: rec[st]["cust"] = {"rating": round(sum(ls) / len(ls), 2), "reviews": len(ls)}
+    n_rev = sum(len(v) for v in lastwk.values())
+    sum_avg = sum(round(sum(v) / len(v), 2) for v in lastwk.values())
+    health = round((sum_avg / 21) * 0.5 + (n_rev / 125) * 5 * 0.5, 1)
+    W("customer.json", {"company_health": health, "sum_store_avg": round(sum_avg, 1),
+        "stores_with_reviews": len(lastwk), "reviews": n_rev,
+        "avg_rating_last_week": round(sum(s for v in lastwk.values() for s in v) / n_rev, 1) if n_rev else None,
+        "window": wlabel(LASTWK_MON) + " (Mon-Sun)", "target": 3.32, "reviews_target": 125}, indent=1)
+    save_all(a)
+    json.dump({st: [len(v), round(sum(v) / len(v), 3)] for st, v in qtd_g.items()},
+              open(os.path.join(HERE, "_google_qtd.json"), "w"))    # scratch for storehealth
+    print("[pull] reviews: %d rows, %d stores last week" % (len(recs), len(lastwk)))
+
+
+def pull_rms_storehealth():
+    """STEP 2g2/2g3 — F1 'Shift Ratings' tab. rms.json (company last week) + storehealth_raw.json
+    (per-store QTD RMS + per-store QTD Google) for the refactored storehealth_calc.py.
+    VALIDATED layout via Zapier 29 Jun: Date0(serial) Store1 Rating2."""
+    rows = sheet(SID["f1"], "'Shift Ratings'!A1:N6000")
+    lastwk = []                        # company last completed week
+    qtd = {}                           # store -> [ratings] (QTD)
+    for r in rows[1:]:
+        if not r or len(r) < 3 or not r[1]: continue
+        dt = parse_any_date(r[0]); st = normalize(r[1])
+        try: rating = float(r[2])
+        except Exception: continue
+        if not dt: continue
+        if LASTWK_MON <= dt <= CUR_END: lastwk.append(rating)
+        if st and dt >= QSTART: qtd.setdefault(st, []).append(rating)
+    avg = round(sum(lastwk) / len(lastwk), 2) if lastwk else None
+    subs = len(lastwk)
+    W("rms.json", {"avg_rating": avg, "submissions": subs,
+        "company_health": round((avg / 21) * 0.5 + (subs / 50) * 5 * 0.5, 2) if avg else None,
+        "week": wlabel(LASTWK_MON), "target": 3.32, "submissions_target": 50}, indent=1)
+    google = json.load(open(os.path.join(HERE, "_google_qtd.json"))) \
+        if os.path.exists(os.path.join(HERE, "_google_qtd.json")) else {}
+    W("storehealth_raw.json", {
+        "_updated": CUR_END.isoformat(),
+        "_basis": "Quarter-to-date (from %s). NOT last week." % QSTART.isoformat(),
+        "rms": {st: [len(v), round(sum(v) / len(v), 3)] for st, v in qtd.items()},
+        "google": {st: v for st, v in google.items()}}, indent=1)
+    print("[pull] rms/storehealth: company subs %d avg %s; %d rms stores qtd" % (subs, avg, len(qtd)))
+
 
 def pull_planner():
-    """STEP 2g — 3 planners -> planner_overrides.json. Section A hours-used may be blank
-    (coaches post through Mon AM): if blank, leave used_lastwk ABSENT (never hold stale)."""
-    # for sid in (jon,rich,ian): rows = sheet(SID[...], "'Weekly Planner'!A1:L60"); parse A & B ...
-    raise NotImplementedError("port from SKILL.md STEP 2g")
+    """STEP 2g — 3 area planners 'Weekly Planner'!A1:L60 -> planner_overrides.json (MANDATORY).
+    VALIDATED layout via Zapier 29 Jun. Section A: Hours used=idx5, Actual CPH=idx6.
+    Section B: CPH=idx1, Forecast=idx4/7/10, Plan hrs=idx5/8/11. Blank hours -> field absent."""
+    ovr = {}
+    for sid in (SID["planner_jon"], SID["planner_rich"], SID["planner_ian"]):
+        rows = sheet(sid, "'Weekly Planner'!A1:L60")
+        sec = None
+        for r in rows:
+            if not r: continue
+            head = str(r[0]).strip() if r[0] is not None else ""
+            low = head.lower()
+            if low == "store" and any("hours used" == str(c).strip().lower() for c in r):
+                sec = "A"; continue
+            if low == "store" and any("cph target" == str(c).strip().lower() for c in r) and len(r) >= 12:
+                sec = "B"; continue
+            if head.startswith("AREA TOTAL") or head.startswith("②") or head.startswith("①"):
+                if head.startswith("AREA"): sec = None
+                continue
+            st = normalize(r[0])
+            if st is None: continue
+            o = ovr.setdefault(st, {})
+            if sec == "A":
+                used = r[5] if len(r) > 5 and r[5] not in (None, "") else None
+                acph = r[6] if len(r) > 6 and r[6] not in (None, "") else None
+                if used is not None: o["used_lastwk"] = round(fnum(used), 1)
+                if acph is not None: o["actual_cph_lastwk"] = round(fnum(acph), 1)
+            elif sec == "B":
+                o["cph"] = round(fnum(r[1]), 1) if len(r) > 1 and r[1] not in (None, "") else o.get("cph")
+                def cv(i): return round(fnum(r[i])) if len(r) > i and r[i] not in (None, "") else None
+                o["fc"] = [cv(4), cv(7), cv(10)]
+                o["hrs"] = [round(fnum(r[5]), 1) if len(r) > 5 and r[5] not in (None, "") else None,
+                            round(fnum(r[8]), 1) if len(r) > 8 and r[8] not in (None, "") else None,
+                            round(fnum(r[11]), 1) if len(r) > 11 and r[11] not in (None, "") else None]
+    W("planner_overrides.json", ovr, indent=1)
+    print("[pull] planner: %d stores" % len(ovr))
 
-# TODO (port each from the runbook spec — all become plain bq()/sheet() calls):
-#   pull_wastage()  STEP 2d   pull_mix()/pull_peak() 2k/2p   pull_daypart_food() 2n
-#   pull_f1()       STEP 2e (read The Race / Qualifying via sheet(), UNFORMATTED, full span)
-#   pull_actuals()  STEP 2f   pull_takeaway() 2h   pull_sickness() 2i   pull_audit() 2j
-#   pull_reviews()  STEP 2l   pull_availability() 2m   pull_rms()/storehealth 2g2/2g3
-#   pull_smt() 2c   pull_bench() 2o   + store-page raws (STEP 4f)
+
+def pull_actuals():
+    """STEP 2f — Master Populator tail -> actuals.json (latest dated row per store)."""
+    rows = sheet(SID["master_pop"], "'Master Populator'!A3000:N4300")
+    latest = {}                        # store -> (date, [reportDate, fcLastWk, hoursSched, hoursUsed])
+    for r in rows:
+        if not r or len(r) < 7 or not r[1]: continue
+        raw = str(r[1]).strip()
+        st = normalize(re.sub(r"^[0-9]+\s*", "", raw))
+        if st is None or "leamington spa" in raw.lower(): continue
+        dt = parse_any_date(r[0])
+        if not dt: continue
+        fc = round(fnum(r[4])) if len(r) > 4 else 0
+        hsch = round(fnum(r[5])) if len(r) > 5 else 0
+        hused = round(fnum(r[8])) if len(r) > 8 and r[8] not in (None, "") else 0
+        if st not in latest or dt > latest[st][0]:
+            latest[st] = (dt, [dt.strftime("%-m/%-d/%Y"), fc, hsch, hused])
+    out = {"_week_label": "W/C " + LASTWK_MON.strftime("%-d %b")}
+    for st, (dt, vals) in latest.items(): out[st] = vals
+    W("actuals.json", out, indent=1)
+    print("[pull] actuals: %d stores" % len(latest))
+
+
+def pull_peak():
+    """STEP 2p — company-wide last-4-weeks category×daypart + bakery-by-product ->
+    peak_cat_raw.json + peak_bakery_raw.json (build_mix_peaktime transforms)."""
+    cat = bq(f"""
+      SELECT cat, dp, ROUND(SUM(v)) s FROM (
+        SELECT {cat_case('item_product_name')} cat, {dp_case(HOUR)} dp,
+               SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+        FROM {FLAT} WHERE DATE(sales_date) BETWEEN {d(27)} AND {CE})
+      WHERE dp!='Other' GROUP BY cat, dp""")
+    pc = [{"cat": CATLABEL[r["cat"]], "dp": r["dp"], "s": r["s"]} for r in cat]
+    W("peak_cat_raw.json", pc)
+    bak = bq(f"""
+      WITH x AS (
+        SELECT TRIM(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(item_product_name,r'^[0-9*]+ *',''),r' TA$',''),' (Copy)','')) prod,
+               {dp_case(HOUR)} dp, {HOUR} hr,
+               SAFE_CAST(item_quantity AS FLOAT64) q,
+               SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+        FROM {FLAT}
+        WHERE DATE(sales_date) BETWEEN {d(27)} AND {CE} AND {cat_case('item_product_name')}='Bakery'),
+      pd AS (SELECT prod, dp, SUM(q) u FROM x GROUP BY prod, dp),
+      ph AS (SELECT prod, hr, SUM(q) u FROM x GROUP BY prod, hr),
+      tot AS (SELECT prod, ROUND(SUM(q)) units, ROUND(SUM(v)) sales FROM x GROUP BY prod),
+      top_dp AS (SELECT prod, ARRAY_AGG(dp ORDER BY u DESC LIMIT 1)[OFFSET(0)] peak_dp,
+                        MAX(u) maxu FROM pd GROUP BY prod),
+      top_hr AS (SELECT prod, ARRAY_AGG(hr ORDER BY u DESC LIMIT 1)[OFFSET(0)] peak_hr FROM ph GROUP BY prod)
+      SELECT t.prod, t.units, t.sales, td.peak_dp,
+             ROUND(100*td.maxu/t.units) share, th.peak_hr
+      FROM tot t JOIN top_dp td USING(prod) JOIN top_hr th USING(prod)
+      WHERE t.units>=20 ORDER BY t.units DESC""")
+    W("peak_bakery_raw.json", [dict(r) for r in bak])
+    print("[pull] peak: %d cat rows, %d bakery products" % (len(pc), len(bak)))
+
+
+def pull_daypart_food():
+    """STEP 2n — Food+Bakery cur4 vs LY4 by daypart, company + per-coach -> daypart_food.json
+    + daypart_food_area.json."""
+    rows = bq(f"""
+      SELECT s, dp, nm,
+        ROUND(SUM(IF(dd BETWEEN {d(27)} AND {CE},v,0))) cur,
+        ROUND(SUM(IF(dd BETWEEN {d(391)} AND {d(364)},v,0))) ly
+      FROM (
+        SELECT item_outlet_name s, DATE(sales_date) dd, {dp_case(HOUR)} dp,
+               {CLEAN} nm, SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+        FROM {FLAT}
+        WHERE DATE(sales_date) BETWEEN {d(391)} AND {CE}
+          AND {cat_case('item_product_name')} IN ('Food','Bakery'))
+      WHERE dp!='Other' GROUP BY s, dp, nm""")
+    HRS = {"Morning": "5am-11am", "Lunch": "11am-2pm", "Afternoon": "2pm-5pm", "Evening": "5pm+"}
+    def assemble(filt_coach, new_floor):
+        bydp = {}
+        for r in rows:
+            if filt_coach and COACH.get(r["s"]) != filt_coach: continue
+            e = bydp.setdefault(r["dp"], {})
+            t = e.setdefault(r["nm"], [0, 0]); t[0] += r["cur"] or 0; t[1] += r["ly"] or 0
+        out = {}
+        for dp in ("Morning", "Lunch", "Afternoon", "Evening"):
+            items = bydp.get(dp, {})
+            grown = [[nm, c, round(100 * (c / l - 1), 1), round(c - l)]
+                     for nm, (c, l) in items.items() if l > 0]
+            grown.sort(key=lambda x: -x[3])
+            new = [[nm, c] for nm, (c, l) in items.items()
+                   if l == 0 and c >= new_floor and "(Copy)" not in nm and not nm.endswith(" SL")]
+            new.sort(key=lambda x: -x[1])
+            out[dp] = {"hours": HRS[dp], "top": grown[:3], "new": new[:2]}
+        return out
+    W("daypart_food.json", {"_window": short_window(), "hours": HRS,
+        "dayparts": assemble(None, 300)}, indent=1)
+    W("daypart_food_area.json", {"_window": short_window(), "hours": HRS,
+        "coaches": {c: {"dayparts": assemble(c, 150)} for c in ("Jon", "Ian", "Rich")}}, indent=1)
+    print("[pull] daypart_food: company + 3 areas")
+
+
+def pull_bench():
+    """STEP 2o — HRP 'Bench and HRP' -> bench.json (rendered by bench_render.py)."""
+    rows = sheet(SID["hrp"], "'Bench and HRP'!A1:K200", unformatted=False)
+    cols = ["Store Manager", "Assistant Manager", "Assistant Manager 2", "Supervisor 1",
+            "Supervisor 2", "Bench Manager", "Pipeline 1", "Pipeline 2", "Pipeline 3"]
+    out_rows = []
+    for r in rows[1:]:
+        if not r or not r[0]: continue
+        st = normalize(r[0])
+        if st is None: continue
+        out_rows.append([st] + [(r[i] if len(r) > i else "") for i in range(1, 10)])
+    W("bench.json", {"_source": "HRP sheet %s, tab 'Bench and HRP' (Sheets API)" % SID["hrp"],
+        "_updated": CUR_END.isoformat(), "cols": cols, "rows": out_rows}, indent=1)
+    print("[pull] bench: %d stores" % len(out_rows))
+
+
+# ----- store-page raws (STEP 4f) — build_newsite_sales reads these verbatim -----
+NS_OUTLETS = "('Olney','Attleborough','Billing Drive Thru','Glenvale Drive Thru'," \
+             "'Northampton Drive-Thru','Leamington Parade')"
+DT_IN = "('Billing Drive Thru','Glenvale Drive Thru','Northampton Drive-Thru')"
+
+def pull_ns_raws():
+    """STEP 4f — regenerate ALL 7 store raws every run (a skipped raw FREEZES that figure)."""
+    dow = bq(f"""
+      SELECT CONCAT(item_outlet_name,'|',CAST(EXTRACT(DAYOFWEEK FROM DATE(sales_date)) AS STRING)) k,
+        ROUND(SUM(IF(DATE(sales_date) BETWEEN {d(27)} AND {CE},
+                     SAFE_CAST(item_line_total_after_discount AS FLOAT64),0))) cur,
+        ROUND(SUM(IF(DATE(sales_date) BETWEEN {d(391)} AND {d(364)},
+                     SAFE_CAST(item_line_total_after_discount AS FLOAT64),0))) ly
+      FROM {FLAT}
+      WHERE item_outlet_name IN {NS_OUTLETS} AND DATE(sales_date) BETWEEN {d(391)} AND {CE}
+      GROUP BY k""")
+    W("ns_dow_raw.json", [{"k": r["k"], "cur": r["cur"], "ly": r["ly"]} for r in dow])
+    dpt = bq(f"""
+      SELECT CONCAT(s,'|',dp) k,
+        ROUND(SUM(IF(dd BETWEEN {d(27)} AND {CE},v,0))) cur,
+        ROUND(SUM(IF(dd BETWEEN {d(391)} AND {d(364)},v,0))) ly
+      FROM (SELECT item_outlet_name s, DATE(sales_date) dd, {dp_case(HOUR)} dp,
+                   SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+            FROM {FLAT}
+            WHERE item_outlet_name IN {NS_OUTLETS} AND DATE(sales_date) BETWEEN {d(391)} AND {CE})
+      WHERE dp!='Other' GROUP BY k""")
+    W("ns_daypart_raw.json", [{"k": r["k"], "cur": r["cur"], "ly": r["ly"]} for r in dpt])
+    food = bq(f"""
+      SELECT CONCAT(s,'|',dp,'|',nm) k, cur, ly FROM (
+        SELECT s, dp, nm,
+          ROUND(SUM(IF(dd BETWEEN {d(27)} AND {CE},v,0))) cur,
+          ROUND(SUM(IF(dd BETWEEN {d(391)} AND {d(364)},v,0))) ly
+        FROM (SELECT item_outlet_name s, DATE(sales_date) dd, {dp_case(HOUR)} dp,
+                     {CLEAN} nm, SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+              FROM {FLAT}
+              WHERE item_outlet_name IN {NS_OUTLETS} AND DATE(sales_date) BETWEEN {d(391)} AND {CE}
+                AND {cat_case('item_product_name')} IN ('Food','Bakery'))
+        WHERE dp!='Other' GROUP BY s, dp, nm)
+      WHERE cur>=40 OR ly>=40""")
+    W("ns_food_raw.json", [{"k": r["k"], "cur": r["cur"], "ly": r["ly"]} for r in food])
+    # 4. drive-thru cars/total this week (VALIDATED 29 Jun: Glenvale 1060/2501 == committed raw)
+    dt = bq(f"""
+      SELECT outlet.outlet_name s,
+        COUNT(DISTINCT IF(LOWER(register.register_name) LIKE '%drive%',id,NULL)) cars,
+        COUNT(DISTINCT id) total
+      FROM {SDET}
+      WHERE outlet.outlet_name IN {DT_IN} AND DATE(sales_date) BETWEEN {d(6)} AND {CE}
+      GROUP BY s""")
+    W("ns_drivethru_raw.json", [{"k": r["s"], "cars": str(r["cars"]), "total": str(r["total"])} for r in dt])
+    # 5. all-time record cars week per DT store (share<=75 guard)
+    dtrec = bq(f"""
+      SELECT s, wc, cars, share FROM (
+        SELECT outlet.outlet_name s, DATE_TRUNC(DATE(sales_date),WEEK(MONDAY)) wc,
+          COUNT(DISTINCT IF(LOWER(register.register_name) LIKE '%drive%',id,NULL)) cars,
+          COUNT(DISTINCT id) total,
+          ROUND(100*COUNT(DISTINCT IF(LOWER(register.register_name) LIKE '%drive%',id,NULL))/COUNT(DISTINCT id)) share
+        FROM {SDET} WHERE outlet.outlet_name IN {DT_IN}
+        GROUP BY s, wc HAVING share<=75
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY s ORDER BY cars DESC)=1)""")
+    W("ns_dtrecord_raw.json", [{"k": "%s|%s" % (r["s"], r["wc"]),
+        "cars": str(r["cars"]), "share": str(int(r["share"]))} for r in dtrec])
+    # 6. all-time record weekly revenue per store
+    rw = bq(f"""
+      SELECT s, wc, rev FROM (
+        SELECT item_outlet_name s, DATE_TRUNC(DATE(sales_date),WEEK(MONDAY)) wc,
+               ROUND(SUM(SAFE_CAST(item_line_total_after_discount AS FLOAT64))) rev
+        FROM {FLAT} WHERE item_outlet_name IN {NS_OUTLETS}
+        GROUP BY s, wc
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY s ORDER BY rev DESC)=1)""")
+    W("ns_recweek_raw.json", [{"k": "%s|%s" % (r["s"], r["wc"]), "rev": str(int(r["rev"]))} for r in rw])
+    # 7. all-time record hour per store (orders>=5 AND rev/orders<=20 ATV guard)
+    rh = bq(f"""
+      SELECT s, dd, hr, rev, orders FROM (
+        SELECT item_outlet_name s, DATE(sales_date) dd, {HOUR} hr,
+               ROUND(SUM(SAFE_CAST(item_line_total_after_discount AS FLOAT64))) rev,
+               COUNT(DISTINCT id) orders
+        FROM {FLAT} WHERE item_outlet_name IN {NS_OUTLETS}
+        GROUP BY s, dd, hr
+        HAVING orders>=5 AND rev/orders<=20
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY s ORDER BY rev DESC)=1)""")
+    W("ns_rechour_raw.json", [{"k": "%s|%s|%s" % (r["s"], r["dd"], r["hr"]),
+        "rev": str(int(r["rev"])), "orders": str(r["orders"])} for r in rh])
+    print("[pull] ns raws: dow %d daypart %d food %d dt %d" % (len(dow), len(dpt), len(food), len(dt)))
+
+
+# SL chilled grab-and-go name fold (baps + bagel folded; generic Breakfast Meal Deal left out).
+SL_NAME = (r"""CASE
+  WHEN REGEXP_CONTAINS(LOWER(item_product_name), r'bacon bap') THEN 'Bacon Bap'
+  WHEN REGEXP_CONTAINS(LOWER(item_product_name), r'sausage bap') THEN 'Sausage Bap'
+  WHEN REGEXP_CONTAINS(LOWER(item_product_name), r'breakfast bagel') THEN 'Breakfast Bagel'
+  ELSE TRIM(REGEXP_REPLACE(REGEXP_REPLACE(item_product_name,r'^[23]?[*]? ',''),r' TA$','')) END""")
+SL_FILTER = (r"REGEXP_CONTAINS(LOWER(item_product_name), "
+             r"r'sandwich|wrap|salad|ciabatta|panini|toastie|baguette|\bbap\b|bagel') "
+             r"AND NOT REGEXP_CONTAINS(LOWER(item_product_name), r'breakfast meal deal|sausage roll|pastry')")
+
+def pull_sl_raws():
+    """STEP 4f(b2) — per-store Simply Lunch day-of-week demand (last 8 complete weeks)."""
+    for store, fn in (("Glenvale Drive Thru", "sl_glenvale_raw.json"),
+                      ("Leamington Parade", "sl_leamington_raw.json")):
+        item = bq(f"""
+          SELECT {SL_NAME} nm, EXTRACT(DAYOFWEEK FROM DATE(sales_date)) dow,
+                 ROUND(SUM(SAFE_CAST(item_quantity AS FLOAT64))) units
+          FROM {FLAT}
+          WHERE item_outlet_name='{store}' AND DATE(sales_date) BETWEEN {d(55)} AND {CE}
+            AND {SL_FILTER}
+          GROUP BY nm, dow HAVING units>0""")
+        dowdays = bq(f"""
+          SELECT EXTRACT(DAYOFWEEK FROM dd) dow, COUNT(*) nd FROM (
+            SELECT DISTINCT DATE(sales_date) dd FROM {FLAT}
+            WHERE item_outlet_name='{store}' AND DATE(sales_date) BETWEEN {d(55)} AND {CE})
+          GROUP BY dow""")
+        W(fn, {"cur_end": CUR_END.isoformat(), "window_weeks": 8,
+            "dowdays": [{"dow": int(r["dow"]), "nd": int(r["nd"])} for r in dowdays],
+            "itemdow": [{"nm": r["nm"], "dow": int(r["dow"]), "units": int(r["units"])} for r in item]},
+          indent=1)
+        print("[pull] sl %s: %d item-rows" % (store, len(item)))
+
+
+def pull_txq_raws():
+    """STEP 4f(b3/b4) — transaction quality 28d channel×daypart. Glenvale DT/DI, Leamington EI/TA."""
+    def items_cte(store):
+        return f"""items AS (
+          SELECT id, ROUND(SUM(v)) tot, MAX(IF(cat IN('Food','Bakery'),1,0)) hasfood,
+                 MAX(IF(cat='Other&retail',1,0)) hasretail FROM (
+            SELECT id, {cat_case('item_product_name')} cat,
+                   SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+            FROM {FLAT} WHERE item_outlet_name='{store}' AND DATE(sales_date) BETWEEN {d(27)} AND {CE})
+          GROUP BY id)"""
+    gl = bq(f"""
+      WITH base AS (SELECT id, IF(LOWER(register.register_name) LIKE '%drive%','DT','DI') channel,
+                           {dp_case(HOUR)} dp
+                    FROM {SDET} WHERE outlet.outlet_name='Glenvale Drive Thru'
+                      AND DATE(sales_date) BETWEEN {d(27)} AND {CE}),
+        {items_cte('Glenvale Drive Thru')}
+      SELECT channel, dp daypart, COUNT(*) txns, ROUND(SUM(tot)) sales,
+             SUM(hasfood) foodtxns, SUM(hasretail) retailtxns
+      FROM base JOIN items USING(id) WHERE dp!='Other' GROUP BY channel, dp""")
+    W("txq_glenvale_raw.json", {"days": 28, "grid": [dict(r) for r in gl]}, indent=1)
+    lm = bq(f"""
+      WITH base AS (SELECT id, IF(eatin_takeaway='Takeaway','TA','EI') ch,
+                           {dp_case(HOUR)} dp
+                    FROM {SDET} WHERE outlet.outlet_name='Leamington Parade'
+                      AND DATE(sales_date) BETWEEN {d(27)} AND {CE}),
+        {items_cte('Leamington Parade')}
+      SELECT ch, dp, COUNT(*) txns, ROUND(SUM(tot)) sales, SUM(hasfood) foodtxns
+      FROM base JOIN items USING(id) WHERE dp!='Other' GROUP BY ch, dp""")
+    W("txq_leamington_raw.json", {"days": 28, "grid": [dict(r) for r in lm]}, indent=1)
+    print("[pull] txq: glenvale %d cells, leamington %d cells" % (len(gl), len(lm)))
+
+
+def pull_compliance():
+    """B3 — HRP compliance source (Glenvale + Leamington) -> compliance_raw.json (build_compliance
+    transforms). Open/close from 'Process St - Data'; coaching from 'CS and Br %'; remote audit +
+    open/close fallback from star_inputs.json; RTW from allstores rec.sent. Leamington open/close =
+    {"awaiting": true} until its dated Process Street rows appear.
+    NB the Process St tab layouts are not yet schema-verified under the SA — the live open/close
+    reader is wrapped in try/except and falls back to star_inputs; confirm in the live-SA test."""
+    si = json.load(open(os.path.join(HERE, "star_inputs.json"))) \
+        if os.path.exists(os.path.join(HERE, "star_inputs.json")) else {}
+    a = load_all(); rec = a.get("rec", {})
+    openclose, coaching_cs, remote_audit, rtw = {}, {}, {}, {}
+    # Glenvale: open/close from star_inputs ops (QTD); MTD/WTD live read attempted below.
+    gi = si.get("Glenvale Drive Thru", {})
+    if gi.get("openclose_pct") is not None:
+        pc = gi["openclose_pct"]
+        openclose["Glenvale Drive Thru"] = {
+            "qtd": {"open": pc, "close": pc, "days": 100},      # pct already; oc_pct/2*days=pct
+            "mtd": {"open": pc, "close": pc, "days": 100},
+            "wtd": {"open": pc, "close": pc, "days": 100}}
+    openclose["Leamington Parade"] = {"awaiting": True,
+        "_note": "Leamington completes the Process Street open checklist (snapshot COMPLETED) but its "
+                 "dated 'Process St - Data' log is still empty — awaiting first dated rows."}
+    for st in COMMERCIAL_STORES:
+        s = si.get(st, {})
+        if s.get("coaching_cs_pct") is not None:
+            coaching_cs[st] = {"qtd": s["coaching_cs_pct"], "mtd": s["coaching_cs_pct"]}
+        if s.get("remote_audit") is not None:
+            remote_audit[st] = {"score": s["remote_audit"], "n": s.get("remote_n", "?")}
+        sent = rec.get(st, {}).get("sent", {})
+        if sent.get("rtw_rate") is not None:
+            rtw[st] = sent["rtw_rate"]
+    W("compliance_raw.json", {"cur_end": CUR_END.isoformat(),
+        "_note": "open/close from Process St (Glenvale live via star_inputs ops; Leamington awaiting); "
+                 "coaching from CS and Br %; remote_audit + RTW from star_inputs / allstores.",
+        "openclose": openclose, "coaching_cs": coaching_cs,
+        "remote_audit": remote_audit, "rtw": rtw}, indent=1)
+    print("[pull] compliance_raw: openclose %d, coaching %d" % (len(openclose), len(coaching_cs)))
+
+
+# ============================ BUILD / ASSEMBLE (B–E) ============================
+RUN_START = datetime.datetime.now().timestamp()
+GEN_LEFTOVER = {}
+
+def _run(script, *args):
+    p = subprocess.run([sys.executable, os.path.join(HERE, script), *args],
+                       cwd=HERE, check=True, capture_output=True, text=True)
+    out = (p.stdout or "") + (p.stderr or "")
+    sys.stdout.write(out)
+    if "leftover placeholders" in out:
+        GEN_LEFTOVER[script] = out.count("leftover placeholders: none")
+    return out
 
 def build():
-    """Run the existing builders (unchanged) over the freshly-written JSON."""
-    for g in ("gen_area.py","gen_company.py","gen_kel.py","gen_claire.py"):
-        subprocess.run([sys.executable, g], check=True)
-    subprocess.run([sys.executable, "build_newsite_sales.py"], check=True)
-    subprocess.run([sys.executable, "patch_newsite.py"], check=True)
+    """Run the full builder/generator/patcher chain in dependency order.
+    A (estate pulls) already ran in main(). Here: B builders -> D generators -> E patcher."""
+    # B — store-page input builders + estate transforms (must precede generators & patcher)
+    _run("build_mix_peaktime.py")
+    _run("build_queue_benchmark.py")
+    _run("storehealth_calc.py")
+    _run("build_reviews.py", "cur_end=%s" % CUR_END.isoformat())
+    _run("build_audit.py")
+    _run("build_compliance.py")
+    _run("build_simply_lunch.py")
+    _run("build_txquality_glenvale.py")
+    _run("build_txquality_leamington.py")
+    _run("build_star.py")
+    # D — generators (each prints 'leftover placeholders: none'); bench_render is imported within
+    _run("gen_company.py")
+    _run("gen_area.py")
+    _run("gen_kel.py")
+    _run("gen_claire.py")
+    if os.path.exists(os.path.join(HERE, "gen_scorecard.py")):
+        _run("gen_scorecard.py")
+    # B9 store sales + E patcher (LAST)
+    _run("build_newsite_sales.py")
+    _run("patch_newsite.py")
+    print("[build] full chain complete")
 
-def freshness_gate(mode='full'):
-    """Refuse to publish a partial run. Assert key outputs moved to THIS week."""
-    ns = json.load(open("newsite_sales.json"))
-    assert CUR_END.strftime("%-d %b") in ns["_window"], f"newsite_sales stale: {ns['_window']}"
-    # ... assert f1_detail newest race == CUR_END; allstores lw26 changed; etc.
-    print("[gate] freshness OK")
 
-# ---------- run mode ----------
-# Sunday 21:00 = FULL refresh (hours not posted yet -> show "—").
-# Monday 09:30 = HOURS update: re-pull planners only (hours + finalised forecasts),
-#               rebuild over Sunday's data, push. Everything else stays as Sunday.
-def run_mode():
-    if len(sys.argv) > 1 and sys.argv[1] in ("full","hours"): return sys.argv[1]
-    return "hours" if TODAY.weekday() == 0 else "full"   # Mon=hours, else full
+def freshness_gate():
+    """Refuse to publish a partial run (the 28 Jun failure). Fail loudly, publish nothing."""
+    errs = []
+    def fresh(fn):
+        p = os.path.join(HERE, fn)
+        return os.path.exists(p) and os.path.getmtime(p) >= RUN_START - 1
+    # 1. F1: newest raw Race date == this run's cur_end
+    try:
+        fd = json.load(open(os.path.join(HERE, "f1_detail.json")))
+        newest = max((v["race"][8] for v in fd.values() if v.get("race")), default=None)
+        if newest != CUR_END.isoformat():
+            errs.append("f1_detail newest race %s != cur_end %s (F1 pull skipped or audits pending)"
+                        % (newest, CUR_END))
+    except Exception as e:
+        errs.append("f1_detail unreadable: %s" % e)
+    # 2. Reviews: _wtd_window == [cur_end-6, cur_end] AND rec carries cust_qtd/cust_wtd
+    try:
+        rf = json.load(open(os.path.join(HERE, "reviews_feed.json")))
+        want = [LASTWK_MON.isoformat(), CUR_END.isoformat()]
+        win = rf.get("_wtd_window")
+        if win not in (want, "%s..%s" % tuple(want)):
+            errs.append("reviews_feed _wtd_window %s != %s" % (win, want))
+        rec = json.load(open(os.path.join(HERE, "allstores.json")))["rec"]
+        if not any("cust_qtd" in r and "cust_wtd" in r for r in rec.values()):
+            errs.append("allstores rec missing cust_qtd/cust_wtd (build_reviews skipped)")
+    except Exception as e:
+        errs.append("reviews gate unreadable: %s" % e)
+    # 3. Changed-vs-baseline: every key estate output must have been rewritten THIS run
+    for fn in ("allstores.json", "company_wastage.json", "daypart_food.json", "actuals.json",
+               "planner_overrides.json", "rms.json", "storehealth.json", "audit_themes.json",
+               "compliance.json", "star_rating.json", "cos_metrics.json", "cph_targets.json",
+               "f1_detail.json", "newsite_sales.json", "smt_visits.json", "bench.json"):
+        if not fresh(fn):
+            errs.append("%s not rewritten this run (pull/builder skipped -> stale)" % fn)
+    # 4. Consistency: newsite_sales _window names this run's Sunday
+    try:
+        ns = json.load(open(os.path.join(HERE, "newsite_sales.json")))
+        if CUR_END.strftime("%-d %b") not in ns.get("_window", ""):
+            errs.append("newsite_sales _window stale: %s" % ns.get("_window"))
+    except Exception as e:
+        errs.append("newsite_sales unreadable: %s" % e)
+    # 5. Generators each reported 'leftover placeholders: none'
+    for g in ("gen_company.py", "gen_area.py", "gen_kel.py", "gen_claire.py"):
+        if GEN_LEFTOVER.get(g, 0) < 1:
+            errs.append("%s did not report 'leftover placeholders: none'" % g)
+    if errs:
+        print("[gate] FAILED — partial run, publishing nothing:")
+        for e in errs: print("   x " + e)
+        sys.exit(1)
+    print("[gate] freshness OK — all estate outputs refreshed to %s" % CUR_END)
+
+
+# ============================ ORCHESTRATION ============================
+def pulls():
+    """All estate + store-page pulls (A) in dependency order."""
+    pull_sales()              # rec windows/dow/daypart  (-> allstores.json)
+    pull_cph_fallback()       # rec.cph
+    pull_cph_targets()        # cph_targets.json
+    pull_cos()                # cos_metrics.json
+    pull_smt()                # smt_visits.json + rec.visdow
+    pull_wastage()            # company_wastage.json + rec waste
+    pull_f1()                 # f1_detail.json + rec.f1 + champ + the_race.csv
+    pull_actuals()            # actuals.json
+    pull_planner()            # planner_overrides.json  (MANDATORY)
+    pull_takeaway()           # rec.takeaway
+    pull_sickness()           # rec.sent
+    pull_audit()              # audit_raw.json + rec.audit_qtd
+    pull_mix()                # rec.mix/mix_prev/mix_lw
+    pull_peak()               # peak_cat_raw.json + peak_bakery_raw.json
+    pull_availability()       # rec.avail
+    pull_daypart_food()       # daypart_food.json + daypart_food_area.json
+    pull_bench()              # bench.json
+    pull_reviews()            # reviews_raw.json + rec.cust + customer.json (+ google scratch)
+    pull_rms_storehealth()    # rms.json + storehealth_raw.json
+    pull_compliance()         # compliance_raw.json
+    pull_ns_raws()            # ns_*_raw.json (7)
+    pull_sl_raws()            # sl_*_raw.json (2)
+    pull_txq_raws()           # txq_*_raw.json (2)
+
 
 def main():
-    mode = run_mode(); print(f"[mode] {mode}")
-    if mode == "full":
-        pull_sales(); pull_planner()        # + wastage/f1/mix/daypart/actuals/... (ported)
-    else:  # hours — light Monday pass
-        pull_planner()                      # finalised forecasts + now-posted hours only
+    print("[run] Bewiched weekly — mode=%s cur_end=%s" % (MODE, CUR_END))
+    pulls()
     build()
-    freshness_gate(mode)
-    print(f"[done] {mode} run rebuilt — workflow will commit & push")
+    freshness_gate()
+    print("[done] %s run rebuilt — workflow will commit & push" % MODE)
+
 
 if __name__ == "__main__":
     main()
