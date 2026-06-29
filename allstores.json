@@ -10,7 +10,7 @@
    "waste_pct": 3.2,
    "avail": 96.1,
    "yield": 72.1,
-   "f1_finish": 7,
+   "f1_finish": 4,
    "cov": 78,
    "s4": 21230,
    "orders": 2775,
@@ -195,15 +195,15 @@
     ]
    ],
    "f1": [
-    7,
-    16,
+    4,
+    19,
     [
-     4,
      13,
      3,
      6,
      3,
-     7
+     7,
+     4
     ]
    ],
    "visdow": {
@@ -361,7 +361,7 @@
    "waste_pct": 2.6,
    "avail": 92.3,
    "yield": 66.0,
-   "f1_finish": 11,
+   "f1_finish": 9,
    "cov": 72,
    "s4": 28999,
    "orders": 3938,
@@ -567,15 +567,15 @@
     ]
    ],
    "f1": [
-    11,
-    12,
+    9,
+    14,
     [
-     7,
      16,
      7,
      16,
      11,
-     11
+     11,
+     9
     ]
    ],
    "visdow": {
@@ -733,7 +733,7 @@
    "waste_pct": 4.8,
    "avail": 96.8,
    "yield": 70.9,
-   "f1_finish": 5,
+   "f1_finish": 13,
    "cov": 80,
    "s4": 18401,
    "orders": 2517,
@@ -904,15 +904,15 @@
     ]
    ],
    "f1": [
-    5,
-    18,
+    13,
+    10,
     [
-     15,
      6,
      24,
      19,
      20,
-     5
+     5,
+     13
     ]
    ],
    "visdow": {
@@ -1044,7 +1044,7 @@
    "waste_pct": 2.0,
    "avail": 82.1,
    "yield": 67.0,
-   "f1_finish": 3,
+   "f1_finish": 15,
    "cov": 80,
    "s4": 38411,
    "orders": 5241,
@@ -1250,15 +1250,15 @@
     ]
    ],
    "f1": [
-    3,
-    20,
+    15,
+    8,
     [
-     19,
      11,
      2,
      18,
      7,
-     3
+     3,
+     15
     ]
    ],
    "visdow": {
@@ -1723,7 +1723,7 @@
    "waste_pct": 4.3,
    "avail": 84.5,
    "yield": 59.8,
-   "f1_finish": 22,
+   "f1_finish": 20,
    "cov": 78,
    "s4": 19616,
    "orders": 2819,
@@ -1908,15 +1908,15 @@
     ]
    ],
    "f1": [
-    22,
-    1,
+    20,
+    3,
     [
-     21,
      22,
      9,
      3,
      9,
-     22
+     22,
+     20
     ]
    ],
    "visdow": {
@@ -2048,7 +2048,7 @@
    "waste_pct": 3.4,
    "avail": 93.3,
    "yield": 74.2,
-   "f1_finish": 8,
+   "f1_finish": 5,
    "cov": 75,
    "s4": 33120,
    "orders": 4859,
@@ -2261,15 +2261,15 @@
     ]
    ],
    "f1": [
-    8,
-    15,
+    5,
+    18,
     [
-     6,
      10,
      16,
      4,
      1,
-     8
+     8,
+     5
     ]
    ],
    "visdow": {
@@ -4543,7 +4543,7 @@
    "waste_pct": 1.9,
    "avail": 94.9,
    "yield": 64.3,
-   "f1_finish": 1,
+   "f1_finish": 2,
    "cov": 82,
    "s4": 36068,
    "orders": 5130,
@@ -4749,15 +4749,15 @@
     ]
    ],
    "f1": [
-    1,
-    25,
+    2,
+    22,
     [
-     3,
      7,
      4,
      1,
      6,
-     1
+     1,
+     2
     ]
    ],
    "visdow": {
@@ -4889,7 +4889,7 @@
    "waste_pct": 3.1,
    "avail": 82.9,
    "yield": 61.3,
-   "f1_finish": 16,
+   "f1_finish": 11,
    "cov": 72,
    "s4": 18481,
    "orders": 2450,
@@ -5067,15 +5067,15 @@
     ]
    ],
    "f1": [
-    16,
-    7,
+    11,
+    12,
     [
-     14,
      17,
      12,
      15,
      18,
-     16
+     16,
+     11
     ]
    ],
    "visdow": {
@@ -5207,7 +5207,7 @@
    "waste_pct": 2.3,
    "avail": 87.5,
    "yield": 66.4,
-   "f1_finish": 10,
+   "f1_finish": 3,
    "cov": 83,
    "s4": 43298,
    "orders": 5407,
@@ -5420,15 +5420,15 @@
     ]
    ],
    "f1": [
-    10,
-    13,
+    3,
+    20,
     [
-     1,
      12,
      11,
      8,
      13,
-     10
+     10,
+     3
     ]
    ],
    "visdow": {
@@ -5906,7 +5906,7 @@
    "waste_pct": 1.1,
    "avail": 79.7,
    "yield": 75.5,
-   "f1_finish": 13,
+   "f1_finish": 14,
    "cov": 80,
    "s4": 107444,
    "orders": 13053,
@@ -6147,15 +6147,15 @@
     ]
    ],
    "f1": [
-    13,
-    10,
+    14,
+    9,
     [
-     8,
      15,
      14,
      20,
      15,
-     13
+     13,
+     14
     ]
    ],
    "visdow": {
@@ -7356,12 +7356,22 @@
    [
     "Leamington Parade",
     "Rich",
-    186
+    208
    ],
    [
     "Burton Latimer",
     "Jon",
-    168
+    187
+   ],
+   [
+    "Peterborough Fletton Quays",
+    "Jon",
+    153
+   ],
+   [
+    "Market Harborough",
+    "Rich",
+    151
    ],
    [
     "Northampton",
@@ -7374,19 +7384,14 @@
     141
    ],
    [
-    "Peterborough Fletton Quays",
-    "Jon",
-    135
-   ],
-   [
-    "Market Harborough",
-    "Rich",
-    131
-   ],
-   [
     "Wellingborough",
     "Rich",
     130
+   ],
+   [
+    "Corby",
+    "Jon",
+    123
    ],
    [
     "Attleborough",
@@ -7394,14 +7399,14 @@
     119
    ],
    [
-    "Rothwell",
+    "Kettering",
     "Jon",
     110
    ],
    [
-    "Corby",
+    "Rothwell",
     "Jon",
-    109
+    110
    ],
    [
     "HOE Balsall Common",
@@ -7409,14 +7414,14 @@
     108
    ],
    [
-    "Kettering",
-    "Jon",
-    102
-   ],
-   [
     "Glenvale Drive Thru",
     "Ian",
     102
+   ],
+   [
+    "Lower Heathcote",
+    "Rich",
+    98
    ],
    [
     "Rushden Lakes",
@@ -7424,14 +7429,14 @@
     97
    ],
    [
-    "Lower Heathcote",
+    "Northampton Drive-Thru",
     "Rich",
-    86
+    89
    ],
    [
     "Peterborough Bridge Street",
     "Jon",
-    84
+    87
    ],
    [
     "Rugby",
@@ -7439,14 +7444,9 @@
     81
    ],
    [
-    "Northampton Drive-Thru",
-    "Rich",
-    80
-   ],
-   [
     "Higham Ferrers",
     "Jon",
-    66
+    76
    ],
    [
     "Olney",
@@ -7462,24 +7462,24 @@
   "cons": [
    [
     "Rich",
-    1017,
+    1080,
     9,
-    113.0
+    120.0
+   ],
+   [
+    "Jon",
+    994,
+    9,
+    110.4
    ],
    [
     "Ian",
     329,
     3,
     109.7
-   ],
-   [
-    "Jon",
-    922,
-    9,
-    102.4
    ]
   ],
-  "window": "since 25 Apr 2026"
+  "window": "25 Apr 2026"
  },
  "cats": [
   "Hot drinks",
