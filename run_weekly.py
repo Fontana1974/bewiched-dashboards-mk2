@@ -879,7 +879,7 @@ def pull_daypart_food():
 
 def pull_bench():
     """STEP 2o — HRP 'Bench and HRP' -> bench.json (rendered by bench_render.py)."""
-    rows = sheet(SID["hrp"], "'Bench and HRP'!A1:K200", unformatted=False)
+    rows = sheet(SID["hrp"], "'HRP & Bench'!A1:K200", unformatted=False)
     cols = ["Store Manager", "Assistant Manager", "Assistant Manager 2", "Supervisor 1",
             "Supervisor 2", "Bench Manager", "Pipeline 1", "Pipeline 2", "Pipeline 3"]
     out_rows = []
@@ -888,7 +888,7 @@ def pull_bench():
         st = normalize(r[0])
         if st is None: continue
         out_rows.append([st] + [(r[i] if len(r) > i else "") for i in range(1, 10)])
-    W("bench.json", {"_source": "HRP sheet %s, tab 'Bench and HRP' (Sheets API)" % SID["hrp"],
+    W("bench.json", {"_source": "HRP sheet %s, tab 'HRP & Bench' (Sheets API)" % SID["hrp"],
         "_updated": CUR_END.isoformat(), "cols": cols, "rows": out_rows}, indent=1)
     print("[pull] bench: %d stores" % len(out_rows))
 
