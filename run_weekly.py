@@ -86,13 +86,16 @@ def parse_any_date(v):
     s = str(v).strip()
     if not s: return None
     m = re.match(r"Date\((\d+),(\d+),(\d+)", s)            # gviz Date(y,m,d) — month 0-based
-    if m: return datetime.date(int(m.group(1)), int(m.group(2)) + 1, int(m.group(3)))
+    if m:
+        try: return datetime.date(int(m.group(1)), int(m.group(2)) + 1, int(m.group(3)))
+        except ValueError: return None
     for fmt in ("%Y-%m-%d", "%d-%b-%Y", "%b %d %Y", "%d %b %Y", "%m/%d/%Y", "%d/%m/%Y"):
         try: return datetime.datetime.strptime(s, fmt).date()
         except ValueError: pass
     m = re.search(r"([A-Za-z]{3})\s+(\d{1,2})\b.*?(\d{4})", s)   # 'Fri Mar 11 ... 2022'
     if m and m.group(1).lower() in _MONTHS:
-        return datetime.date(int(m.group(3)), _MONTHS[m.group(1).lower()], int(m.group(2)))
+        try: return datetime.date(int(m.group(3)), _MONTHS[m.group(1).lower()], int(m.group(2)))
+        except ValueError: return None
     return None
 
 def fnum(v, default=0.0):
