@@ -7,7 +7,7 @@
    "yoy_lw": -1.1,
    "yoy_4w": 0.2,
    "atv": 7.89,
-   "waste_pct": 2.9,
+   "waste_pct": 3.2,
    "avail": 96.1,
    "yield": 72.1,
    "f1_finish": 7,
@@ -15,7 +15,7 @@
    "s4": 21230,
    "orders": 2775,
    "wc": 150,
-   "wr": 615,
+   "wr": 677,
    "lw25": 5345,
    "s4_25": 21197,
    "tx26": 670,
@@ -153,31 +153,45 @@
    "outliers": [
     [
      "Double Espresso",
-     78.9,
-     30,
+     77.8,
+     28,
      8,
-     94
-    ],
-    [
-     "3 Cheese & Onion Croque",
-     34.5,
-     20,
-     38,
-     110
+     88
     ],
     [
      "3 Ham & Cheese Croque",
-     16.8,
-     17,
-     84,
-     93
+     21.8,
+     22,
+     79,
+     121
+    ],
+    [
+     "3 Cheese & Onion Croque",
+     37.9,
+     22,
+     36,
+     121
+    ],
+    [
+     "Chocolate Twist Traybake",
+     33.3,
+     15,
+     30,
+     40
     ],
     [
      "Sausage Roll Pastry",
-     14.1,
-     11,
-     67,
-     36
+     12.2,
+     9,
+     65,
+     30
+    ],
+    [
+     "Vegan Raspberry Croissant Pastry",
+     11.5,
+     9,
+     69,
+     24
     ]
    ],
    "f1": [
@@ -299,8 +313,8 @@
     }
    },
    "lw_sales": 5913,
-   "wr_lw": 120,
-   "waste_pct_lw": 2.0,
+   "wr_lw": 202,
+   "waste_pct_lw": 3.8,
    "cust_qtd": {
     "n": 16,
     "avg": 4.94
@@ -344,7 +358,7 @@
    "yoy_lw": 7.0,
    "yoy_4w": -4.5,
    "atv": 7.62,
-   "waste_pct": 2.8,
+   "waste_pct": 2.6,
    "avail": 92.3,
    "yield": 66.0,
    "f1_finish": 11,
@@ -352,7 +366,7 @@
    "s4": 28999,
    "orders": 3938,
    "wc": 342,
-   "wr": 828,
+   "wr": 767,
    "lw25": 7511,
    "s4_25": 30353,
    "tx26": 1055,
@@ -512,37 +526,44 @@
     [
      "Whole Milk 1 bottle",
      100.0,
-     45,
+     23,
      0,
      0
     ],
     [
      "3 Cheese & Onion Croque",
-     19.8,
-     18,
-     73,
-     99
-    ],
-    [
-     "3 Ham & Cheese Croque",
-     10.8,
+     16.7,
      16,
-     132,
+     80,
      88
     ],
     [
-     "3 Green & Grain Salad",
-     80.0,
+     "3 Ham & Cheese Croque",
+     11.4,
      16,
-     4,
-     86
+     124,
+     88
     ],
     [
      "3 Mozzarella & Tomato Ciabatta",
-     31.1,
+     34.1,
      14,
-     31,
+     27,
      77
+    ],
+    [
+     "All Butter Flapjack",
+     33.3,
+     12,
+     24,
+     34
+    ],
+    [
+     "Luxury Millionaires Triangle Traybake",
+     5.5,
+     11,
+     188,
+     34
     ]
    ],
    "f1": [
@@ -664,8 +685,8 @@
     }
    },
    "lw_sales": 7259,
-   "wr_lw": 115,
-   "waste_pct_lw": 1.6,
+   "wr_lw": 249,
+   "waste_pct_lw": 3.1,
    "cust_qtd": {
     "n": 10,
     "avg": 4.8
@@ -709,7 +730,7 @@
    "yoy_lw": 21.2,
    "yoy_4w": 6.6,
    "atv": 7.5,
-   "waste_pct": 4.6,
+   "waste_pct": 4.8,
    "avail": 96.8,
    "yield": 70.9,
    "f1_finish": 5,
@@ -717,7 +738,7 @@
    "s4": 18401,
    "orders": 2517,
    "wc": 220,
-   "wr": 824,
+   "wr": 885,
    "lw25": 4207,
    "s4_25": 17262,
    "tx26": 680,
@@ -841,38 +862,45 @@
    "outliers": [
     [
      "3 Ham & Cheese Croque",
-     35.6,
-     26,
-     47,
-     143
+     39.4,
+     28,
+     43,
+     154
     ],
     [
      "3 Chicken & Chorizo Ciabatta",
-     47.5,
-     19,
-     21,
-     104
+     46.5,
+     20,
+     23,
+     110
     ],
     [
-     "3 Mozzarella & Tomato Ciabatta",
-     39.0,
-     16,
-     25,
-     88
-    ],
-    [
-     "3 Egg & Spinach Sandwich",
-     28.9,
-     11,
-     27,
-     49
+     "3 Sausage Bap",
+     33.3,
+     14,
+     28,
+     60
     ],
     [
      "3 Ham & Mozzarella Croissant",
-     35.7,
-     10,
-     18,
-     48
+     46.4,
+     13,
+     15,
+     62
+    ],
+    [
+     "3 Caesar Wrap",
+     30.8,
+     12,
+     27,
+     52
+    ],
+    [
+     "3 Egg & Spinach Sandwich",
+     29.7,
+     11,
+     26,
+     49
     ]
    ],
    "f1": [
@@ -994,8 +1022,8 @@
     }
    },
    "lw_sales": 4665,
-   "wr_lw": 225,
-   "waste_pct_lw": 4.8,
+   "wr_lw": 236,
+   "waste_pct_lw": 4.6,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -1013,7 +1041,7 @@
    "yoy_lw": -2.4,
    "yoy_4w": -0.5,
    "atv": 7.2,
-   "waste_pct": 1.8,
+   "waste_pct": 2.0,
    "avail": 82.1,
    "yield": 67.0,
    "f1_finish": 3,
@@ -1021,7 +1049,7 @@
    "s4": 38411,
    "orders": 5241,
    "wc": 239,
-   "wr": 724,
+   "wr": 754,
    "lw25": 8999,
    "s4_25": 38602,
    "tx26": 1220,
@@ -1180,31 +1208,45 @@
    "outliers": [
     [
      "3 Ham & Cheese Croque",
-     24.5,
-     34,
-     105,
-     187
+     22.8,
+     33,
+     112,
+     181
+    ],
+    [
+     "3 Cheese & Onion Croque",
+     22.1,
+     17,
+     60,
+     93
     ],
     [
      "3 Mozzarella & Tomato Ciabatta",
-     26.9,
+     23.7,
      14,
-     38,
+     45,
      77
     ],
     [
-     "3 Bacon Bap",
-     23.9,
+     "3 Tuna Ciabatta",
+     21.2,
      11,
-     35,
-     47
+     41,
+     60
     ],
     [
-     "3 Tuna Ciabatta",
-     17.5,
+     "3 Bacon Bap",
+     22.7,
      10,
-     47,
-     55
+     34,
+     43
+    ],
+    [
+     "3 Yoghurt Granola Pot",
+     50.0,
+     10,
+     10,
+     37
     ]
    ],
    "f1": [
@@ -1326,8 +1368,8 @@
     }
    },
    "lw_sales": 9600,
-   "wr_lw": 213,
-   "waste_pct_lw": 2.2,
+   "wr_lw": 203,
+   "waste_pct_lw": 2.3,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -1345,7 +1387,7 @@
    "yoy_lw": null,
    "yoy_4w": null,
    "atv": 7.69,
-   "waste_pct": 3.4,
+   "waste_pct": 3.2,
    "avail": 90.0,
    "yield": 70.0,
    "f1_finish": 15,
@@ -1353,7 +1395,7 @@
    "s4": 22185,
    "orders": 2747,
    "wc": 336,
-   "wr": 741,
+   "wr": 717,
    "lw25": 0,
    "s4_25": 0,
    "tx26": 736,
@@ -1485,37 +1527,44 @@
     [
      "Skimmed Milk 1 Bottle",
      100.0,
-     33,
+     25,
      0,
      0
     ],
     [
-     "3 Cheese & Onion Croque",
-     50.0,
-     22,
-     22,
-     121
+     "Chocolate Twist Traybake",
+     61.5,
+     24,
+     15,
+     64
     ],
     [
-     "Chocolate Twist Traybake",
-     51.3,
-     20,
-     19,
-     53
+     "Croissant Pastry",
+     28.8,
+     21,
+     52,
+     45
     ],
     [
      "3 Bacon Bap",
      51.4,
-     19,
      18,
-     81
+     17,
+     77
     ],
     [
-     "3 Mozzarella & Tomato Ciabatta",
-     27.5,
-     11,
-     29,
-     60
+     "3 Caesar Wrap",
+     69.6,
+     16,
+     7,
+     71
+    ],
+    [
+     "3 Cheese & Onion Croque",
+     36.4,
+     16,
+     28,
+     88
     ]
    ],
    "f1": [
@@ -1637,8 +1686,8 @@
     }
    },
    "lw_sales": 5133,
-   "wr_lw": 92,
-   "waste_pct_lw": 1.8,
+   "wr_lw": 128,
+   "waste_pct_lw": 2.3,
    "cust_qtd": {
     "n": 3,
     "avg": 5.0
@@ -1671,7 +1720,7 @@
    "yoy_lw": -6.5,
    "yoy_4w": -2.8,
    "atv": 6.99,
-   "waste_pct": 4.7,
+   "waste_pct": 4.3,
    "avail": 84.5,
    "yield": 59.8,
    "f1_finish": 22,
@@ -1679,7 +1728,7 @@
    "s4": 19616,
    "orders": 2819,
    "wc": 299,
-   "wr": 927,
+   "wr": 846,
    "lw25": 5413,
    "s4_25": 20186,
    "tx26": 724,
@@ -1816,46 +1865,46 @@
    ],
    "outliers": [
     [
-     "3 Ham & Cheese Croque",
-     18.0,
-     22,
-     100,
-     121
-    ],
-    [
      "Vegan Raspberry Croissant Pastry",
-     47.7,
-     21,
-     23,
-     56
+     51.0,
+     25,
+     24,
+     66
     ],
     [
      "Rocky Road Traybake",
-     25.6,
-     20,
-     58,
-     57
+     26.9,
+     21,
+     57,
+     60
     ],
     [
      "Chocolate Twist Traybake",
-     39.6,
-     19,
-     29,
-     50
+     41.7,
+     20,
+     28,
+     53
     ],
     [
      "3 Ham & Mozzarella Croissant",
-     34.9,
-     15,
-     28,
-     75
+     39.0,
+     16,
+     25,
+     80
     ],
     [
-     "3 Chicken & Chorizo Ciabatta",
-     23.6,
-     13,
-     42,
-     71
+     "Yoghurt & Cranberry Slice Traybake",
+     24.2,
+     15,
+     47,
+     46
+    ],
+    [
+     "3 Ham & Cheese Croque",
+     11.9,
+     14,
+     104,
+     77
     ]
    ],
    "f1": [
@@ -1977,8 +2026,8 @@
     }
    },
    "lw_sales": 4954,
-   "wr_lw": 152,
-   "waste_pct_lw": 3.1,
+   "wr_lw": 141,
+   "waste_pct_lw": 2.8,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -1996,7 +2045,7 @@
    "yoy_lw": 17.1,
    "yoy_4w": 25.2,
    "atv": 6.73,
-   "waste_pct": 3.1,
+   "waste_pct": 3.4,
    "avail": 93.3,
    "yield": 74.2,
    "f1_finish": 8,
@@ -2004,7 +2053,7 @@
    "s4": 33120,
    "orders": 4859,
    "wc": 359,
-   "wr": 979,
+   "wr": 1132,
    "lw25": 6975,
    "s4_25": 26463,
    "tx26": 1214,
@@ -2169,25 +2218,46 @@
    ],
    "outliers": [
     [
-     "Teacake Traybake",
-     20.9,
-     18,
-     68,
-     51
+     "Yoghurt & Cranberry Slice Traybake",
+     31.4,
+     22,
+     48,
+     67
+    ],
+    [
+     "Marbled Crunch Slice",
+     26.5,
+     22,
+     61,
+     67
+    ],
+    [
+     "Cherry Bakewell Slice Traybake",
+     12.2,
+     19,
+     137,
+     62
     ],
     [
      "3 Cheese & Onion Croque",
-     12.4,
-     16,
-     113,
-     88
+     13.3,
+     18,
+     117,
+     99
     ],
     [
-     "3 Caesar Wrap",
-     9.1,
-     13,
-     130,
-     58
+     "Teacake Traybake",
+     22.0,
+     18,
+     64,
+     51
+    ],
+    [
+     "3 Mozzarella & Tomato Ciabatta",
+     16.5,
+     16,
+     81,
+     88
     ]
    ],
    "f1": [
@@ -2309,8 +2379,8 @@
     }
    },
    "lw_sales": 8033,
-   "wr_lw": 173,
-   "waste_pct_lw": 2.2,
+   "wr_lw": 452,
+   "waste_pct_lw": 5.5,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -2328,7 +2398,7 @@
    "yoy_lw": -3.4,
    "yoy_4w": 5.6,
    "atv": 6.81,
-   "waste_pct": 2.9,
+   "waste_pct": 2.2,
    "avail": 96.8,
    "yield": 61.0,
    "f1_finish": 14,
@@ -2336,7 +2406,7 @@
    "s4": 23368,
    "orders": 3526,
    "wc": 323,
-   "wr": 671,
+   "wr": 523,
    "lw25": 5935,
    "s4_25": 22131,
    "tx26": 842,
@@ -2473,32 +2543,46 @@
    ],
    "outliers": [
     [
-     "3 Ham & Cheese Croque",
-     11.4,
-     14,
-     109,
-     77
-    ],
-    [
      "3 Bacon Bap",
-     35.9,
+     40.0,
      14,
-     25,
+     21,
      60
     ],
     [
      "3 Mozzarella & Tomato Ciabatta",
-     35.1,
-     13,
-     24,
-     71
+     29.7,
+     11,
+     26,
+     60
+    ],
+    [
+     "3 Egg & Spinach Sandwich",
+     28.6,
+     10,
+     25,
+     45
+    ],
+    [
+     "Croissant Pastry",
+     40.0,
+     10,
+     15,
+     21
+    ],
+    [
+     "Luxury Millionaires Triangle Traybake",
+     10.8,
+     10,
+     83,
+     31
     ],
     [
      "3 Sausage Bap",
-     27.8,
-     10,
-     26,
-     43
+     25.0,
+     9,
+     27,
+     38
     ]
    ],
    "f1": [
@@ -2621,8 +2705,8 @@
     }
    },
    "lw_sales": 6131,
-   "wr_lw": 81,
-   "waste_pct_lw": 1.3,
+   "wr_lw": 134,
+   "waste_pct_lw": 2.3,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -2640,7 +2724,7 @@
    "yoy_lw": -0.2,
    "yoy_4w": -2.8,
    "atv": 8.96,
-   "waste_pct": 2.9,
+   "waste_pct": 3.3,
    "avail": 79.5,
    "yield": 81.5,
    "f1_finish": 17,
@@ -2648,7 +2732,7 @@
    "s4": 75145,
    "orders": 8842,
    "wc": 790,
-   "wr": 2394,
+   "wr": 2455,
    "lw25": 20773,
    "s4_25": 77282,
    "tx26": 2314,
@@ -2800,59 +2884,45 @@
    "outliers": [
     [
      "3 Ham & Cheese Croque",
-     28.3,
-     127,
-     321,
-     697
-    ],
-    [
-     "3 Extra Shot",
-     48.6,
-     51,
-     54,
-     48
+     29.4,
+     123,
+     296,
+     675
     ],
     [
      "3 Bacon Bap",
-     32.2,
-     38,
-     80,
-     162
+     37.2,
+     42,
+     71,
+     179
     ],
     [
      "3 Cheese & Onion Croque",
-     14.7,
-     31,
-     180,
-     170
+     20.2,
+     41,
+     162,
+     225
     ],
     [
-     "Rocky Road Traybake",
-     12.6,
-     23,
-     159,
-     66
+     "3 Extra Shot",
+     42.7,
+     41,
+     55,
+     39
+    ],
+    [
+     "Sausage Roll Pastry",
+     23.5,
+     31,
+     101,
+     102
     ],
     [
      "3 Sausage Bap",
-     15.8,
-     22,
-     117,
-     94
-    ],
-    [
-     "3 Mozzarella & Tomato Ciabatta",
-     15.6,
-     20,
-     108,
-     110
-    ],
-    [
-     "3 Chicken Caprese Sandwich",
-     26.3,
-     20,
-     56,
-     98
+     20.5,
+     27,
+     105,
+     115
     ]
    ],
    "f1": [
@@ -2974,8 +3044,8 @@
     }
    },
    "lw_sales": 19658,
-   "wr_lw": 256,
-   "waste_pct_lw": 1.3,
+   "wr_lw": 604,
+   "waste_pct_lw": 2.9,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -2993,7 +3063,7 @@
    "yoy_lw": null,
    "yoy_4w": null,
    "atv": 8.27,
-   "waste_pct": 5.1,
+   "waste_pct": 4.5,
    "avail": 81.0,
    "yield": 64.7,
    "f1_finish": 18,
@@ -3001,7 +3071,7 @@
    "s4": 25730,
    "orders": 3138,
    "wc": 499,
-   "wr": 1292,
+   "wr": 1158,
    "lw25": 0,
    "s4_25": 0,
    "tx26": 826,
@@ -3153,31 +3223,45 @@
    "outliers": [
     [
      "Croissant Pastry",
-     61.9,
-     26,
-     16,
-     56
-    ],
-    [
-     "Almond Croissant",
-     51.0,
-     26,
-     25,
-     69
-    ],
-    [
-     "3 Bacon Bap",
-     32.3,
-     21,
-     44,
-     89
+     66.7,
+     28,
+     14,
+     60
     ],
     [
      "Sausage Roll Pastry",
-     19.6,
+     21.7,
+     23,
+     83,
+     76
+    ],
+    [
+     "Almond Croissant",
+     46.8,
+     22,
+     25,
+     58
+    ],
+    [
+     "Vegan Raspberry Croissant Pastry",
+     28.6,
      20,
-     82,
-     66
+     50,
+     53
+    ],
+    [
+     "All Butter Flapjack",
+     25.4,
+     18,
+     53,
+     51
+    ],
+    [
+     "3 Sausage Bap",
+     23.6,
+     17,
+     55,
+     72
     ]
    ],
    "f1": [
@@ -3299,8 +3383,8 @@
     }
    },
    "lw_sales": 6758,
-   "wr_lw": 171,
-   "waste_pct_lw": 2.5,
+   "wr_lw": 207,
+   "waste_pct_lw": 3.0,
    "cust_qtd": {
     "n": 2,
     "avg": 5.0
@@ -3338,7 +3422,7 @@
    "yoy_lw": null,
    "yoy_4w": null,
    "atv": 8.45,
-   "waste_pct": 4.8,
+   "waste_pct": 3.8,
    "avail": 84.0,
    "yield": 64.6,
    "f1_finish": 6,
@@ -3346,7 +3430,7 @@
    "s4": 50588,
    "orders": 4601,
    "wc": 713,
-   "wr": 2329,
+   "wr": 1906,
    "lw25": 0,
    "s4_25": 0,
    "tx26": 1790,
@@ -3526,59 +3610,45 @@
    "outliers": [
     [
      "3 Extra Shot",
-     63.4,
+     59.8,
      64,
-     37,
+     43,
      61
     ],
     [
-     "3 Sausage Bap",
-     43.6,
-     41,
-     53,
-     174
+     "3 Tuna Ciabatta",
+     43.0,
+     34,
+     45,
+     187
     ],
     [
      "3 Ham & Cheese Croque",
-     26.5,
-     41,
-     114,
-     225
-    ],
-    [
-     "3 Cheese & Onion Croque",
-     40.2,
-     39,
-     58,
-     214
-    ],
-    [
-     "3 Tuna Ciabatta",
-     53.4,
-     39,
-     34,
-     214
-    ],
-    [
-     "3 Chicken & Chorizo Ciabatta",
-     38.5,
+     21.0,
      30,
-     48,
+     113,
      165
     ],
     [
+     "3 Caesar Wrap",
+     47.5,
+     28,
+     31,
+     126
+    ],
+    [
      "Croissant Pastry",
-     34.7,
+     35.1,
      26,
-     49,
+     48,
      56
     ],
     [
-     "3 Caesar Wrap",
-     38.9,
-     21,
-     33,
-     94
+     "3 Sausage Bap",
+     30.9,
+     25,
+     56,
+     106
     ]
    ],
    "f1": [
@@ -3698,8 +3768,8 @@
     }
    },
    "lw_sales": 12381,
-   "wr_lw": 343,
-   "waste_pct_lw": 2.8,
+   "wr_lw": 547,
+   "waste_pct_lw": 3.6,
    "cust_qtd": {
     "n": 18,
     "avg": 5.0
@@ -3717,7 +3787,7 @@
    "yoy_lw": 50.3,
    "yoy_4w": 34.4,
    "atv": 8.15,
-   "waste_pct": 2.7,
+   "waste_pct": 2.5,
    "avail": 88.7,
    "yield": 72.6,
    "f1_finish": 19,
@@ -3725,7 +3795,7 @@
    "s4": 72835,
    "orders": 9130,
    "wc": 713,
-   "wr": 1955,
+   "wr": 1856,
    "lw25": 13535,
    "s4_25": 54179,
    "tx26": 2497,
@@ -3919,59 +3989,45 @@
    "outliers": [
     [
      "3 Breakfast Bagel",
-     32.0,
-     58,
-     123,
-     316
-    ],
-    [
-     "Sausage Roll Pastry",
-     28.4,
-     44,
-     111,
-     145
+     29.3,
+     49,
+     118,
+     267
     ],
     [
      "3 Bacon Bap",
-     37.9,
-     39,
-     64,
-     166
+     37.6,
+     47,
+     78,
+     200
+    ],
+    [
+     "Sausage Roll Pastry",
+     26.1,
+     40,
+     113,
+     132
     ],
     [
      "3 Sausage Bap",
-     23.2,
-     33,
-     109,
-     140
-    ],
-    [
-     "Croissant Pastry",
-     35.2,
-     31,
-     57,
-     67
+     24.6,
+     35,
+     107,
+     149
     ],
     [
      "3 Tuna Ciabatta",
-     28.4,
-     25,
-     63,
-     137
+     36.6,
+     34,
+     59,
+     187
     ],
     [
-     "3 Egg and Spinach Pot",
-     60.5,
-     23,
-     15,
-     80
-    ],
-    [
-     "3 Ham & Cheese Croque",
-     13.4,
-     22,
-     142,
-     121
+     "Croissant Pastry",
+     36.4,
+     28,
+     49,
+     60
     ]
    ],
    "f1": [
@@ -4093,8 +4149,8 @@
     }
    },
    "lw_sales": 17931,
-   "wr_lw": 462,
-   "waste_pct_lw": 2.6,
+   "wr_lw": 438,
+   "waste_pct_lw": 2.2,
    "cust_qtd": {
     "n": 36,
     "avg": 4.67
@@ -4138,7 +4194,7 @@
    "yoy_lw": 3.4,
    "yoy_4w": 4.7,
    "atv": 7.99,
-   "waste_pct": 4.2,
+   "waste_pct": 3.7,
    "avail": 97.1,
    "yield": 72.6,
    "f1_finish": 2,
@@ -4146,7 +4202,7 @@
    "s4": 24917,
    "orders": 3470,
    "wc": 357,
-   "wr": 1050,
+   "wr": 923,
    "lw25": 6430,
    "s4_25": 23802,
    "tx26": 832,
@@ -4304,32 +4360,46 @@
    ],
    "outliers": [
     [
-     "3 Sausage Bap",
-     26.1,
-     24,
-     68,
-     102
+     "Croissant Pastry",
+     43.2,
+     19,
+     25,
+     41
     ],
     [
-     "3 Bacon Bap",
-     26.4,
+     "3 Sausage Bap",
+     22.6,
      19,
-     53,
+     65,
      81
     ],
     [
-     "3 Cheese & Onion Croque",
-     17.9,
-     17,
-     78,
-     93
+     "Chocolate Twist Traybake",
+     33.3,
+     16,
+     32,
+     42
     ],
     [
      "Blueberry Muffin",
-     39.0,
-     16,
-     25,
-     47
+     42.9,
+     15,
+     20,
+     44
+    ],
+    [
+     "Chocolate Muffin",
+     43.3,
+     13,
+     17,
+     38
+    ],
+    [
+     "3 Caesar Wrap",
+     40.6,
+     13,
+     19,
+     58
     ]
    ],
    "f1": [
@@ -4451,8 +4521,8 @@
     }
    },
    "lw_sales": 6243,
-   "wr_lw": 104,
-   "waste_pct_lw": 1.7,
+   "wr_lw": 151,
+   "waste_pct_lw": 2.3,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -4470,7 +4540,7 @@
    "yoy_lw": 19.6,
    "yoy_4w": 22.9,
    "atv": 7.21,
-   "waste_pct": 2.2,
+   "waste_pct": 1.9,
    "avail": 94.9,
    "yield": 64.3,
    "f1_finish": 1,
@@ -4478,7 +4548,7 @@
    "s4": 36068,
    "orders": 5130,
    "wc": 323,
-   "wr": 798,
+   "wr": 677,
    "lw25": 7717,
    "s4_25": 29340,
    "tx26": 1281,
@@ -4637,17 +4707,45 @@
    "outliers": [
     [
      "3 Cheese & Onion Croque",
-     22.8,
-     23,
-     78,
-     126
+     19.6,
+     18,
+     74,
+     99
+    ],
+    [
+     "3 Ham & Cheese Croque",
+     14.7,
+     14,
+     81,
+     77
     ],
     [
      "3 Bacon Bap",
-     27.1,
-     19,
-     51,
-     81
+     16.7,
+     11,
+     55,
+     47
+    ],
+    [
+     "3 Caesar Wrap",
+     21.3,
+     10,
+     37,
+     45
+    ],
+    [
+     "3 Chicken & Chorizo Ciabatta",
+     18.2,
+     10,
+     45,
+     55
+    ],
+    [
+     "3 Sausage Bap",
+     13.6,
+     9,
+     57,
+     38
     ]
    ],
    "f1": [
@@ -4769,8 +4867,8 @@
     }
    },
    "lw_sales": 8618,
-   "wr_lw": 282,
-   "waste_pct_lw": 3.3,
+   "wr_lw": 136,
+   "waste_pct_lw": 1.5,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -4788,7 +4886,7 @@
    "yoy_lw": 54.4,
    "yoy_4w": 38.3,
    "atv": 7.24,
-   "waste_pct": 3.7,
+   "waste_pct": 3.1,
    "avail": 82.9,
    "yield": 61.3,
    "f1_finish": 16,
@@ -4796,7 +4894,7 @@
    "s4": 18481,
    "orders": 2450,
    "wc": 214,
-   "wr": 655,
+   "wr": 576,
    "lw25": 3169,
    "s4_25": 13367,
    "tx26": 676,
@@ -4926,39 +5024,46 @@
    ],
    "outliers": [
     [
-     "Chocolate Twist Traybake",
-     36.2,
+     "Croissant Pastry",
+     47.2,
      17,
-     30,
-     45
+     19,
+     37
     ],
     [
      "3 Sausage Bap",
-     38.5,
-     15,
-     24,
-     64
+     43.2,
+     16,
+     21,
+     68
     ],
     [
-     "3 Tuna Ciabatta",
-     37.9,
+     "Chocolate Twist Traybake",
+     28.8,
+     15,
+     37,
+     40
+    ],
+    [
+     "Sausage Roll Pastry",
+     48.1,
+     13,
+     14,
+     43
+    ],
+    [
+     "3 Cheese & Onion Croque",
+     24.4,
      11,
-     18,
+     34,
      60
     ],
     [
-     "Marbled Crunch Slice",
+     "3 Tuna Ciabatta",
      32.3,
      10,
      21,
-     31
-    ],
-    [
-     "3 Mozzarella & Tomato Ciabatta",
-     45.0,
-     9,
-     11,
-     49
+     55
     ]
    ],
    "f1": [
@@ -5080,8 +5185,8 @@
     }
    },
    "lw_sales": 4601,
-   "wr_lw": 140,
-   "waste_pct_lw": 3.0,
+   "wr_lw": 134,
+   "waste_pct_lw": 2.7,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -5099,7 +5204,7 @@
    "yoy_lw": 20.7,
    "yoy_4w": 20.0,
    "atv": 7.82,
-   "waste_pct": 2.4,
+   "waste_pct": 2.3,
    "avail": 87.5,
    "yield": 66.4,
    "f1_finish": 10,
@@ -5107,7 +5212,7 @@
    "s4": 43298,
    "orders": 5407,
    "wc": 390,
-   "wr": 1057,
+   "wr": 991,
    "lw25": 9292,
    "s4_25": 36073,
    "tx26": 1433,
@@ -5273,31 +5378,45 @@
    "outliers": [
     [
      "3 Cheese & Onion Croque",
-     32.2,
-     38,
-     80,
-     209
-    ],
-    [
-     "3 Mozzarella & Tomato Ciabatta",
-     25.3,
-     19,
-     56,
-     104
+     25.0,
+     29,
+     87,
+     159
     ],
     [
      "3 Ham & Cheese Croque",
-     12.5,
-     19,
-     133,
-     104
+     18.9,
+     27,
+     116,
+     148
     ],
     [
      "3 Bacon Bap",
-     32.7,
-     17,
-     35,
-     72
+     25.9,
+     15,
+     43,
+     64
+    ],
+    [
+     "3 Chicken & Chorizo Ciabatta",
+     22.7,
+     15,
+     51,
+     82
+    ],
+    [
+     "Sausage Roll Pastry",
+     12.4,
+     13,
+     92,
+     43
+    ],
+    [
+     "3 Mozzarella & Tomato Ciabatta",
+     18.3,
+     13,
+     58,
+     71
     ]
    ],
    "f1": [
@@ -5419,8 +5538,8 @@
     }
    },
    "lw_sales": 11396,
-   "wr_lw": 168,
-   "waste_pct_lw": 1.5,
+   "wr_lw": 329,
+   "waste_pct_lw": 2.9,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -5438,7 +5557,7 @@
    "yoy_lw": 17.2,
    "yoy_4w": 16.8,
    "atv": 6.96,
-   "waste_pct": 2.6,
+   "waste_pct": 2.2,
    "avail": 80.0,
    "yield": 66.8,
    "f1_finish": 9,
@@ -5446,7 +5565,7 @@
    "s4": 41000,
    "orders": 5846,
    "wc": 359,
-   "wr": 1087,
+   "wr": 896,
    "lw25": 8340,
    "s4_25": 35112,
    "tx26": 1405,
@@ -5605,38 +5724,45 @@
    "outliers": [
     [
      "Chocolate Twist Traybake",
-     32.1,
-     27,
-     57,
-     72
+     27.2,
+     22,
+     59,
+     58
     ],
     [
-     "All Butter Flapjack",
-     37.1,
-     26,
-     44,
-     74
-    ],
-    [
-     "Vegan Raspberry Croissant Pastry",
-     33.3,
+     "Croissant Pastry",
+     42.0,
      21,
-     42,
-     56
-    ],
-    [
-     "3 Mozzarella & Tomato Ciabatta",
-     26.5,
-     18,
-     50,
-     99
+     29,
+     45
     ],
     [
      "3 Sausage Bap",
-     17.9,
-     14,
-     64,
-     60
+     23.1,
+     18,
+     60,
+     77
+    ],
+    [
+     "3 Bacon Bap",
+     23.2,
+     16,
+     53,
+     68
+    ],
+    [
+     "All Butter Flapjack",
+     20.5,
+     15,
+     58,
+     43
+    ],
+    [
+     "Vegan Raspberry Croissant Pastry",
+     25.9,
+     15,
+     43,
+     40
     ]
    ],
    "f1": [
@@ -5758,8 +5884,8 @@
     }
    },
    "lw_sales": 10427,
-   "wr_lw": 209,
-   "waste_pct_lw": 2.0,
+   "wr_lw": 151,
+   "waste_pct_lw": 1.5,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -5785,7 +5911,7 @@
    "s4": 107444,
    "orders": 13053,
    "wc": 431,
-   "wr": 1156,
+   "wr": 1216,
    "lw25": 23317,
    "s4_25": 93936,
    "tx26": 3556,
@@ -5979,24 +6105,45 @@
    "outliers": [
     [
      "Croissant Pastry",
-     29.5,
+     32.6,
      31,
-     74,
+     64,
      67
     ],
     [
-     "Sausage Roll Pastry",
-     11.9,
-     21,
-     155,
-     69
+     "3 Chicken & Chorizo Ciabatta",
+     22.7,
+     25,
+     85,
+     137
     ],
     [
-     "3 Egg & Spinach Sandwich",
-     22.9,
+     "3 Bacon Bap",
+     28.4,
+     25,
+     63,
+     106
+    ],
+    [
+     "Sausage Roll Pastry",
+     9.1,
      16,
-     54,
-     68
+     159,
+     53
+    ],
+    [
+     "3 Falafel Wrap",
+     32.6,
+     15,
+     31,
+     66
+    ],
+    [
+     "3 Tuna Ciabatta",
+     14.7,
+     14,
+     81,
+     77
     ]
    ],
    "f1": [
@@ -6118,8 +6265,8 @@
     }
    },
    "lw_sales": 24898,
-   "wr_lw": 272,
-   "waste_pct_lw": 1.1,
+   "wr_lw": 412,
+   "waste_pct_lw": 1.4,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -6137,7 +6284,7 @@
    "yoy_lw": 17.7,
    "yoy_4w": 7.6,
    "atv": 7.72,
-   "waste_pct": 3.0,
+   "waste_pct": 2.5,
    "avail": 89.3,
    "yield": 58.4,
    "f1_finish": 20,
@@ -6145,7 +6292,7 @@
    "s4": 33973,
    "orders": 4461,
    "wc": 461,
-   "wr": 989,
+   "wr": 854,
    "lw25": 7599,
    "s4_25": 31560,
    "tx26": 1158,
@@ -6318,31 +6465,45 @@
    "outliers": [
     [
      "3 Extra Shot",
-     54.5,
-     66,
-     55,
-     63
+     62.4,
+     73,
+     44,
+     69
     ],
     [
-     "3 Ham & Cheese Croque",
-     23.3,
-     27,
-     89,
-     148
+     "3 Mozzarella & Tomato Ciabatta",
+     31.7,
+     19,
+     41,
+     104
+    ],
+    [
+     "3 Cheese & Onion Croque",
+     18.6,
+     16,
+     70,
+     88
+    ],
+    [
+     "3 Chicken & Chorizo Ciabatta",
+     22.8,
+     13,
+     44,
+     71
+    ],
+    [
+     "Whole Milk 1 bottle",
+     100.0,
+     13,
+     0,
+     0
     ],
     [
      "3 Kids Cheese Sandwich",
-     54.8,
-     17,
-     14,
-     59
-    ],
-    [
-     "3 Chicken Caprese Sandwich",
-     50.0,
-     16,
-     16,
-     76
+     48.0,
+     12,
+     13,
+     42
     ]
    ],
    "f1": [
@@ -6464,8 +6625,8 @@
     }
    },
    "lw_sales": 8163,
-   "wr_lw": 124,
-   "waste_pct_lw": 1.5,
+   "wr_lw": 172,
+   "waste_pct_lw": 1.9,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -6483,7 +6644,7 @@
    "yoy_lw": 7.5,
    "yoy_4w": 11.0,
    "atv": 6.29,
-   "waste_pct": 2.2,
+   "waste_pct": 2.5,
    "avail": 96.7,
    "yield": 71.1,
    "f1_finish": 4,
@@ -6491,7 +6652,7 @@
    "s4": 27630,
    "orders": 4519,
    "wc": 159,
-   "wr": 617,
+   "wr": 684,
    "lw25": 6312,
    "s4_25": 24885,
    "tx26": 1078,
@@ -6643,38 +6804,45 @@
    "outliers": [
     [
      "3 Extra Shot",
-     41.8,
-     28,
-     39,
-     27
-    ],
-    [
-     "Sausage Roll Pastry",
-     44.0,
-     22,
-     28,
-     73
-    ],
-    [
-     "Croissant Pastry",
-     27.6,
-     16,
-     42,
-     34
+     38.7,
+     24,
+     38,
+     23
     ],
     [
      "3 Ham & Cheese Croque",
-     30.8,
-     16,
-     36,
-     88
+     41.1,
+     23,
+     33,
+     126
     ],
     [
-     "3 Cheese & Onion Croque",
-     16.1,
+     "Croissant Pastry",
+     31.6,
+     18,
+     39,
+     39
+    ],
+    [
+     "Sausage Roll Pastry",
+     36.2,
+     17,
+     30,
+     56
+    ],
+    [
+     "3 Sausage Bap",
+     71.4,
+     10,
+     4,
+     43
+    ],
+    [
+     "Chocolate Twist Traybake",
+     13.8,
      9,
-     47,
-     49
+     56,
+     24
     ]
    ],
    "f1": [
@@ -6797,8 +6965,8 @@
     }
    },
    "lw_sales": 6813,
-   "wr_lw": 128,
-   "waste_pct_lw": 1.9,
+   "wr_lw": 159,
+   "waste_pct_lw": 2.3,
    "cust_qtd": {
     "n": 0,
     "avg": null
@@ -6816,7 +6984,7 @@
    "yoy_lw": -85.8,
    "yoy_4w": -22.8,
    "atv": 5.41,
-   "waste_pct": 1.5,
+   "waste_pct": 3.4,
    "avail": 87.8,
    "yield": 85,
    "f1_finish": 12,
@@ -6824,7 +6992,7 @@
    "s4": 20589,
    "orders": 5337,
    "wc": 128,
-   "wr": 393,
+   "wr": 701,
    "lw25": 7037,
    "s4_25": 26684,
    "tx26": 185,
@@ -6983,38 +7151,45 @@
    "outliers": [
     [
      "3* Extra Shot",
-     57.9,
-     62,
-     45,
-     59
+     62.1,
+     64,
+     39,
+     61
     ],
     [
-     "* Chocolate Twist Traybake",
-     11.3,
-     8,
-     63,
-     21
-    ],
-    [
-     "3 Breakfast Bagel",
-     19.4,
-     7,
-     29,
-     38
+     "3* Ham & Cheese Croque TA",
+     16.1,
+     15,
+     78,
+     82
     ],
     [
      "3* Cheese & Onion Croque TA",
-     12.7,
-     7,
-     48,
-     38
+     26.1,
+     12,
+     34,
+     66
+    ],
+    [
+     "3* Chicken Caprese Sandwich TA",
+     29.0,
+     9,
+     22,
+     41
     ],
     [
      "* Sausage Roll Pastry",
-     13.3,
-     6,
-     39,
-     17
+     23.7,
+     9,
+     29,
+     26
+    ],
+    [
+     "3* Mozzarella & Tomato Ciabatta TA",
+     19.5,
+     8,
+     33,
+     44
     ]
    ],
    "f1": [
@@ -7137,8 +7312,8 @@
     }
    },
    "lw_sales": 5541,
-   "wr_lw": 100,
-   "waste_pct_lw": 1.8,
+   "wr_lw": 374,
+   "waste_pct_lw": 37.4,
    "cust_qtd": {
     "n": 98,
     "avg": 4.97

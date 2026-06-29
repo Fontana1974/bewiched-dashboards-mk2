@@ -1,5 +1,5 @@
 {
- "_window": "4 weeks to 21 Jun 2026 vs same 4 weeks 2025",
+ "_window": "4 weeks to 28 Jun 2026 vs same 4 weeks 2025",
  "hours": {
   "Morning": "5am-11am",
   "Lunch": "11am-2pm",
@@ -7,26 +7,59 @@
   "Evening": "5pm+"
  },
  "dayparts": {
+  "Morning": {
+   "hours": "5am-11am",
+   "top": [
+    [
+     "Breakfast Meal Deal",
+     6750,
+     64,
+     2645
+    ],
+    [
+     "Cherry Bakewell Slice Traybake",
+     1659,
+     3507,
+     1613
+    ],
+    [
+     "Bacon Bap",
+     4891,
+     44,
+     1503
+    ]
+   ],
+   "new": [
+    [
+     "Breakfast Bagel",
+     1952
+    ],
+    [
+     "Sausage Roll Meal Deal",
+     970
+    ]
+   ]
+  },
   "Lunch": {
    "hours": "11am-2pm",
    "top": [
     [
      "Cherry Bakewell Slice Traybake",
-     3362,
-     4443,
-     3288
+     3312,
+     3890,
+     3229
     ],
     [
      "Cheese & Onion Croque",
-     4962,
-     22,
-     882
+     4961,
+     25,
+     980
     ],
     [
-     "Tuna Ciabatta",
-     4111,
-     20,
-     691
+     "Chicken & Chorizo Ciabatta",
+     3289,
+     28,
+     718
     ]
    ],
    "new": [
@@ -36,7 +69,7 @@
     ],
     [
      "Chicken Caprese Sandwich",
-     1356
+     1267
     ]
    ]
   },
@@ -45,64 +78,48 @@
    "top": [
     [
      "Cherry Bakewell Slice Traybake",
-     2267,
-     3335,
-     2201
+     2188,
+     4365,
+     2139
+    ],
+    [
+     "Caesar Wrap",
+     826,
+     84,
+     376
     ],
     [
      "Mozzarella & Tomato Ciabatta",
-     1103,
-     41,
-     319
-    ],
-    [
-     "Cheese & Onion Croque",
-     1639,
-     22,
-     301
+     1071,
+     51,
+     361
     ]
    ],
    "new": [
     [
      "Chicken Caprese Sandwich",
-     393
+     388
     ],
     [
      "Breakfast Bagel",
-     301
+     340
     ]
    ]
   },
-  "Morning": {
-   "hours": "5am-11am",
+  "Evening": {
+   "hours": "5pm+",
    "top": [
     [
-     "Breakfast Meal Deal",
-     6745,
-     80,
-     2996
-    ],
-    [
-     "Cherry Bakewell Slice Traybake",
-     1677,
-     4092,
-     1637
-    ],
-    [
-     "Large Breakfast Pastry Meal Deal",
-     4208,
-     57,
-     1527
+     "Luxury Millionaires Triangle Traybake",
+     464,
+     37,
+     125
     ]
    ],
    "new": [
     [
-     "Breakfast Bagel",
-     1850
-    ],
-    [
-     "Sausage Roll Meal Deal",
-     922
+     "Cherry Bakewell Slice Traybake",
+     412
     ]
    ]
   }

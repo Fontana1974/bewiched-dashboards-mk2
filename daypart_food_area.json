@@ -1,5 +1,5 @@
 {
- "_window": "4 weeks to 21 Jun 2026 vs same 4 weeks 2025",
+ "_window": "4 weeks to 28 Jun 2026 vs same 4 weeks 2025",
  "hours": {
   "Morning": "5am-11am",
   "Lunch": "11am-2pm",
@@ -7,308 +7,304 @@
   "Evening": "5pm+"
  },
  "coaches": {
-  "Rich": {
-   "Evening": {
-    "hours": "5pm+",
-    "top": [
-     [
-      "Luxury Millionaires Triangle Traybake",
-      213,
-      66,
-      85
-     ],
-     [
-      "Sausage Roll Pastry",
-      81,
-      179,
-      52
-     ]
-    ],
-    "new": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      172
-     ]
-    ]
-   },
-   "Morning": {
-    "hours": "5am-11am",
-    "top": [
-     [
-      "Breakfast Meal Deal",
-      4073,
-      112,
-      2152
-     ],
-     [
-      "Bacon Bap Meal Deal Reg",
-      1351,
-      179,
-      866
-     ],
-     [
-      "Cherry Bakewell Slice Traybake",
-      727,
-      2245,
-      696
-     ]
-    ],
-    "new": [
-     [
-      "Breakfast Bagel",
-      1049
-     ],
-     [
-      "Sausage Roll Meal Deal",
-      623
-     ]
-    ]
-   },
-   "Lunch": {
-    "hours": "11am-2pm",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      1438,
-      2563,
-      1384
-     ],
-     [
-      "Cheese & Onion Croque",
-      2111,
-      33,
-      527
-     ],
-     [
-      "Sausage Roll Pastry",
-      1457,
-      51,
-      489
-     ]
-    ],
-    "new": [
-     [
-      "Breakfast Bagel",
-      697
-     ],
-     [
-      "Chicken Caprese Sandwich",
-      620
-     ]
-    ]
-   },
-   "Afternoon": {
-    "hours": "2pm-5pm",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      1100,
-      3974,
-      1073
-     ],
-     [
-      "Sausage Roll Pastry",
-      425,
-      84,
-      194
-     ],
-     [
-      "Mozzarella & Tomato Ciabatta",
-      560,
-      49,
-      183
-     ]
-    ],
-    "new": [
-     [
-      "Chicken Caprese Sandwich",
-      194
-     ],
-     [
-      "Breakfast Bagel",
-      183
-     ]
-    ]
-   }
-  },
   "Jon": {
-   "Lunch": {
-    "hours": "11am-2pm",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      1500,
-      8724,
-      1483
+   "dayparts": {
+    "Morning": {
+     "hours": "5am-11am",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       700,
+       7678,
+       691
+      ],
+      [
+       "Breakfast Meal Deal",
+       1755,
+       39,
+       491
+      ],
+      [
+       "Bacon Bap",
+       1083,
+       42,
+       322
+      ]
      ],
-     [
-      "Tuna Ciabatta",
-      1855,
-      21,
-      322
-     ],
-     [
-      "Caesar Wrap",
-      1081,
-      36,
-      284
+     "new": [
+      [
+       "Breakfast Bagel",
+       157
+      ],
+      [
+       "Sausage Roll Meal Deal",
+       150
+      ]
      ]
-    ],
-    "new": [
-     [
-      "Chicken Caprese Sandwich",
-      514
+    },
+    "Lunch": {
+     "hours": "11am-2pm",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       1476,
+       10443,
+       1462
+      ],
+      [
+       "Tuna Ciabatta",
+       1717,
+       23,
+       323
+      ],
+      [
+       "Chicken & Chorizo Ciabatta",
+       1343,
+       19,
+       218
+      ]
      ],
-     [
-      "Falafel Wrap",
-      272
+     "new": [
+      [
+       "Chicken Caprese Sandwich",
+       500
+      ],
+      [
+       "Breakfast Bagel",
+       256
+      ]
      ]
-    ]
-   },
-   "Afternoon": {
-    "hours": "2pm-5pm",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      857,
-      2497,
-      824
+    },
+    "Afternoon": {
+     "hours": "2pm-5pm",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       861,
+       3814,
+       839
+      ],
+      [
+       "Tuna Ciabatta",
+       605,
+       71,
+       252
+      ],
+      [
+       "Ham & Cheese Croque",
+       961,
+       23,
+       179
+      ]
      ],
-     [
-      "Tuna Ciabatta",
-      615,
-      71,
-      255
-     ],
-     [
-      "Ham & Cheese Croque",
-      1034,
-      19,
-      165
-     ]
-    ],
-    "new": []
-   },
-   "Morning": {
-    "hours": "5am-11am",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      748,
-      12367,
-      742
-     ],
-     [
-      "Breakfast Meal Deal",
-      1659,
-      38,
-      457
-     ],
-     [
-      "Bacon Bap Meal Deal Reg",
-      550,
-      204,
-      369
-     ]
-    ],
-    "new": []
-   },
-   "Evening": {
-    "hours": "5pm+",
-    "top": [],
-    "new": []
+     "new": []
+    },
+    "Evening": {
+     "hours": "5pm+",
+     "top": [],
+     "new": []
+    }
    }
   },
   "Ian": {
-   "Morning": {
-    "hours": "5am-11am",
-    "top": [
-     [
-      "Large Breakfast Pastry Meal Deal",
-      1220,
-      121,
-      669
+   "dayparts": {
+    "Morning": {
+     "hours": "5am-11am",
+     "top": [
+      [
+       "Large Breakfast Pastry Meal Deal",
+       1132,
+       105,
+       580
+      ],
+      [
+       "Bacon Bap",
+       931,
+       69,
+       380
+      ],
+      [
+       "Sausage Bap",
+       1307,
+       38,
+       363
+      ]
      ],
-     [
-      "Breakfast Meal Deal",
-      1012,
-      62,
-      386
-     ],
-     [
-      "Sausage Bap Meal Deal Large",
-      475,
-      145,
-      281
+     "new": [
+      [
+       "Breakfast Bagel",
+       725
+      ],
+      [
+       "Sausage Roll Meal Deal Large",
+       226
+      ]
      ]
-    ],
-    "new": [
-     [
-      "Breakfast Bagel",
-      650
+    },
+    "Lunch": {
+     "hours": "11am-2pm",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       421,
+       4578,
+       412
+      ],
+      [
+       "Cheese & Onion Croque",
+       855,
+       54,
+       298
+      ],
+      [
+       "Chicken & Chorizo Ciabatta",
+       522,
+       98,
+       259
+      ]
      ],
-     [
-      "Sausage Roll Meal Deal Large",
-      245
+     "new": [
+      [
+       "Breakfast Bagel",
+       548
+      ],
+      [
+       "Chicken Caprese Sandwich",
+       175
+      ]
      ]
-    ]
-   },
-   "Lunch": {
-    "hours": "11am-2pm",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      424,
-      14033,
-      421
+    },
+    "Afternoon": {
+     "hours": "2pm-5pm",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       288,
+       4700,
+       282
+      ],
+      [
+       "Luxury Millionaires Triangle Traybake",
+       426,
+       73,
+       180
+      ]
      ],
-     [
-      "Teacake Traybake",
-      775,
-      45,
-      239
+     "new": []
+    },
+    "Evening": {
+     "hours": "5pm+",
+     "top": [],
+     "new": []
+    }
+   }
+  },
+  "Rich": {
+   "dayparts": {
+    "Morning": {
+     "hours": "5am-11am",
+     "top": [
+      [
+       "Breakfast Meal Deal",
+       3935,
+       84,
+       1798
+      ],
+      [
+       "Bacon Bap",
+       2877,
+       43,
+       865
+      ],
+      [
+       "Cherry Bakewell Slice Traybake",
+       739,
+       2074,
+       705
+      ]
      ],
-     [
-      "Cheese & Onion Croque",
-      813,
-      41,
-      236
+     "new": [
+      [
+       "Breakfast Bagel",
+       1070
+      ],
+      [
+       "Sausage Roll Meal Deal",
+       623
+      ]
      ]
-    ],
-    "new": [
-     [
-      "Breakfast Bagel",
-      543
+    },
+    "Lunch": {
+     "hours": "11am-2pm",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       1415,
+       2258,
+       1355
+      ],
+      [
+       "Cheese & Onion Croque",
+       2122,
+       40,
+       608
+      ],
+      [
+       "Sausage Roll Pastry",
+       1484,
+       61,
+       560
+      ]
      ],
-     [
-      "Chicken Caprese Sandwich",
-      222
+     "new": [
+      [
+       "Breakfast Bagel",
+       680
+      ],
+      [
+       "Chicken Caprese Sandwich",
+       592
+      ]
      ]
-    ]
-   },
-   "Afternoon": {
-    "hours": "2pm-5pm",
-    "top": [
-     [
-      "Cherry Bakewell Slice Traybake",
-      311,
-      5083,
-      305
+    },
+    "Afternoon": {
+     "hours": "2pm-5pm",
+     "top": [
+      [
+       "Cherry Bakewell Slice Traybake",
+       1038,
+       4843,
+       1017
+      ],
+      [
+       "Mozzarella & Tomato Ciabatta",
+       516,
+       70,
+       212
+      ],
+      [
+       "Caesar Wrap",
+       354,
+       116,
+       190
+      ]
      ],
-     [
-      "Luxury Millionaires Triangle Traybake",
-      396,
-      46,
-      125
-     ],
-     [
-      "Fudge Topped Brownie",
-      208,
-      106,
-      107
+     "new": [
+      [
+       "Breakfast Bagel",
+       197
+      ],
+      [
+       "Chicken Caprese Sandwich",
+       183
+      ]
      ]
-    ],
-    "new": []
+    },
+    "Evening": {
+     "hours": "5pm+",
+     "top": [],
+     "new": []
+    }
    }
   }
  }
