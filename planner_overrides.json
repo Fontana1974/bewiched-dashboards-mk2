@@ -1,22 +1,305 @@
-{"_note":"Per-store overrides taken live from the Area Manager Weekly Planner sheets (W/C 22 Jun 2026). Forecast & Hours tab uses these forecasts/planned-hours and last-week hours used. Sources: Jon 1PSjBGiR40171h769esQCtn3ldcpCB5XJyfqRTo7Yccs, Rich 11XuXn9zQr-JB4x2fQ0ORV96Sf-U7xWPQPvg2YlCl_dQ, Ian 1_qdK6fzqPg1NcA2KKMy2TnaZ8nQJtVE-fglz2On3oBw.",
-"Rushden Lakes":{"cph":63,"fc":[21002,20000,20100],"hrs":[333,317,319],"used_lastwk":307},
-"Kettering":{"cph":59,"fc":[8819,9800,9800],"hrs":[149,166,166],"used_lastwk":166.62},
-"Peterborough Fletton Quays":{"cph":52,"fc":[8530,8800,9000],"hrs":[164,169,173],"used_lastwk":157},
-"Corby":{"cph":48,"fc":[7203,7500,7500],"hrs":[150,156,156],"used_lastwk":152},
-"Olney":{"cph":49,"fc":[5133,5500,5650],"hrs":[105,112,115],"used_lastwk":124},
-"Rothwell":{"cph":48,"fc":[6095,5700,6000],"hrs":[127,119,125],"used_lastwk":118},
-"Peterborough Bridge Street":{"cph":48,"fc":[4774,5000,5100],"hrs":[99,104,106],"used_lastwk":111},
-"Burton Latimer":{"cph":40,"fc":[5361,5450,5450],"hrs":[134,136,136],"used_lastwk":128},
-"Higham Ferrers":{"cph":40,"fc":[4304,5100,5200],"hrs":[108,128,130],"used_lastwk":110},
-"Northampton Drive-Thru":{"cph":70,"fc":[25750,26369,26330],"hrs":[355,377,376],"used_lastwk":330},
-"Billing Drive Thru":{"cph":56,"fc":[12300,12381,12381],"hrs":[260,221,221],"used_lastwk":275},
-"Market Harborough":{"cph":58,"fc":[10500,10821,10718],"hrs":[168,187,185],"used_lastwk":164},
-"Northampton":{"cph":60,"fc":[10250,10823,10141],"hrs":[173,180,169],"used_lastwk":175},
-"Leamington Parade":{"cph":58,"fc":[9000,8570,9084],"hrs":[160,148,157],"used_lastwk":154},
-"Rugby":{"cph":55,"fc":[7980,8021,7511],"hrs":[150,146,137],"used_lastwk":157},
-"Wellingborough Train Station":{"cph":55,"fc":[4000,7587,7086],"hrs":[73,138,129],"used_lastwk":100},
-"Wellingborough":{"cph":53,"fc":[7125,7016,7251],"hrs":[131,132,137],"used_lastwk":131},
-"Lower Heathcote":{"cph":40,"fc":[4600,4685,4695],"hrs":[108,117,117],"used_lastwk":108},
-"Glenvale Drive Thru":{"cph":63,"fc":[18205,18192,18049],"hrs":[289,289,286],"used_lastwk":291},
-"HOE Balsall Common":{"cph":48,"fc":[7253,6715,6477],"hrs":[151,140,135],"used_lastwk":148},
-"Attleborough":{"cph":49,"fc":[6758,6758,6758],"hrs":[138,138,138],"used_lastwk":164}}
+{
+ "Rushden Lakes": {
+  "cph": 63.0,
+  "fc": [
+   20000.0,
+   22000.0,
+   20100.0
+  ],
+  "hrs": [
+   309.0,
+   349.0,
+   319.0
+  ],
+  "used_lastwk": 310.0,
+  "actual_cph_lastwk": 66.9
+ },
+ "Kettering": {
+  "cph": 59.0,
+  "fc": [
+   9800.0,
+   9800.0,
+   9800.0
+  ],
+  "hrs": [
+   168.0,
+   166.0,
+   166.0
+  ],
+  "used_lastwk": 158.0,
+  "actual_cph_lastwk": 55.6
+ },
+ "Peterborough Fletton Quays": {
+  "cph": 52.0,
+  "fc": [
+   8800.0,
+   8400.0,
+   9000.0
+  ],
+  "hrs": [
+   169.0,
+   162.0,
+   173.0
+  ],
+  "used_lastwk": 155.0,
+  "actual_cph_lastwk": 52.7
+ },
+ "Corby": {
+  "cph": 48.0,
+  "fc": [
+   7500.0,
+   7650.0,
+   7500.0
+  ],
+  "hrs": [
+   159.0,
+   159.0,
+   156.0
+  ],
+  "used_lastwk": 152.0,
+  "actual_cph_lastwk": 52.9
+ },
+ "Olney": {
+  "cph": 49.0,
+  "fc": [
+   5500.0,
+   5500.0,
+   5650.0
+  ],
+  "hrs": [
+   131.0,
+   112.0,
+   115.0
+  ],
+  "used_lastwk": 135.0,
+  "actual_cph_lastwk": 41.9
+ },
+ "Rothwell": {
+  "cph": 48.0,
+  "fc": [
+   5700.0,
+   6400.0,
+   6000.0
+  ],
+  "hrs": [
+   120.0,
+   133.0,
+   125.0
+  ],
+  "used_lastwk": 119.0,
+  "actual_cph_lastwk": 48.2
+ },
+ "Peterborough Bridge Street": {
+  "cph": 48.0,
+  "fc": [
+   5000.0,
+   5300.0,
+   5100.0
+  ],
+  "hrs": [
+   110.0,
+   110.0,
+   106.0
+  ],
+  "used_lastwk": 114.0,
+  "actual_cph_lastwk": 44.4
+ },
+ "Burton Latimer": {
+  "cph": 40.0,
+  "fc": [
+   5450.0,
+   5400.0,
+   5450.0
+  ],
+  "hrs": [
+   121.0,
+   135.0,
+   136.0
+  ],
+  "used_lastwk": 121.0,
+  "actual_cph_lastwk": 43.7
+ },
+ "Higham Ferrers": {
+  "cph": 40.0,
+  "fc": [
+   5100.0,
+   5200.0,
+   5200.0
+  ],
+  "hrs": [
+   128.0,
+   130.0,
+   130.0
+  ],
+  "used_lastwk": 114.0,
+  "actual_cph_lastwk": 44.7
+ },
+ "Northampton Drive-Thru": {
+  "cph": 70.0,
+  "fc": [
+   25750.0,
+   25851.0,
+   23831.0
+  ],
+  "hrs": [
+   350.0,
+   369.0,
+   340.0
+  ],
+  "used_lastwk": 330
+ },
+ "Billing Drive Thru": {
+  "cph": 56.0,
+  "fc": [
+   12300.0,
+   15128.0,
+   15128.0
+  ],
+  "hrs": [
+   259.0,
+   270.0,
+   270.0
+  ],
+  "used_lastwk": 275
+ },
+ "Market Harborough": {
+  "cph": 58.0,
+  "fc": [
+   10500.0,
+   11006.0,
+   9919.0
+  ],
+  "hrs": [
+   176.0,
+   190.0,
+   171.0
+  ],
+  "used_lastwk": 164
+ },
+ "Northampton": {
+  "cph": 60.0,
+  "fc": [
+   10250.0,
+   9799.0,
+   10011.0
+  ],
+  "hrs": [
+   184.0,
+   163.0,
+   167.0
+  ],
+  "used_lastwk": 175
+ },
+ "Leamington Parade": {
+  "cph": 58.0,
+  "fc": [
+   9000.0,
+   9156.0,
+   9174.0
+  ],
+  "hrs": [
+   158.0,
+   158.0,
+   158.0
+  ],
+  "used_lastwk": 154
+ },
+ "Rugby": {
+  "cph": 55.0,
+  "fc": [
+   7980.0,
+   7716.0,
+   8748.0
+  ],
+  "hrs": [
+   155.0,
+   140.0,
+   159.0
+  ],
+  "used_lastwk": 157
+ },
+ "Wellingborough Train Station": {
+  "cph": 55.0,
+  "fc": [
+   4000.0,
+   7086.0,
+   7090.0
+  ],
+  "hrs": [
+   120.0,
+   129.0,
+   129.0
+  ],
+  "used_lastwk": 100
+ },
+ "Wellingborough": {
+  "cph": 53.0,
+  "fc": [
+   7125.0,
+   7251.0,
+   6770.0
+  ],
+  "hrs": [
+   131.0,
+   137.0,
+   128.0
+  ],
+  "used_lastwk": 131
+ },
+ "Lower Heathcote": {
+  "cph": 40.0,
+  "fc": [
+   4600.0,
+   4695.0,
+   4824.0
+  ],
+  "hrs": [
+   108.0,
+   117.0,
+   121.0
+  ],
+  "used_lastwk": 108
+ },
+ "Glenvale Drive Thru": {
+  "cph": 63.0,
+  "fc": [
+   18192.0,
+   18049.0,
+   18238.0
+  ],
+  "hrs": [
+   289.0,
+   286.0,
+   289.0
+  ],
+  "used_lastwk": 291
+ },
+ "HOE Balsall Common": {
+  "cph": 48.0,
+  "fc": [
+   6715.0,
+   6477.0,
+   6408.0
+  ],
+  "hrs": [
+   140.0,
+   135.0,
+   134.0
+  ],
+  "used_lastwk": 148
+ },
+ "Attleborough": {
+  "cph": 49.0,
+  "fc": [
+   6835.0,
+   6835.0,
+   6835.0
+  ],
+  "hrs": [
+   139.0,
+   139.0,
+   139.0
+  ],
+  "used_lastwk": 164
+ }
+}

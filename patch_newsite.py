@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Headless refresh + pillar injection for the 5 store dashboards.
-# Data sources (all headless): allstores.json / f1_detail.json / storehealth.json (area pipeline, BigQuery+F1, w/c 8 Jun)
+# Data sources (all headless): allstores.json / f1_detail.json / storehealth.json (area pipeline, BigQuery+F1, w/c 22 Jun)
 # + Master Populator "hours used" (passed in HOURS map, gviz).  No Chrome needed.
 import json, re, sys
 
@@ -49,11 +49,11 @@ def stars(n):
     except: n=0
     return "★"*max(0,min(5,n))
 
-NEWWK="w/c 8 Jun"; OLDWK="w/c 1 Jun"; NEWWK_C="W/C 8 Jun"; OLDWK_C="W/C 1 Jun"
-NEWDATE="2026-06-08"; NEWWK_DDMM="08/06"
+NEWWK="w/c 22 Jun"; OLDWK="w/c 15 Jun"; NEWWK_C="W/C 22 Jun"; OLDWK_C="W/C 15 Jun"
+NEWDATE="2026-06-22"; NEWWK_DDMM="22/06"
 
-# Master Populator "hours used" for the just-completed week (w/c 8 Jun), from the 15-Jun-dated rows. None = not yet posted.
-HOURS={'Olney':None,'Attleborough':161.0,'Billing Drive Thru':273.0,'Glenvale Drive Thru':277.0,'Northampton Drive-Thru':350.0}
+# Master Populator "hours used" for the just-completed week (w/c 22 Jun), from the 15-Jun-dated rows. None = not yet posted.
+HOURS={'Olney':135.0,'Attleborough':161.0,'Billing Drive Thru':273.0,'Glenvale Drive Thru':277.0,'Northampton Drive-Thru':350.0}
 # CPH targets (Store Targets sheet) and the just-completed week's committed forecast £ (Master Populator "Forecasts last week", 15-Jun row)
 CPH_T={'Olney':49,'Attleborough':49,'Billing Drive Thru':56,'Glenvale Drive Thru':63,'Northampton Drive-Thru':70}
 # CPH targets are now SOURCED from the Store-Targets Google Sheet (cph_targets.json, pulled headlessly
@@ -62,7 +62,7 @@ try:
     _cpht=json.load(open('cph_targets.json')).get('targets',{})
     CPH_T.update({k:v for k,v in _cpht.items()})
 except (FileNotFoundError, ValueError): pass
-FCST={'Olney':5800,'Attleborough':6300,'Billing Drive Thru':12000,'Glenvale Drive Thru':18250,'Northampton Drive-Thru':26000}
+FCST={'Olney':5450,'Attleborough':6350,'Billing Drive Thru':12000,'Glenvale Drive Thru':18450,'Northampton Drive-Thru':26000}
 MINUS="−"  # unicode minus, matches the dashboards' existing style
 def pct1(v): return ("+" if v>=0 else MINUS)+f"{abs(v):.1f}%"
 
@@ -1041,29 +1041,29 @@ def patch(fn,store,coach,mature):
     h=inject_simply_lunch(h,store)   # Simply Lunch food order forecast on the Mix tab (Glenvale)
     h=inject_reviews(h,store)        # Customer reviews trio (Overall/QTD/WTD) + Customer Voice on the Sentiment tab
     # 2) actbox value + week
-    sub(r'(Last week actual sales · )w/c 1 Jun(</div><div class="ab-val">)£[\d,]+(</div>)',
+    sub(r'(Last week actual sales · )w/c 15 Jun(</div><div class="ab-val">)£[\d,]+(</div>)',
         rf'\g<1>{NEWWK}\g<2>{gbp(LW)}\g<3>',1,"actbox £ + week")
     # 3) sales series append + FC[0] drop
     if mature:
         sub(r'(const ACT=\[\[.*?)\]\];', rf'\1],["{NEWDATE}",{LW}]];',1,"mature ACT append",flags=re.S)
-        sub(r'const FC=\[\["2026-06-08",[^\]]*\],', 'const FC=[',1,"mature FC[0] drop")
+        sub(r'const FC=\[\["2026-06-15",[^\]]*\],', 'const FC=[',1,"mature FC[0] drop")
     else:
         sub(r'(const \w+_ACT=\[[^\]]*)\];', rf'\1,{LW}];',1,"newsite ACT append")
-        sub(r'const FC=\[\["2026-06-08",[^\]]*\],', 'const FC=[',1,"newsite FC[0] drop")
-    # 4) ACT_WK + ACT_CPH (only if hours posted for w/c 8 Jun)
+        sub(r'const FC=\[\["2026-06-15",[^\]]*\],', 'const FC=[',1,"newsite FC[0] drop")
+    # 4) ACT_WK + ACT_CPH (only if hours posted for w/c 22 Jun)
     hrs=HOURS.get(store)
     if hrs:
         cph=round(LW/hrs,2)
-        sub(r'ACT_WK="w/c 1 Jun"', f'ACT_WK="{NEWWK}"',1,"ACT_WK")
+        sub(r'ACT_WK="w/c 15 Jun"', f'ACT_WK="{NEWWK}"',1,"ACT_WK")
         sub(r'ACT_CPH=[\d.]+', f'ACT_CPH={cph}',1,f"ACT_CPH={cph}")
     else:
-        log.append("  • CPH-actual held (w/c 8 Jun hours not yet posted in Master Populator)")
+        log.append("  • CPH-actual held (w/c 22 Jun hours not yet posted in Master Populator)")
     # 5) mature YoY card
     if mature and r.get('yoy_lw') is not None:
         y=r['yoy_lw']
-        sub(r'(<div class="card"><div class="lbl">YoY growth</div><div class="val"[^>]*>)\+?[\d.]+%(</div><div class="meta">)w/c 1 Jun( vs 2025)',
+        sub(r'(<div class="card"><div class="lbl">YoY growth</div><div class="val"[^>]*>)\+?[\d.]+%(</div><div class="meta">)w/c 15 Jun( vs 2025)',
             rf'\g<1>{"+" if y>=0 else ""}{y}%\g<2>{NEWWK}\g<3>',1,"mature YoY card")
-    # 5b) derived headline stats -> w/c 8 Jun (data-driven, reproducible)
+    # 5b) derived headline stats -> w/c 22 Jun (data-driven, reproducible)
     fcst=FCST.get(store); cpht=CPH_T.get(store)
     # vs-forecast (actbox) — sales-based, applies to all incl. new sites
     if fcst:
@@ -1073,7 +1073,7 @@ def patch(fn,store,coach,mature):
         # forecast note(s): "£X vs £Y forecast (Z%)"
         sub(r'£[\d,]+ vs £[\d,]+ forecast \([^)]*\)',
             f'{gbp(LW)} vs {gbp(fcst)} forecast ({pct1(vsf)})',3,"forecast note sales")
-    # CPH-actual (only where w/c 8 Jun hours posted)
+    # CPH-actual (only where w/c 22 Jun hours posted)
     if hrs:
         cph=round(LW/hrs,1); diff=round(cph-cpht,1); met=cph>=cpht
         cw='met' if met else 'missed'; cvar='green' if met else 'red'; cab='pos' if met else 'neg'
@@ -1081,7 +1081,7 @@ def patch(fn,store,coach,mature):
         sub(r'<span>CPH</span><b class="(?:neg|pos)">£[\d.]+</b><small>target £\d+ · (?:missed|met)</small>',
             f'<span>CPH</span><b class="{cab}">£{cph}</b><small>target £{cpht} · {cw}</small>',1,"actbox CPH stat")
         sub(r'last wk actual <b style="color:var\(--(?:red|green)\);?">£[\d.]+</b> · [^(]*\(w/c \d Jun\)',
-            f'last wk actual <b style="color:var(--{cvar})">£{cph}</b> · {dsign}£{abs(diff)}/hr (w/c 8 Jun)',1,"KPI CPH card")
+            f'last wk actual <b style="color:var(--{cvar})">£{cph}</b> · {dsign}£{abs(diff)}/hr (w/c 22 Jun)',1,"KPI CPH card")
         sub(r'ran £[\d.]+ CPH', f'ran £{cph} CPH',2,"forecast-note CPH (mature)")
     # actbox YoY stat (mature only; new sites read "new site — no prior yr" and are skipped by the pattern)
     if mature and r.get('yoy_lw') is not None:

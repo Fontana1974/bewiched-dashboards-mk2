@@ -1,7 +1,5 @@
 {
- "_format": "[reportRowDate, forecastLastWeek_GBP, hoursScheduled, hoursUsed]",
- "_source": "Master Populator latest row per store (gid 1695121199)",
- "_week_label": "W/C 15 Jun",
+ "_week_label": "W/C 22 Jun",
  "Burton Latimer": [
   "6/22/2026",
   5350,
