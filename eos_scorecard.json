@@ -1,6 +1,6 @@
 {
  "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
- "generated": "30 Jun 2026, 20:36",
+ "generated": "30 Jun 2026, 20:38",
  "cur_end": "2026-06-28",
  "week_label": "w/c 22 Jun 2026",
  "quarter_label": "Q2 2026 (Apr–Jun)",
@@ -333,16 +333,14 @@
   "Google Health & Rate My Shift Health blend divisors (40 reviews / 4.6★ ; 70 submissions / 4.6★) are default assumptions — adjust if you prefer different volume targets.",
   "Plans (Matt's stated defaults): SPH Labour 50, Brew Crew Kudos 50%%, Bench 3, NPAT 18%%, Food GP%% 71%%. YoY Sales 12%% / Transactions 5%% on both tabs.",
   "F1 Score = AVERAGE RACE TOTAL SCORE (Matt confirmed), live from the F1 sheet (ID 1YFqpR9_ftlQEbfwc5ZVMjtS5tFO0j-7ccwB8rwG56wQ) — weekly = last week's race, quarterly = QTD avg. The old '75' target is retired. Plan is a PROVISIONAL 280 on this scale — Matt still needs to give the target NUMBER on the ~280 average-race-total-score scale (being asked separately).",
-  "SYMMETRIC: both tabs now carry the SAME 13 KPIs — Weekly measured on the last completed week, Quarterly the identical 13 measured QTD (since quarter start). Where a measure has no natural weekly/QTD split it shows the same figure on both tabs.",
-  "Same figure on both tabs (by nature): NPAT (latest-month P&L projection — no weekly actual), SPH Labour (a £/hr rate), Bench (point-in-time headcount), Food GP% (weekly CoS, a week in arrears). Brand Audit weekly shows 'awaiting' in weeks with no audits.",
-  "Still need definitions/sources: New Starter Health and Social Media Engagement are greyed TBC placeholders on BOTH tabs until defined. NPAT needs the P&L sheet shared with the service account to go beyond the May snapshot.",
+  "SYMMETRIC: both tabs now carry the SAME 13 KPIs — Weekly measured on the last completed week, Quarterly the identical 13 measured QTD (since quarter start). Where a measure has no natural weekly/QTD split it shows the same figure on both tabs (see below).",
+  "Same figure on both tabs (by nature): NPAT (latest-month P&L projection — no weekly actual), SPH Labour (a £/hr rate — QTD labour hours not separately sourced), Bench (point-in-time headcount), Food GP% (weekly CoS, a week in arrears). Brand Audit weekly shows 'awaiting' in weeks with no audits; the QTD tile is the reliable one.",
+  "Still need definitions/sources: New Starter Health and Social Media Engagement are greyed TBC placeholders on BOTH tabs until Matt defines the metric + source. NPAT needs the P&L sheet shared with the service account to go beyond the May snapshot.",
   "Net Profit After Tax % is derived from the Bewiched Ltd monthly P&L (Profit after Taxation ÷ Total Turnover); currently May 2026 = 7.9%%. Share the P&L sheet with the service account so it auto-refreshes each month (see flag above if it 403s).",
   "Food GP% uses the Cost of Sales estate GP% as a proxy until a company food-specific GP source exists.",
   "Social Media Engagement and New Starter Health are greyed TBC placeholders pending metric + target definitions.",
   "Manual inputs sheet 'Bewiched EOS Scorecard Inputs' (ID 1HimYAjZg4zlMQG91-KUefkeYMPvrU4ddVuO2IuERTqg) must be shared (Viewer) with dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com for the automated run to read it.",
-  "Manual inputs sheet not readable (No module named 'googleapiclient') — share it (Viewer) with the service account dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com. Manual metrics shown as awaiting.",
-  "Brew Crew Kudos: could not read Employee List (No module named 'googleapiclient') or BCKH tab — share the Employee List (ID 11QhNGGM5BIJrO1NOflso5I1VnSzlWGWcC5FbXJoLQgM, Viewer) with dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com (the BCKH tab is in the F1 workbook, already shared). Tiles shown as awaiting.",
-  "Net Profit After Tax: P&L sheet not readable by the service account (No module named 'googleapiclient') — share 'May 2026 P&L' (ID 1RTsnnz5F9XIdkg4j8m8MiuKqeAvZaAWcndbFifNNLhM, Viewer) with dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com. Using the May 2026 snapshot (7.9%) meanwhile.",
-  "YoY (BigQuery QTD) pull failed (No module named 'google.cloud') — YoY rows shown as awaiting."
+  "Manual inputs sheet not readable (<HttpError 403 when requesting https://sheets.googleapis.com/v4/spreadsheets/1HimYAjZg4zlM) — share it (Viewer) with the service account dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com. Manual metrics shown as awaiting.",
+  "Net Profit After Tax: P&L sheet not readable by the service account (<HttpError 403 when requesting https://sheets.googleapis.com/v4/spread) — share 'May 2026 P&L' (ID 1RTsnnz5F9XIdkg4j8m8MiuKqeAvZaAWcndbFifNNLhM, Viewer) with dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com. Using the May 2026 snapshot (7.9%) meanwhile."
  ]
 }
