@@ -1287,6 +1287,19 @@ def pull_eos_scorecard():
                      "(ID %s, Viewer) with dashboards-bot@%s.iam.gserviceaccount.com. Using the %s snapshot (%.1f%%) meanwhile."
                      % (str(e)[:70], NPAT_MONTH, SID["npat_pnl"], PROJECT, NPAT_MONTH, NPAT_SNAPSHOT))
 
+    # ---- QTD health blends (Google / RMS) from storehealth_raw.json (QTD per-store [n, avg]) ----
+    weeks_q = max(1, round((CUR_END - QSTART).days / 7.0))
+    sh = jload("storehealth_raw.json")
+    def _qtd_blend(dd, vol_per_week):
+        if not dd: return (None, 0, None)
+        n = sum(v[0] for v in dd.values())
+        if not n: return (None, 0, None)
+        avg = sum(v[0] * v[1] for v in dd.values()) / n
+        pct = round((min(n / (vol_per_week * weeks_q), 1) + min(avg / 4.6, 1)) / 2 * 100, 1)
+        return (pct, n, round(avg, 2))
+    gh_qtd, gh_qtd_n, gh_qtd_avg = _qtd_blend(sh.get("google", {}), 40)
+    rh_qtd, rh_qtd_n, rh_qtd_avg = _qtd_blend(sh.get("rms", {}), 70)
+
     # ---- live quarterly: YoY sales / tx (QTD LFL) ----
     yoy_sales = yoy_tx = None; lfl_n = None
     qstart_lit = "DATE('%s')" % QSTART.isoformat()
@@ -1329,23 +1342,14 @@ def pull_eos_scorecard():
     weekly = [
         metric("yoy_sales_wk", "YoY Sales Growth", 12, yoy_sales_wk, "%", "pct_signed", "derived",
                "%s (%d like-for-like stores)" % (wk_ref, len(lfl)),
-               "Last completed week vs same week last year (LFL). Weekly counterpart of the quarterly YoY; reuses the weekly sales pull (lw26/lw25)."),
+               "Last completed week vs same week last year (LFL); reuses the weekly sales pull (lw26/lw25)."),
         metric("yoy_tx_wk", "YoY Transactional Growth", 5, yoy_tx_wk, "%", "pct_signed", "derived",
                "%s (%d like-for-like stores)" % (wk_ref, len(lflx)),
                "Last completed week transactions vs same week last year (LFL); reuses tx26/tx25."),
-        metric("f1_score_wk", "F1 Score", F1_PLAN, f1_wk, "", "num1", "sheet",
-               ("Last week's race result, estate avg (%d stores)" % len(f1_wk_xs)) if f1_wk_xs else "No race scores logged last week",
-               f1_note),
-        metric("brand_audit_wk", "Brand Audit Score", 4.6, audit_lastwk, "", "score2", "derived",
-               ("Audits logged last week, estate avg (%d audits)" % audit_lastwk_n) if audit_lastwk_n else "No brand audits logged last week",
-               "Last completed week's audits. Brand audits are periodic — tile stays awaiting in weeks with none; the quarterly QTD tile is the reliable one."),
-        metric("food_gp_wk", "Food GP%", 71, fg, "%", "pct1", "derived",
-               ("Cost-of-Sales latest week (ending %s), estate GP%%" % cos_week) if cos_week else "Estate GP% from Cost of Sales",
-               "PROXY: company food-specific GP% not yet sourced — using the weekly CoS estate GP%. The CoS sheet posts a week in arrears."),
         metric("google_health", "Google Health", 100, gh, "%", "pct0", "derived", gh_detail,
-               "Blend: avg of reviews÷40 and rating÷4.6, each capped 100%. Green at 100%."),
+               "Blend: avg of reviews÷40 and rating÷4.6, each capped 100%. Last completed week."),
         metric("rms_health", "Rate My Shift Health", 100, rh, "%", "pct0", "derived", rh_detail,
-               "Blend: avg of submissions÷70 and avgScore÷4.6, each capped 100%."),
+               "Blend: avg of submissions÷70 and avgScore÷4.6, each capped 100%. Last completed week."),
         metric("brew_crew_kudos", "Brew Crew Kudos Participation", 50, kudos_wk_pct, "%", "pct0", "derived",
                ("%d of %d employees gave kudos last week (BCKH)" % (kudos_wk_n, kudos_total)) if kudos_wk_pct is not None
                else ("No BCKH entries last week (latest %s)" % (bckh_latest.isoformat() if bckh_latest else "n/a")),
@@ -1354,44 +1358,72 @@ def pull_eos_scorecard():
                "Metric and target not yet defined.", tbc=True),
         metric("sph_labour", "SPH Labour (incl holiday pay)", 50, sph, "£", "gbp1", "derived",
                ("£%.0f sales ÷ %.0f hours used (last week, %d stores reporting)" % (num, den, nrep)) if den else "Awaiting posted hours",
-               "Sales per labour hour incl holiday pay. Provisional on Sunday; finalised Monday once planner hours post."),
+               "Sales per labour hour incl holiday pay. Last completed week; provisional on Sunday, finalised Monday once planner hours post."),
         metric("bench", "Bench", 3, bench_val, "", "num0", "derived",
                ("%d managers ready on the bench (HRP bench sheet)" % bench_val) if bench_val is not None else "",
-               "Count of named Bench Managers in the HRP bench sheet. Green when ≥ 3. Override via the inputs sheet."),
+               "Count of named Bench Managers in the HRP bench sheet (point-in-time). Green when ≥ 3."),
+        metric("f1_score_wk", "F1 Score", F1_PLAN, f1_wk, "", "num1", "sheet",
+               ("Last week's race result, estate avg (%d stores)" % len(f1_wk_xs)) if f1_wk_xs else "No race scores logged last week",
+               f1_note),
+        metric("brand_audit_wk", "Brand Audit Score", 4.6, audit_lastwk, "", "score2", "derived",
+               ("Audits logged last week, estate avg (%d audits)" % audit_lastwk_n) if audit_lastwk_n else "No brand audits logged last week",
+               "Last completed week's audits. Brand audits are periodic — tile stays awaiting in weeks with none; the QTD tile is the reliable one."),
+        metric("food_gp_wk", "Food GP%", 71, fg, "%", "pct1", "derived",
+               ("Cost-of-Sales latest week (ending %s), estate GP%%" % cos_week) if cos_week else "Estate GP% from Cost of Sales",
+               "PROXY: company food-specific GP% not yet sourced — weekly CoS estate GP% (posts a week in arrears)."),
+        metric("npat_wk", "Net Profit After Tax (projected)", 18, npat_pct, "%", "pct1", npat_src,
+               "%s projection (latest month) — P&L is monthly, no weekly actual" % NPAT_MONTH,
+               "P&L is monthly so there is no weekly actual; shows the latest-month projected NPAT % (Profit after Taxation ÷ Total Turnover). Same figure as the QTD tile."),
+        metric("new_starter_health_wk", "New Starter Health", None, None, "%", "pct0", "tbc", "",
+               "Metric and target not yet defined.", tbc=True),
     ]
     quarterly = [
         metric("yoy_sales", "YoY Sales Growth", 12, yoy_sales, "%", "pct_signed", "live",
                ("LFL QTD sales vs same period last year (%s like-for-like stores)" % lfl_n) if lfl_n else "LFL QTD sales vs same period last year",
-               "Auto from BigQuery v_sales_details_flat."),
+               "Auto from BigQuery v_sales_details_flat (quarter-to-date)."),
         metric("yoy_tx", "YoY Transactional Growth", 5, yoy_tx, "%", "pct_signed", "live",
                ("LFL QTD transactions vs last year (%s like-for-like stores)" % lfl_n) if lfl_n else "LFL QTD transactions vs same period last year",
-               "Auto from BigQuery v_sales_details_flat."),
-        metric("brand_audit", "Brand Audit Score", 4.6, ba, "", "score2", "derived",
-               "Estate average brand audit (QTD), out of 5",
-               "Auto-derived from the Brand Audit sheet; override in the inputs sheet if needed."),
-        metric("f1_score", "F1 Score", F1_PLAN, f1_qtd, "", "num1", "sheet",
-               ("QTD race 'Total Score', estate avg (%d stores)" % len(f1_qtd_xs)) if f1_qtd_xs else "Awaiting F1 race data",
-               f1_note),
-        metric("npat", "Net Profit After Tax (projected)", 18, npat_pct, "%", "pct1", npat_src,
-               "%s · %s" % (NPAT_MONTH, npat_detail),
-               "Derived from the Bewiched Ltd monthly P&L (Profit after Taxation ÷ Total Turnover). No corporation tax is booked monthly, so this is effectively the net margin. Uses the latest month available."),
-        metric("food_gp", "Food GP%", 71, fg, "%", "pct1", "derived",
-               "Estate GP% from Cost of Sales (commercial stores)",
-               "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."),
+               "Auto from BigQuery v_sales_details_flat (quarter-to-date)."),
+        metric("google_health_qtd", "Google Health", 100, gh_qtd, "%", "pct0", "derived",
+               ("%d reviews (÷%d) · %s★ (÷4.6) QTD" % (gh_qtd_n, 40 * weeks_q, gh_qtd_avg)) if gh_qtd is not None else "No QTD reviews",
+               "Blend: avg of QTD reviews÷(40×%d wks) and avg rating÷4.6, each capped 100%%." % weeks_q),
+        metric("rms_health_qtd", "Rate My Shift Health", 100, rh_qtd, "%", "pct0", "derived",
+               ("%d submissions (÷%d) · %s★ (÷4.6) QTD" % (rh_qtd_n, 70 * weeks_q, rh_qtd_avg)) if rh_qtd is not None else "No QTD submissions",
+               "Blend: avg of QTD submissions÷(70×%d wks) and avg score÷4.6, each capped 100%%." % weeks_q),
         metric("brew_crew_kudos_qtd", "Brew Crew Kudos Participation", 50, kudos_qtd_pct, "%", "pct0", "derived",
                ("%d of %d employees gave kudos this quarter (BCKH)" % (kudos_qtd_n, kudos_total)) if kudos_qtd_pct is not None else "",
                "Distinct employees who contributed to Brew Crew Kudos (BCKH tab) QUARTER-TO-DATE, matched by email to the Employee List, ÷ total employees."),
+        metric("social_media_qtd", "Social Media Engagement", None, None, "%", "pct0", "tbc", "",
+               "Metric and target not yet defined.", tbc=True),
+        metric("sph_labour_qtd", "SPH Labour (incl holiday pay)", 50, sph, "£", "gbp1", "derived",
+               "Current £/hr rate — QTD labour-hour totals not separately sourced",
+               "SPH is a rate; quarterly labour-hour totals aren't separately available, so this shows the current weekly £/hr rate. Same figure as the weekly tile."),
+        metric("bench_qtd", "Bench", 3, bench_val, "", "num0", "derived",
+               ("%d managers ready on the bench (HRP bench sheet)" % bench_val) if bench_val is not None else "",
+               "Bench headcount is point-in-time, not a period sum — shows the current count. Green when ≥ 3."),
+        metric("f1_score", "F1 Score", F1_PLAN, f1_qtd, "", "num1", "sheet",
+               ("QTD race 'Total Score', estate avg (%d stores)" % len(f1_qtd_xs)) if f1_qtd_xs else "Awaiting F1 race data",
+               f1_note),
+        metric("brand_audit", "Brand Audit Score", 4.6, ba, "", "score2", "derived",
+               "Estate average brand audit (QTD), out of 5",
+               "Auto-derived from the Brand Audit sheet (quarter-to-date); override in the inputs sheet if needed."),
+        metric("food_gp", "Food GP%", 71, fg, "%", "pct1", "derived",
+               "Estate GP% from Cost of Sales (commercial stores)",
+               "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."),
+        metric("npat", "Net Profit After Tax (projected)", 18, npat_pct, "%", "pct1", npat_src,
+               "%s · %s" % (NPAT_MONTH, npat_detail),
+               "Derived from the Bewiched Ltd monthly P&L (Profit after Taxation ÷ Total Turnover). No corporation tax is booked monthly, so this is effectively the net margin. Latest month available."),
         metric("new_starter_health", "New Starter Health", None, None, "%", "pct0", "tbc", "",
                "Metric and target not yet defined.", tbc=True),
     ]
-
     flags = [
         "Status is strictly binary: GREEN when actual ≥ plan, RED when below — no near-target band. Bench is green when ≥ 3.",
         "Google Health & Rate My Shift Health blend divisors (40 reviews / 4.6★ ; 70 submissions / 4.6★) are default assumptions — adjust if you prefer different volume targets.",
         "Plans (Matt's stated defaults): SPH Labour 50, Brew Crew Kudos 50%%, Bench 3, NPAT 18%%, Food GP%% 71%%. YoY Sales 12%% / Transactions 5%% on both tabs.",
         "F1 Score = AVERAGE RACE TOTAL SCORE (Matt confirmed), live from the F1 sheet (ID %s) — weekly = last week's race, quarterly = QTD avg. The old '75' target is retired. Plan is a PROVISIONAL 280 on this scale — Matt still needs to give the target NUMBER on the ~280 average-race-total-score scale (being asked separately)." % SID["f1"],
-        "Weekly tab now mirrors the quarterly measures wherever a genuine weekly value exists: YoY Sales, YoY Transactions, F1 Score (last week's race), Food GP%% (weekly CoS, posted a week in arrears), and Brand Audit (last week's audits — periodic, so it shows 'awaiting' in weeks with none; latest audit on file is currently 18 Jun).",
-        "Net Profit After Tax and New Starter Health are intentionally QUARTERLY-ONLY — no weekly tile (NPAT is monthly/quarterly management-accounts data; New Starter Health is a quarterly measure).",
+        "SYMMETRIC: both tabs now carry the SAME 13 KPIs — Weekly measured on the last completed week, Quarterly the identical 13 measured QTD (since quarter start). Where a measure has no natural weekly/QTD split it shows the same figure on both tabs (see below).",
+        "Same figure on both tabs (by nature): NPAT (latest-month P&L projection — no weekly actual), SPH Labour (a £/hr rate — QTD labour hours not separately sourced), Bench (point-in-time headcount), Food GP% (weekly CoS, a week in arrears). Brand Audit weekly shows 'awaiting' in weeks with no audits; the QTD tile is the reliable one.",
+        "Still need definitions/sources: New Starter Health and Social Media Engagement are greyed TBC placeholders on BOTH tabs until Matt defines the metric + source. NPAT needs the P&L sheet shared with the service account to go beyond the May snapshot.",
         "Net Profit After Tax % is derived from the Bewiched Ltd monthly P&L (Profit after Taxation ÷ Total Turnover); currently May 2026 = 7.9%%. Share the P&L sheet with the service account so it auto-refreshes each month (see flag above if it 403s).",
         "Food GP% uses the Cost of Sales estate GP% as a proxy until a company food-specific GP source exists.",
         "Social Media Engagement and New Starter Health are greyed TBC placeholders pending metric + target definitions.",
