@@ -11,5 +11,10 @@
    "gp_pct": 69.06
   }
  },
+ "_estate_gp_basis": "Master COS Input, all stores, (ΣSales-ΣCoG)/ΣSales",
+ "estate_gp_wk": 76.03,
+ "estate_gp_qtd": 74.21,
+ "estate_gp_may": 73.96,
+ "estate_gp_wk_date": "2026-06-29",
  "_week": "2026-06-21"
 }
