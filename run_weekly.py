@@ -144,6 +144,7 @@ SID = dict(
     reviews="1Dm3fxmhodV2xH-apaMp1baWmJ6zDIofv6z6YPuY8D3s",
     availability="1CeTBvZ610zfEMe118m76LgMW5gw_SDS-2Eel1HMuM78",
     smt="1IGL3sLWSI7k1vuXEMFBWplgk3uS4tTUU1-MtGYDk-bQ",
+    eos="1HimYAjZg4zlMQG91-KUefkeYMPvrU4ddVuO2IuERTqg",  # Bewiched EOS Scorecard Inputs (manual rows)
 )
 
 # ---------- canonical estate (21) + mappings ----------
@@ -1119,6 +1120,174 @@ def pull_compliance():
 RUN_START = datetime.datetime.now().timestamp()
 GEN_LEFTOVER = {}
 
+def pull_eos_scorecard():
+    """EOS Scorecard (Weekly + Quarterly) -> eos_scorecard.json (rendered by gen_eos_scorecard.py).
+    LIVE  : YoY Sales / Transactional growth (BigQuery, QTD LFL).
+    DERIVED (from feeds already pulled): Google Health, Rate My Shift Health, SPH Labour,
+            Brand Audit, Food GP% (CoS proxy).
+    MANUAL (read from the 'Bewiched EOS Scorecard Inputs' sheet SID['eos']): Brew Crew Kudos,
+            Bench, F1 Score, NPAT, + the two TBC rows. A non-empty actual/plan in that sheet
+            OVERRIDES the derived/live value for any metric.
+    Fault-tolerant: any source that fails degrades that metric to awaiting and is flagged —
+    it must never break the weekly run. STATUS thresholds live in gen_eos_scorecard.py
+    (config.amber_band, default 5%)."""
+    AMBER_BAND = 0.05
+    flags = []
+    # ---- manual inputs sheet (optional; 403s until shared Viewer with the SA) ----
+    manual = {}
+    try:
+        rows = sheet(SID["eos"], "Sheet1!A1:H60")
+        for r in rows[1:]:
+            if not r or not r[0]:
+                continue
+            mid = str(r[0]).strip()
+            manual[mid] = {"plan": (r[3] if len(r) > 3 and r[3] not in (None, "") else None),
+                           "actual": (r[4] if len(r) > 4 and r[4] not in (None, "") else None)}
+    except Exception as e:
+        flags.append("Manual inputs sheet not readable (%s) — share it (Viewer) with the service "
+                     "account dashboards-bot@%s.iam.gserviceaccount.com. Manual metrics shown as awaiting."
+                     % (str(e)[:90], PROJECT))
+    def mp(mid, default):
+        v = manual.get(mid, {}).get("plan")
+        return fnum(v) if v not in (None, "") else default
+    def ma(mid):
+        v = manual.get(mid, {}).get("actual")
+        return fnum(v) if v not in (None, "") else None
+
+    def jload(fn):
+        p = os.path.join(HERE, fn)
+        return json.load(open(p)) if os.path.exists(p) else {}
+    rec = jload("allstores.json").get("rec", {})
+    cust = jload("customer.json"); rms = jload("rms.json")
+    cos = jload("cos_metrics.json").get("stores", {})
+    ovr = jload("planner_overrides.json")
+    benchj = jload("bench.json")
+    bench_n = sum(1 for row in benchj.get("rows", []) if len(row) > 6 and str(row[6]).strip())
+    bench_val = bench_n if benchj.get("rows") else None
+
+    # ---- derived weekly ----
+    rev = cust.get("reviews"); rat = cust.get("avg_rating_last_week")
+    gh = round((min(rev / 40, 1) + min(rat / 4.6, 1)) / 2 * 100, 1) if rev is not None and rat else None
+    gh_detail = ("%s reviews (÷40) · %s★ rating (÷4.6) last week" % (rev, rat)) if rat else "No reviews logged last week"
+    subs = rms.get("submissions") or 0; ravg = rms.get("avg_rating")
+    rh = round((min(subs / 70, 1) + min(ravg / 4.6, 1)) / 2 * 100, 1) if ravg and subs else None
+    rh_detail = ("%d submissions (÷70) · %s★ (÷4.6) last week" % (subs, ravg)) if ravg else "No Rate My Shift submissions logged last week"
+    num = den = 0.0; nrep = 0
+    for st, v in ovr.items():
+        h = v.get("used_lastwk")
+        if h and rec.get(st, {}).get("lw26"):
+            num += rec[st]["lw26"]; den += h; nrep += 1
+    sph = round(num / den, 1) if den else None
+    au = [r["audit_qtd"] for r in rec.values() if r.get("audit_qtd")]
+    ba = round(sum(au) / len(au), 2) if au else None
+    gps = [v["gp_pct"] for v in cos.values() if v.get("gp_pct")]
+    fg = round(sum(gps) / len(gps), 1) if gps else None
+
+    # ---- live quarterly: YoY sales / tx (QTD LFL) ----
+    yoy_sales = yoy_tx = None; lfl_n = None
+    qstart_lit = "DATE('%s')" % QSTART.isoformat()
+    qstart_ly_lit = "DATE('%s')" % (QSTART - datetime.timedelta(days=364)).isoformat()
+    try:
+        rows = bq(f"""
+          WITH b AS (SELECT item_outlet_name s, DATE(sales_date) dd, id,
+                            SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+                     FROM {FLAT}
+                     WHERE DATE(sales_date) BETWEEN {qstart_ly_lit} AND {CE}),
+          p AS (SELECT s,
+                  SUM(IF(dd BETWEEN {qstart_lit} AND {CE}, v, 0)) qtd,
+                  COUNT(DISTINCT IF(dd BETWEEN {qstart_lit} AND {CE}, id, NULL)) qtx,
+                  SUM(IF(dd BETWEEN {qstart_ly_lit} AND {d(364)}, v, 0)) qtd_ly,
+                  COUNT(DISTINCT IF(dd BETWEEN {qstart_ly_lit} AND {d(364)}, id, NULL)) qtx_ly
+                FROM b GROUP BY s)
+          SELECT ROUND(100*(SUM(IF(qtd_ly>0,qtd,0))/NULLIF(SUM(IF(qtd_ly>0,qtd_ly,0)),0)-1),1) yoy_sales,
+                 ROUND(100*(SUM(IF(qtx_ly>0,qtx,0))/NULLIF(SUM(IF(qtx_ly>0,qtx_ly,0)),0)-1),1) yoy_tx,
+                 COUNTIF(qtd_ly>0) lfl_stores
+          FROM p""")
+        if rows:
+            yoy_sales = rows[0].get("yoy_sales"); yoy_tx = rows[0].get("yoy_tx"); lfl_n = rows[0].get("lfl_stores")
+    except Exception as e:
+        flags.append("YoY (BigQuery QTD) pull failed (%s) — YoY rows shown as awaiting." % str(e)[:90])
+
+    def metric(mid, name, plan_def, derived, unit, fmt, source, detail, note, tbc=False):
+        a = ma(mid)
+        if tbc:
+            return {"id": mid, "name": name, "plan": None, "actual": None, "unit": unit,
+                    "fmt": fmt, "dir": "high", "source": "tbc", "detail": detail, "note": note, "tbc": True}
+        actual = a if a is not None else derived
+        src = "manual" if (a is not None and source in ("derived", "live")) else source
+        return {"id": mid, "name": name, "plan": mp(mid, plan_def), "actual": actual, "unit": unit,
+                "fmt": fmt, "dir": "high", "source": src, "detail": detail, "note": note}
+
+    qn = (QSTART.month - 1) // 3 + 1
+    m3 = QSTART.replace(month=QSTART.month + 2)
+    qlabel = "Q%d %d (%s–%s)" % (qn, QSTART.year, QSTART.strftime("%b"), m3.strftime("%b"))
+
+    weekly = [
+        metric("google_health", "Google Health", 100, gh, "%", "pct0", "derived", gh_detail,
+               "Blend: avg of reviews÷40 and rating÷4.6, each capped 100%. Green at 100%."),
+        metric("rms_health", "Rate My Shift Health", 100, rh, "%", "pct0", "derived", rh_detail,
+               "Blend: avg of submissions÷70 and avgScore÷4.6, each capped 100%."),
+        metric("brew_crew_kudos", "Brew Crew Kudos Participation", 50, None, "%", "pct0", "manual", "",
+               "Manual weekly input — % of team giving kudos. Enter in the EOS Scorecard Inputs sheet."),
+        metric("social_media", "Social Media Engagement", None, None, "%", "pct0", "tbc", "",
+               "Metric and target not yet defined.", tbc=True),
+        metric("sph_labour", "SPH Labour (incl holiday pay)", 50, sph, "£", "gbp1", "derived",
+               ("£%.0f sales ÷ %.0f hours used (last week, %d stores reporting)" % (num, den, nrep)) if den else "Awaiting posted hours",
+               "Sales per labour hour incl holiday pay. Provisional on Sunday; finalised Monday once planner hours post."),
+        metric("bench", "Bench", 3, bench_val, "", "num0", "derived",
+               ("%d managers ready on the bench (HRP bench sheet)" % bench_val) if bench_val is not None else "",
+               "Count of named Bench Managers in the HRP bench sheet. Green when ≥ 3. Override via the inputs sheet."),
+    ]
+    quarterly = [
+        metric("yoy_sales", "YoY Sales Growth", 12, yoy_sales, "%", "pct_signed", "live",
+               ("LFL QTD sales vs same period last year (%s like-for-like stores)" % lfl_n) if lfl_n else "LFL QTD sales vs same period last year",
+               "Auto from BigQuery v_sales_details_flat."),
+        metric("yoy_tx", "YoY Transactional Growth", 5, yoy_tx, "%", "pct_signed", "live",
+               ("LFL QTD transactions vs last year (%s like-for-like stores)" % lfl_n) if lfl_n else "LFL QTD transactions vs same period last year",
+               "Auto from BigQuery v_sales_details_flat."),
+        metric("brand_audit", "Brand Audit Score", 4.6, ba, "", "score2", "derived",
+               "Estate average brand audit (QTD), out of 5",
+               "Auto-derived from the Brand Audit sheet; override in the inputs sheet if needed."),
+        metric("f1_score", "F1 Score", 75, None, "", "num1", "manual", "",
+               "CONFIRM SCALE: F1 'Total Score' QTD estate avg is ~282 pts, not /100. Enter on the plan-75 scale in the inputs sheet, or update the plan."),
+        metric("npat", "Net Profit After Tax (projected)", 18, None, "%", "pct1", "manual", "",
+               "Projected NPAT % of turnover — not in POS data. Enter from management accounts in the inputs sheet."),
+        metric("food_gp", "Food GP%", 71, fg, "%", "pct1", "derived",
+               "Estate GP% from Cost of Sales (commercial stores)",
+               "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."),
+        metric("new_starter_health", "New Starter Health", None, None, "%", "pct0", "tbc", "",
+               "Metric and target not yet defined.", tbc=True),
+    ]
+
+    flags = [
+        "AMBER band = %d%% under plan (gen_eos_scorecard.py config.amber_band). Bench is green when ≥ 3." % int(AMBER_BAND * 100),
+        "Google Health & Rate My Shift Health blend divisors (40 reviews / 4.6★ ; 70 submissions / 4.6★) are default assumptions — adjust if you prefer different volume targets.",
+        "Plans for SPH Labour, Brew Crew Kudos, Bench, F1 Score, NPAT and Food GP% are Matt's stated defaults (50 / 50%% / 3 / 75 / 18%% / 71%%).",
+        "F1 Score scale needs confirming — sheet QTD Total Score averages ~282 pts, so plan 75 implies a different scale. Shown as awaiting until a value on the plan scale is entered.",
+        "Net Profit After Tax % is not available from POS/BigQuery — manual entry from management accounts.",
+        "Food GP% uses the Cost of Sales estate GP% as a proxy until a company food-specific GP source exists.",
+        "Social Media Engagement and New Starter Health are greyed TBC placeholders pending metric + target definitions.",
+        "Manual inputs sheet 'Bewiched EOS Scorecard Inputs' (ID %s) must be shared (Viewer) with dashboards-bot@%s.iam.gserviceaccount.com for the automated run to read it." % (SID["eos"], PROJECT),
+    ] + flags
+
+    out = {
+        "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); "
+                  "rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
+        "generated": NOW_UK.strftime("%d %b %Y, %H:%M"),
+        "cur_end": CUR_END.isoformat(),
+        "week_label": wlabel(LASTWK_MON),
+        "quarter_label": qlabel,
+        "manual_sheet_id": SID["eos"],
+        "config": {"amber_band": AMBER_BAND},
+        "weekly": weekly,
+        "quarterly": quarterly,
+        "flags": flags,
+    }
+    W("eos_scorecard.json", out, indent=1)
+    print("[pull] eos_scorecard: weekly %d / quarterly %d metrics (yoy_sales=%s yoy_tx=%s)"
+          % (len(weekly), len(quarterly), yoy_sales, yoy_tx))
+
+
 def _run(script, *args):
     try:
         p = subprocess.run([sys.executable, os.path.join(HERE, script), *args],
@@ -1155,6 +1324,9 @@ def build():
     _run("gen_claire.py")
     if os.path.exists(os.path.join(HERE, "gen_scorecard.py")):
         _run("gen_scorecard.py")
+    if os.path.exists(os.path.join(HERE, "gen_eos_scorecard.py")) and \
+       os.path.exists(os.path.join(HERE, "eos_scorecard.json")):
+        _run("gen_eos_scorecard.py")
     # B9 store sales + E patcher (LAST)
     _run("build_newsite_sales.py")
     _run("patch_newsite.py")
@@ -1239,6 +1411,7 @@ def pulls():
     pull_ns_raws()            # ns_*_raw.json (7)
     pull_sl_raws()            # sl_*_raw.json (2)
     pull_txq_raws()           # txq_*_raw.json (2)
+    pull_eos_scorecard()      # eos_scorecard.json (EOS Weekly+Quarterly scorecard)
 
 
 def main():

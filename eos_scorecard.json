@@ -1,0 +1,183 @@
+{
+ "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); rendered by gen_eos_scorecard.py. Live rows from BigQuery + F1/reviews/RMS feeds; manual rows from the EOS Scorecard Inputs sheet.",
+ "generated": "30 Jun 2026, 17:02",
+ "cur_end": "2026-06-28",
+ "week_label": "w/c 22 Jun 2026",
+ "quarter_label": "Q2 2026 (Apr–Jun)",
+ "manual_sheet_id": "1HimYAjZg4zlMQG91-KUefkeYMPvrU4ddVuO2IuERTqg",
+ "config": {
+  "amber_band": 0.05
+ },
+ "weekly": [
+  {
+   "id": "google_health",
+   "name": "Google Health",
+   "plan": 100,
+   "actual": 80.0,
+   "unit": "%",
+   "fmt": "pct0",
+   "dir": "high",
+   "source": "derived",
+   "detail": "24 reviews (÷40) · 4.8★ rating (÷4.6) last week",
+   "note": "Blend: avg of reviews÷40 and rating÷4.6, each capped 100%. Green at 100%."
+  },
+  {
+   "id": "rms_health",
+   "name": "Rate My Shift Health",
+   "plan": 100,
+   "actual": null,
+   "unit": "%",
+   "fmt": "pct0",
+   "dir": "high",
+   "source": "derived",
+   "detail": "No Rate My Shift submissions logged last week",
+   "note": "Blend: avg of submissions÷70 and avgScore÷4.6."
+  },
+  {
+   "id": "brew_crew_kudos",
+   "name": "Brew Crew Kudos Participation",
+   "plan": 50,
+   "actual": null,
+   "unit": "%",
+   "fmt": "pct0",
+   "dir": "high",
+   "source": "manual",
+   "detail": "",
+   "note": "Manual weekly input. Enter % of team giving kudos in the EOS Scorecard Inputs sheet."
+  },
+  {
+   "id": "social_media",
+   "name": "Social Media Engagement",
+   "plan": null,
+   "actual": null,
+   "unit": "%",
+   "fmt": "pct0",
+   "dir": "high",
+   "source": "tbc",
+   "tbc": true,
+   "detail": "",
+   "note": "Metric and target not yet defined."
+  },
+  {
+   "id": "sph_labour",
+   "name": "SPH Labour (incl holiday pay)",
+   "plan": 50,
+   "actual": 57.7,
+   "unit": "£",
+   "fmt": "gbp1",
+   "dir": "high",
+   "source": "derived",
+   "detail": "£168257 sales ÷ 2916 hours used (last week, 17 stores reporting hours)",
+   "note": "Sales per labour hour incl holiday pay. Provisional on Sunday run; finalised Monday once planner hours post."
+  },
+  {
+   "id": "bench",
+   "name": "Bench",
+   "plan": 3,
+   "actual": 5,
+   "unit": "",
+   "fmt": "num0",
+   "dir": "high",
+   "source": "derived",
+   "detail": "5 managers ready on the bench (HRP bench sheet)",
+   "note": "Count of named Bench Managers in the HRP bench sheet. Green when ≥ 3. Override via the inputs sheet."
+  }
+ ],
+ "quarterly": [
+  {
+   "id": "yoy_sales",
+   "name": "YoY Sales Growth",
+   "plan": 12,
+   "actual": 7.6,
+   "unit": "%",
+   "fmt": "pct_signed",
+   "dir": "high",
+   "source": "live",
+   "detail": "LFL QTD sales vs same period last year (19 like-for-like stores)",
+   "note": "Auto from BigQuery v_sales_details_flat."
+  },
+  {
+   "id": "yoy_tx",
+   "name": "YoY Transactional Growth",
+   "plan": 5,
+   "actual": 0.9,
+   "unit": "%",
+   "fmt": "pct_signed",
+   "dir": "high",
+   "source": "live",
+   "detail": "LFL QTD transactions vs same period last year (19 like-for-like stores)",
+   "note": "Auto from BigQuery v_sales_details_flat."
+  },
+  {
+   "id": "brand_audit",
+   "name": "Brand Audit Score",
+   "plan": 4.6,
+   "actual": 4.66,
+   "unit": "",
+   "fmt": "score2",
+   "dir": "high",
+   "source": "derived",
+   "detail": "Estate average brand audit (QTD), out of 5",
+   "note": "Auto-derived from the Brand Audit sheet; override in the inputs sheet if needed."
+  },
+  {
+   "id": "f1_score",
+   "name": "F1 Score",
+   "plan": 75,
+   "actual": null,
+   "unit": "",
+   "fmt": "num1",
+   "dir": "high",
+   "source": "manual",
+   "detail": "",
+   "note": "CONFIRM SCALE: the F1 'Total Score' QTD estate avg is ~282 pts, not /100. Enter the figure on plan-75 scale in the inputs sheet, or update the plan."
+  },
+  {
+   "id": "npat",
+   "name": "Net Profit After Tax (projected)",
+   "plan": 18,
+   "actual": null,
+   "unit": "%",
+   "fmt": "pct1",
+   "dir": "high",
+   "source": "manual",
+   "detail": "",
+   "note": "Projected NPAT % of turnover. Not in POS data — enter from management accounts in the inputs sheet."
+  },
+  {
+   "id": "food_gp",
+   "name": "Food GP%",
+   "plan": 71,
+   "actual": 71.1,
+   "unit": "%",
+   "fmt": "pct1",
+   "dir": "high",
+   "source": "derived",
+   "detail": "Estate GP%% from Cost of Sales (currently 2 commercial stores)",
+   "note": "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."
+  },
+  {
+   "id": "new_starter_health",
+   "name": "New Starter Health",
+   "plan": null,
+   "actual": null,
+   "unit": "%",
+   "fmt": "pct0",
+   "dir": "high",
+   "source": "tbc",
+   "tbc": true,
+   "detail": "",
+   "note": "Metric and target not yet defined."
+  }
+ ],
+ "flags": [
+  "AMBER band = 5% under plan (config.amber_band). Bench is green when ≥3.",
+  "Google Health & Rate My Shift Health blends (reviews÷40 / rating÷4.6 ; submissions÷70 / score÷4.6) are default assumptions — adjust the divisors if you prefer different volume targets.",
+  "SPH Labour, Brew Crew Kudos, Bench, F1 Score, NPAT and Food GP% plans are Matt's stated defaults (50 / 50% / 3 / 75 / 18% / 71%).",
+  "F1 Score: scale needs confirming — the sheet's QTD Total Score averages ~282 pts, so a plan of 75 implies a different (e.g. /100) scale. Shown as TBC until a value on the plan scale is entered.",
+  "Net Profit After Tax % is not available from POS/BigQuery — it is a manual entry from management accounts.",
+  "Food GP% is shown from the Cost of Sales sheet (estate GP, 2 commercial stores) as a proxy until a company food-specific GP source exists.",
+  "Social Media Engagement and New Starter Health are greyed TBC placeholders pending metric + target definitions.",
+  "Manual inputs live in the new Google Sheet 'Bewiched EOS Scorecard Inputs' (ID 1HimYAjZg4zlMQG91-KUefkeYMPvrU4ddVuO2IuERTqg). It must be shared (Viewer) with dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com for the automated run to read it."
+ ]
+}
