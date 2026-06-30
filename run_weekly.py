@@ -1216,8 +1216,11 @@ def pull_eos_scorecard():
     audit_lastwk_n = jload("audit_raw.json").get("_lastwk_n", 0)
     # ---- Food GP% — Cost-of-Sales sheet is weekly; cos estate avg already = latest CoS week ----
     cos_week = jload("cos_metrics.json").get("_week", "")
-    # ---- Brew Crew Kudos Participation: distinct employees who have given kudos (BCKH) / total employees ----
-    kudos_pct = None; kudos_n = kudos_total = 0
+    # ---- Brew Crew Kudos Participation: distinct employees who gave kudos, DATE-WINDOWED / total employees ----
+    # BCKH tab (F1 workbook): col A = timestamp string ("Wed May 27 18:28:53 +0100 2026"), col B = email.
+    kudos_wk_pct = kudos_qtd_pct = None
+    kudos_wk_n = kudos_qtd_n = kudos_total = kudos_wk_rows = 0
+    bckh_latest = None
     try:
         emp_rows = sheet(SID["employees"], "'Employee List'!A2:D2000")
         emp_emails = set()
@@ -1227,16 +1230,31 @@ def pull_eos_scorecard():
                   (r[2] if len(r) > 2 and r[2] not in (None, "") else None))
             if em: emp_emails.add(str(em).strip().lower())
         kudos_total = len(emp_emails)
-        bckh = sheet(SID["f1"], "'BCKH'!A2:E20000")             # contributor email in col B; tail-safe range
-        contrib = set(str(r[1]).strip().lower() for r in bckh if len(r) > 1 and r[1] not in (None, ""))
-        participants = contrib & emp_emails
-        kudos_n = len(participants)
+        bckh = sheet(SID["f1"], "'BCKH'!A2:E20000")             # tail-safe; date col A, email col B
+        wk_emp = set(); qtd_emp = set()
+        for r in bckh:
+            if len(r) < 2 or r[1] in (None, ""): continue
+            dt = parse_any_date(r[0]) if r[0] not in (None, "") else None
+            if not dt: continue
+            if not bckh_latest or dt > bckh_latest: bckh_latest = dt
+            em = str(r[1]).strip().lower()
+            if LASTWK_MON <= dt <= CUR_END:
+                kudos_wk_rows += 1
+                if em in emp_emails: wk_emp.add(em)
+            if dt >= QSTART and em in emp_emails:
+                qtd_emp.add(em)
+        kudos_wk_n, kudos_qtd_n = len(wk_emp), len(qtd_emp)
         if kudos_total:
-            kudos_pct = round(100 * kudos_n / kudos_total, 1)
+            kudos_qtd_pct = round(100 * kudos_qtd_n / kudos_total, 1)
+            kudos_wk_pct = round(100 * kudos_wk_n / kudos_total, 1) if kudos_wk_rows > 0 else None
+        if kudos_wk_rows == 0:
+            flags.append("Brew Crew Kudos (weekly) shows awaiting — no BCKH entries in the last completed week "
+                         "(latest BCKH row %s). The QTD tile reflects activity since quarter start."
+                         % (bckh_latest.isoformat() if bckh_latest else "n/a"))
     except Exception as e:
         flags.append("Brew Crew Kudos: could not read Employee List (%s) or BCKH tab — share the Employee List "
                      "(ID %s, Viewer) with dashboards-bot@%s.iam.gserviceaccount.com (the BCKH tab is in the F1 "
-                     "workbook, already shared). Tile shown as awaiting." % (str(e)[:60], SID["employees"], PROJECT))
+                     "workbook, already shared). Tiles shown as awaiting." % (str(e)[:60], SID["employees"], PROJECT))
     # ---- Net Profit After Tax % (projected) from the Bewiched Ltd monthly P&L ----
     # Snapshot from the May 2026 P&L (Profit after Taxation £50,182.10 / Total Turnover £633,064.53);
     # used as a fallback so the tile is populated even if the SA cannot yet read the P&L sheet.
@@ -1328,9 +1346,10 @@ def pull_eos_scorecard():
                "Blend: avg of reviews÷40 and rating÷4.6, each capped 100%. Green at 100%."),
         metric("rms_health", "Rate My Shift Health", 100, rh, "%", "pct0", "derived", rh_detail,
                "Blend: avg of submissions÷70 and avgScore÷4.6, each capped 100%."),
-        metric("brew_crew_kudos", "Brew Crew Kudos Participation", 50, kudos_pct, "%", "pct0", "derived",
-               ("%d of %d employees have given kudos (BCKH tab)" % (kudos_n, kudos_total)) if kudos_pct is not None else "",
-               "Distinct employees who have contributed to Brew Crew Kudos (BCKH tab, F1 workbook), matched by email to the Employee List, ÷ total employees. All-time contributors."),
+        metric("brew_crew_kudos", "Brew Crew Kudos Participation", 50, kudos_wk_pct, "%", "pct0", "derived",
+               ("%d of %d employees gave kudos last week (BCKH)" % (kudos_wk_n, kudos_total)) if kudos_wk_pct is not None
+               else ("No BCKH entries last week (latest %s)" % (bckh_latest.isoformat() if bckh_latest else "n/a")),
+               "Distinct employees who contributed to Brew Crew Kudos (BCKH tab, F1 workbook) in the LAST COMPLETED WEEK, matched by email to the Employee List, ÷ total employees. Awaiting if no entries that week."),
         metric("social_media", "Social Media Engagement", None, None, "%", "pct0", "tbc", "",
                "Metric and target not yet defined.", tbc=True),
         metric("sph_labour", "SPH Labour (incl holiday pay)", 50, sph, "£", "gbp1", "derived",
@@ -1359,6 +1378,9 @@ def pull_eos_scorecard():
         metric("food_gp", "Food GP%", 71, fg, "%", "pct1", "derived",
                "Estate GP% from Cost of Sales (commercial stores)",
                "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."),
+        metric("brew_crew_kudos_qtd", "Brew Crew Kudos Participation", 50, kudos_qtd_pct, "%", "pct0", "derived",
+               ("%d of %d employees gave kudos this quarter (BCKH)" % (kudos_qtd_n, kudos_total)) if kudos_qtd_pct is not None else "",
+               "Distinct employees who contributed to Brew Crew Kudos (BCKH tab) QUARTER-TO-DATE, matched by email to the Employee List, ÷ total employees."),
         metric("new_starter_health", "New Starter Health", None, None, "%", "pct0", "tbc", "",
                "Metric and target not yet defined.", tbc=True),
     ]
