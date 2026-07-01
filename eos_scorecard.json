@@ -1,6 +1,6 @@
 {
  "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
- "generated": "01 Jul 2026, 06:52",
+ "generated": "01 Jul 2026, 07:05",
  "cur_end": "2026-06-28",
  "week_label": "w/c 22 Jun 2026",
  "quarter_label": "Q2 2026 (Apr–Jun)",
@@ -329,7 +329,6 @@
   }
  ],
  "flags": [
-  "YoY Sales/Transactions are strictly LIKE-FOR-LIKE: a store counts only if it traded in BOTH the current window AND the same window last year (qtd>0 AND qtd_ly>0), excluding it from BOTH sides otherwise. New stores (Attleborough, Billing Drive Thru, Olney — no LY) are out; the CLOSED 'Royal Leamington Spa' (aka Leamington Retail) is explicitly excluded; 'Leamington Parade' is a current LFL store and is included. Fix raised QTD YoY sales 7.6%→11.0% and transactions 0.9%→4.0% (18 LFL stores).",
   "Status is strictly binary: GREEN when actual ≥ plan, RED when below — no near-target band. Bench is green when ≥ 3.",
   "Google Health & Rate My Shift Health blend divisors (40 reviews / 4.6★ ; 70 submissions / 4.6★) are default assumptions — adjust if you prefer different volume targets.",
   "Plans (Matt's stated defaults): SPH Labour 50, Brew Crew Kudos 50%, Bench 3, NPAT 18%, Food GP% 71%. YoY Sales 12% / Transactions 5% on both tabs.",
