@@ -579,7 +579,16 @@ def pull_cos():
            "estate_gp_wk": _egp(lambda d: d == maxd) if maxd else None,
            "estate_gp_qtd": _egp(lambda d: d >= QSTART_S),
            "estate_gp_may": _egp(lambda d: MAY1_S <= d <= MAY31_S),
-           "estate_gp_wk_date": serial_to_iso(maxd) if maxd else None}
+           "estate_gp_wk_date": serial_to_iso(maxd) if maxd else None,
+           "estate_gp_by_week": {}}
+    # per-week estate GP (week-ending Sunday) for the quarterly-scorecard grid back-fill
+    wagg = {}
+    for ds, (sa, co) in agg.items():
+        dd = serial_to_date(ds)
+        if not dd: continue
+        we = (dd - datetime.timedelta(days=(dd.weekday() + 1) % 7)).isoformat()   # map to week-ending Sunday
+        a = wagg.setdefault(we, [0.0, 0.0]); a[0] += sa; a[1] += co
+    out["estate_gp_by_week"] = {we: round((sa - co) / sa * 100, 2) for we, (sa, co) in wagg.items() if sa}
     for st, (h, gp, wk) in latest.items():
         out["_week"] = str(wk); out["stores"][st] = {"holding_pct": h, "gp_pct": gp}
     W("cos_metrics.json", out, indent=1)
@@ -1278,18 +1287,18 @@ def pull_eos_scorecard():
     kudos_wk_pct = kudos_qtd_pct = None
     kudos_wk_n = kudos_qtd_n = kudos_total = kudos_wk_rows = 0
     bckh_latest = None
+    emp_emails = set(); bckh_rows = []
     try:
         emp_rows = sheet(SID["employees"], "'Employee List'!A2:D2000")
-        emp_emails = set()
         for r in emp_rows:
             if not r or not r[0]: continue
             em = (r[3] if len(r) > 3 and r[3] not in (None, "") else
                   (r[2] if len(r) > 2 and r[2] not in (None, "") else None))
             if em: emp_emails.add(str(em).strip().lower())
         kudos_total = len(emp_emails)
-        bckh = sheet(SID["f1"], "'BCKH'!A2:E20000")             # tail-safe; date col A, email col B
+        bckh_rows = sheet(SID["f1"], "'BCKH'!A2:E20000")        # tail-safe; date col A, email col B
         wk_emp = set(); qtd_emp = set()
-        for r in bckh:
+        for r in bckh_rows:
             if len(r) < 2 or r[1] in (None, ""): continue
             dt = parse_any_date(r[0]) if r[0] not in (None, "") else None
             if not dt: continue
@@ -1521,6 +1530,7 @@ def pull_eos_scorecard():
         "Food GP% uses the Cost of Sales estate GP% as a proxy until a company food-specific GP source exists.",
         "Social Media Engagement and New Starter Health are greyed TBC placeholders pending metric + target definitions.",
         "Each metric now shows an accountable OWNER (EOS-style): YoY Sales/Transactions & Food GP% = Rich; Google Health, Social Media & SPH Labour = Jon; Rate My Shift, Brew Crew Kudos, Bench & New Starter = Kel; F1 & Brand Audit = Claire. Net Profit After Tax is UNASSIGNED (shown as —) — Matt to confirm the owner (likely Matt/MD). Owners are a config block in gen_eos_scorecard.py.",
+        "NEW third tab 'Quarterly Scorecard' — classic EOS grid: the 13 metrics as rows (owner + plan) × each week of the quarter as columns, traffic-lit binary. Back-filled from source: BigQuery (sales, YoY sales/tx per week), COS master (estate GP + NPAT projection per week), F1 sheet (race score), Shift Ratings (RMS), Reviews (Google Health), BCKH (Kudos). SPH (no historical hours), Bench (point-in-time) and Brand Audit (sparse) fill going forward; Social Media & New Starter stay TBC. The grid reads weekly_history.csv.",
         "QTD CPH/SPH and the labour side of QTD NPAT now read from the committed weekly_history.csv (one row per week-ending, upserted each run — re-runs update, no dupes). Thin until several weeks accumulate; until then QTD ≈ the current week. YoY (BigQuery), Kudos QTD (BCKH), GP QTD (COS master) keep their own source-of-truth and are also logged to history.",
         "Manual inputs sheet 'Bewiched EOS Scorecard Inputs' (ID %s) must be shared (Viewer) with dashboards-bot@%s.iam.gserviceaccount.com for the automated run to read it." % (SID["eos"], PROJECT),
     ] + flags
@@ -1538,6 +1548,115 @@ def pull_eos_scorecard():
         "quarterly": quarterly,
         "flags": flags,
     }
+    # ---- BACK-FILL prior weeks of the quarter into weekly_history.csv (idempotent; cell-level) ----
+    # Week-endings (Sundays) from quarter start to cur_end.
+    q_weeks = []
+    _we = CUR_END
+    while _we >= QSTART:
+        q_weeks.append(_we); _we -= datetime.timedelta(days=7)
+    q_weeks = sorted(q_weeks)
+    def _wend(dt):     # map any date to its week-ending Sunday
+        return dt - datetime.timedelta(days=(dt.weekday() + 1) % 7)
+    bf = {w.isoformat(): {} for w in q_weeks}
+    # (a) BigQuery per-week: estate sales, LFL YoY sales/tx
+    try:
+        first = q_weeks[0].isoformat()
+        rows = bq(f"""
+          WITH weeks AS (SELECT we FROM UNNEST(GENERATE_DATE_ARRAY(DATE('{first}'), {CE}, INTERVAL 7 DAY)) we),
+          b AS (SELECT item_outlet_name s, DATE(sales_date) dd, id, SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
+                FROM {FLAT} WHERE DATE(sales_date) BETWEEN DATE_SUB(DATE('{first}'), INTERVAL 370 DAY) AND {CE}),
+          sw AS (SELECT w.we, x.s,
+                   SUM(IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 6 DAY) AND w.we, x.v,0)) cur,
+                   COUNT(DISTINCT IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 6 DAY) AND w.we, x.id,NULL)) curtx,
+                   SUM(IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 370 DAY) AND DATE_SUB(w.we,INTERVAL 364 DAY), x.v,0)) ly,
+                   COUNT(DISTINCT IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 370 DAY) AND DATE_SUB(w.we,INTERVAL 364 DAY), x.id,NULL)) lytx
+                 FROM weeks w CROSS JOIN b x GROUP BY w.we, x.s)
+          SELECT CAST(we AS STRING) we, ROUND(SUM(cur)) sales,
+                 ROUND(100*(SUM(IF(ly>0,cur,0))/NULLIF(SUM(IF(ly>0,ly,0)),0)-1),1) yoy_sales,
+                 ROUND(100*(SUM(IF(lytx>0,curtx,0))/NULLIF(SUM(IF(lytx>0,lytx,0)),0)-1),1) yoy_tx
+          FROM sw GROUP BY we""")
+        for r in rows:
+            w = r["we"]
+            if w in bf:
+                bf[w].update(estate_sales=r["sales"], yoy_sales_pct=r["yoy_sales"], yoy_tx_pct=r["yoy_tx"])
+    except Exception as e:
+        flags.append("Grid back-fill: BigQuery per-week sales/YoY failed (%s)." % str(e)[:70])
+    # (b) COS estate GP per week + NPAT projection (GP flex only; labour held at baseline for history)
+    gpw = jload("cos_metrics.json").get("estate_gp_by_week", {})
+    for w, g in gpw.items():
+        if w in bf and g is not None:
+            bf[w]["estate_gp_pct"] = g
+            bf[w]["npat_proj_pct"] = round(B["npat"] + (g - (gp_may if gp_may is not None else g)), 1)
+    # (c) F1 per week: average race Total Score (The Race: date col0, Total col18)
+    try:
+        for r in sheet(SID["f1"], "'The Race'!A1:AE3000")[1:]:
+            if len(r) < 19 or r[0] in (None, ""): continue
+            dt = parse_any_date(r[0])
+            if not dt: continue
+            w = _wend(dt).isoformat()
+            if w in bf: bf[w].setdefault("_f1", []).append(fnum(r[18]))
+        for w in bf:
+            xs = bf[w].pop("_f1", None)
+            if xs: bf[w]["f1_avg"] = round(sum(xs) / len(xs), 1)
+    except Exception as e:
+        flags.append("Grid back-fill: F1 per-week failed (%s)." % str(e)[:70])
+    # (d) RMS per week blend (Shift Ratings: date col0, rating col2)
+    try:
+        rmsw = {}
+        for r in sheet(SID["f1"], "'Shift Ratings'!A1:N20000")[1:]:
+            if not r or len(r) < 3 or r[1] in (None, ""): continue
+            dt = parse_any_date(r[0])
+            try: rt = float(r[2])
+            except Exception: continue
+            if not dt: continue
+            w = _wend(dt).isoformat()
+            if w in bf: rmsw.setdefault(w, []).append(rt)
+        for w, xs in rmsw.items():
+            if xs:
+                avg = sum(xs) / len(xs)
+                bf[w]["rms_pct"] = round((min(len(xs) / 70, 1) + min(avg / 4.6, 1)) / 2 * 100, 1)
+    except Exception as e:
+        flags.append("Grid back-fill: RMS per-week failed (%s)." % str(e)[:70])
+    # (e) Google Health per week blend (Reviews: star col1, time col3)
+    try:
+        gw = {}
+        rv = sheet(SID["reviews"], "Reviews!A1:D6000", unformatted=False)
+        if len(rv) >= 5999: rv += sheet(SID["reviews"], "Reviews!A6000:D20000", unformatted=False)
+        for r in rv[1:]:
+            if not r or not r[0]: continue
+            star = fnum(r[1], None) if len(r) > 1 and r[1] not in (None, "") else None
+            dt = parse_any_date(r[3]) if len(r) > 3 else None
+            if star is None or not dt: continue
+            w = _wend(dt).isoformat()
+            if w in bf: gw.setdefault(w, []).append(star)
+        for w, xs in gw.items():
+            if xs:
+                avg = sum(xs) / len(xs)
+                bf[w]["google_health_pct"] = round((min(len(xs) / 40, 1) + min(avg / 4.6, 1)) / 2 * 100, 1)
+    except Exception as e:
+        flags.append("Grid back-fill: Google per-week failed (%s)." % str(e)[:70])
+    # (f) Kudos per week: distinct employee-contributors that week / total employees (reuse bckh_rows + emp_emails)
+    if emp_emails and bckh_rows:
+        kw = {}
+        for r in bckh_rows:
+            if len(r) < 2 or r[1] in (None, ""): continue
+            dt = parse_any_date(r[0]) if r[0] not in (None, "") else None
+            if not dt: continue
+            em = str(r[1]).strip().lower()
+            if em in emp_emails:
+                w = _wend(dt).isoformat()
+                if w in bf: kw.setdefault(w, set()).add(em)
+        for w, es in kw.items():
+            bf[w]["kudos_pct"] = round(100 * len(es) / len(emp_emails), 1)
+    # merge back-fill into history (cell-level; current week overwritten by the primary upsert below)
+    bywk0 = {r.get("week_ending"): r for r in hist_rows}
+    for w, cells in bf.items():
+        row = bywk0.setdefault(w, {"week_ending": w})
+        for k, v in cells.items():
+            if v is not None: row[k] = v
+    hist_rows = list(bywk0.values())
+    n_bf_weeks = len(q_weeks)
+
     # ---- upsert this week's row into weekly_history.csv (dedupe by week_ending: re-runs UPDATE, not duplicate) ----
     def _hc(v): return "" if v is None else v
     new_row = {"week_ending": CUR_END.isoformat(), "estate_sales": round(estate_sales_wk),

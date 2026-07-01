@@ -101,6 +101,68 @@ wg, wr, wt = tally(weekly)
 qg, qr, qt = tally(quarterly)
 weekly_html    = "".join(widget(m) for m in weekly)
 quarterly_html = "".join(widget(m) for m in quarterly)
+
+# ---- Quarterly Scorecard grid (metrics as ROWS, quarter weeks as COLUMNS) from weekly_history.csv ----
+import csv as _csv
+GRID = [
+    ("YoY Sales Growth", "yoy_sales_pct", 12, "pct_signed"),
+    ("YoY Transactional Growth", "yoy_tx_pct", 5, "pct_signed"),
+    ("Google Health", "google_health_pct", 100, "pct0"),
+    ("Rate My Shift Health", "rms_pct", 100, "pct0"),
+    ("Brew Crew Kudos Participation", "kudos_pct", 50, "pct0"),
+    ("Social Media Engagement", None, None, "pct0"),
+    ("SPH Labour (incl holiday pay)", "sph", 50, "gbp1"),
+    ("Bench", None, 3, "num0"),
+    ("F1 Score", "f1_avg", 280, "num1"),
+    ("Brand Audit Score", "brand_audit", 4.6, "score2"),
+    ("Food GP%", "estate_gp_pct", 71, "pct1"),
+    ("Net Profit After Tax (projected)", "npat_proj_pct", 18, "pct1"),
+    ("New Starter Health", None, None, "pct0"),
+]
+_hp = os.path.join(HERE, "weekly_history.csv")
+_hist = []
+if os.path.exists(_hp):
+    try:
+        with open(_hp, newline="") as fh:
+            _hist = [r for r in _csv.DictReader(fh)]
+    except Exception:
+        _hist = []
+_hist = sorted(_hist, key=lambda r: r.get("week_ending", ""))
+def _wshort(iso):
+    try:
+        d = dt.date.fromisoformat(iso); return "%d/%-m" % (d.day, d.month)
+    except Exception:
+        return esc(iso)
+def _cell_stat(val, plan):
+    if val in (None, "") or plan is None: return "tbc"
+    try: v = float(val)
+    except Exception: return "tbc"
+    return "green" if v >= float(plan) else "red"
+def _cell_fmt(val, fm):
+    if val in (None, ""): return ""
+    try: return fmt_val(float(val), fm)
+    except Exception: return esc(val)
+_weeks = [r.get("week_ending", "") for r in _hist]
+_ghead = "".join(f'<th>{_wshort(w)}</th>' for w in _weeks)
+_gbody = ""
+_gg = _gr = 0
+for name, col, plan, fm in GRID:
+    owner = OWNERS.get(name) or "—"
+    plan_txt = "—" if plan is None else fmt_val(plan, fm)
+    cells = ""
+    for r in _hist:
+        val = r.get(col) if col else None
+        st = _cell_stat(val, plan)
+        if st == "green": _gg += 1
+        elif st == "red": _gr += 1
+        txt = _cell_fmt(val, fm) if st != "tbc" else ""
+        cells += f'<td class="c-{st}">{txt}</td>'
+    _gbody += (f'<tr><td class="gm"><span class="gmn">{esc(name)}</span>'
+               f'<span class="gmo">Owner: <b>{esc(owner)}</b></span></td>'
+               f'<td class="gp">{plan_txt}</td>{cells}</tr>')
+grid_html = (f'<table class="scgrid"><thead><tr><th class="gm">Measurable</th>'
+             f'<th class="gp">Plan</th>{_ghead}</tr></thead><tbody>{_gbody}</tbody></table>')
+n_grid_weeks = len(_weeks)
 flags = D.get("flags", [])
 flags_html = "".join("<li>%s</li>" % esc(f) for f in flags)
 WK = esc(D.get("week_label", ""))
@@ -163,6 +225,17 @@ HTML = f"""<!DOCTYPE html>
   .info{{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-top:18px}}
   .info h2{{margin:0 0 8px;font-size:15px;color:var(--brown)}} .info ul{{margin:6px 0 0;padding-left:18px}} .info li{{font-size:12.5px;line-height:1.5;margin:6px 0}}
   .info.notebox{{background:#fff8ec;border-color:#f0e0bf}} .info.notebox h2{{color:#7a5e1e}}
+  .gridwrap{{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:6px;box-shadow:0 1px 2px rgba(80,50,30,.04)}}
+  table.scgrid{{border-collapse:collapse;font-size:12px;width:100%;min-width:820px}}
+  table.scgrid th,table.scgrid td{{padding:6px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}}
+  table.scgrid thead th{{font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:700;position:sticky;top:0;background:#fff;z-index:1}}
+  th.gm,td.gm{{text-align:left;position:sticky;left:0;background:#fff;min-width:220px;border-right:1px solid var(--line);z-index:2}}
+  table.scgrid thead th.gm{{z-index:3}}
+  td.gm .gmn{{font-weight:800;display:block;line-height:1.2}} td.gm .gmo{{font-size:10.5px;color:var(--muted)}} td.gm .gmo b{{color:var(--brown)}}
+  th.gp,td.gp{{font-weight:800;color:var(--brown);border-right:1px solid var(--line);min-width:52px}}
+  td.c-green{{background:var(--greenbg);color:var(--green);font-weight:700}}
+  td.c-red{{background:var(--redbg);color:var(--red);font-weight:700}}
+  td.c-tbc{{background:var(--greybg);color:#b9ad9f}}
   footer{{color:var(--muted);font-size:12px;margin-top:26px;line-height:1.6}}
 </style>
 </head>
@@ -184,6 +257,7 @@ HTML = f"""<!DOCTYPE html>
   <div class="tabs">
     <button class="tab active" data-pane="weekly">Weekly <span class="cnt">{len(weekly)} measurables</span></button>
     <button class="tab" data-pane="quarterly">Quarterly <span class="cnt">{len(quarterly)} measurables</span></button>
+    <button class="tab" data-pane="grid">Quarterly Scorecard <span class="cnt">{n_grid_weeks}-week grid</span></button>
   </div>
 
   <section class="pane active" id="pane-weekly">
@@ -200,6 +274,14 @@ HTML = f"""<!DOCTYPE html>
       <span class="tallychips"><span><span class="dot green"></span>{qg} on plan</span><span><span class="dot red"></span>{qr} off plan</span><span><span class="dot tbc"></span>{qt} TBC / awaiting</span></span>
     </div>
     <div class="grid">{quarterly_html}</div>
+  </section>
+
+  <section class="pane" id="pane-grid">
+    <div class="panehead">
+      <span class="lbl">Quarter: <b>{QL}</b> · {n_grid_weeks} week{'' if n_grid_weeks==1 else 's'} · one column per week-ending · each cell traffic-lit vs plan</span>
+    </div>
+    <div class="gridwrap">{grid_html}</div>
+    <div class="legend"><span><span class="sw" style="background:var(--greenbg);border:1px solid #cfe6d8"></span>≥ plan</span><span><span class="sw" style="background:var(--redbg);border:1px solid #eccfca"></span>below plan</span><span><span class="sw" style="background:var(--greybg);border:1px solid var(--line)"></span>no data / not defined (Bench is point-in-time; Social Media &amp; New Starter are TBC; SPH &amp; Brand Audit fill going forward). Food GP% row shows the estate blended GP per week.</span></div>
   </section>
 
   <div class="legend">
