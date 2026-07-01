@@ -1256,10 +1256,12 @@ def pull_eos_scorecard():
     gps = [v["gp_pct"] for v in cos.values() if v.get("gp_pct")]
     fg = round(sum(gps) / len(gps), 1) if gps else None
     # ---- derived weekly: YoY sales/tx, last completed week vs same week last year (LFL) ----
-    lfl = [r for r in rec.values() if (r.get("lw25") or 0) > 0]          # exclude new sites (no LY week)
+    # LFL = trading in BOTH the current week and the same week last year (excludes new sites AND closed sites);
+    # rec already omits the closed "Royal Leamington Spa" (normalize() maps it to None).
+    lfl = [r for r in rec.values() if (r.get("lw25") or 0) > 0 and (r.get("lw26") or 0) > 0]
     slw = sum(r.get("lw26", 0) or 0 for r in lfl); sly = sum(r.get("lw25", 0) or 0 for r in lfl)
     yoy_sales_wk = round(100 * (slw / sly - 1), 1) if sly else None
-    lflx = [r for r in lfl if (r.get("tx25") or 0) > 0]
+    lflx = [r for r in lfl if (r.get("tx25") or 0) > 0 and (r.get("tx26") or 0) > 0]
     tlw = sum(r.get("tx26", 0) or 0 for r in lflx); tly = sum(r.get("tx25", 0) or 0 for r in lflx)
     yoy_tx_wk = round(100 * (tlw / tly - 1), 1) if tly else None
     wk_ref = "w/c %s vs %d" % (LASTWK_MON.strftime("%-d %b"), CUR_END.year - 1)
@@ -1411,16 +1413,17 @@ def pull_eos_scorecard():
           WITH b AS (SELECT item_outlet_name s, DATE(sales_date) dd, id,
                             SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
                      FROM {FLAT}
-                     WHERE DATE(sales_date) BETWEEN {qstart_ly_lit} AND {CE}),
+                     WHERE DATE(sales_date) BETWEEN {qstart_ly_lit} AND {CE}
+                       AND item_outlet_name NOT IN ('Royal Leamington Spa','Leamington Retail','Leamington Spa')),
           p AS (SELECT s,
                   SUM(IF(dd BETWEEN {qstart_lit} AND {CE}, v, 0)) qtd,
                   COUNT(DISTINCT IF(dd BETWEEN {qstart_lit} AND {CE}, id, NULL)) qtx,
                   SUM(IF(dd BETWEEN {qstart_ly_lit} AND {d(364)}, v, 0)) qtd_ly,
                   COUNT(DISTINCT IF(dd BETWEEN {qstart_ly_lit} AND {d(364)}, id, NULL)) qtx_ly
                 FROM b GROUP BY s)
-          SELECT ROUND(100*(SUM(IF(qtd_ly>0,qtd,0))/NULLIF(SUM(IF(qtd_ly>0,qtd_ly,0)),0)-1),1) yoy_sales,
-                 ROUND(100*(SUM(IF(qtx_ly>0,qtx,0))/NULLIF(SUM(IF(qtx_ly>0,qtx_ly,0)),0)-1),1) yoy_tx,
-                 COUNTIF(qtd_ly>0) lfl_stores
+          SELECT ROUND(100*(SUM(IF(qtd>0 AND qtd_ly>0,qtd,0))/NULLIF(SUM(IF(qtd>0 AND qtd_ly>0,qtd_ly,0)),0)-1),1) yoy_sales,
+                 ROUND(100*(SUM(IF(qtd>0 AND qtd_ly>0,qtx,0))/NULLIF(SUM(IF(qtd>0 AND qtd_ly>0,qtx_ly,0)),0)-1),1) yoy_tx,
+                 COUNTIF(qtd>0 AND qtd_ly>0) lfl_stores
           FROM p""")
         if rows:
             yoy_sales = rows[0].get("yoy_sales"); yoy_tx = rows[0].get("yoy_tx"); lfl_n = rows[0].get("lfl_stores")
@@ -1564,7 +1567,8 @@ def pull_eos_scorecard():
         rows = bq(f"""
           WITH weeks AS (SELECT we FROM UNNEST(GENERATE_DATE_ARRAY(DATE('{first}'), {CE}, INTERVAL 7 DAY)) we),
           b AS (SELECT item_outlet_name s, DATE(sales_date) dd, id, SAFE_CAST(item_line_total_after_discount AS FLOAT64) v
-                FROM {FLAT} WHERE DATE(sales_date) BETWEEN DATE_SUB(DATE('{first}'), INTERVAL 370 DAY) AND {CE}),
+                FROM {FLAT} WHERE DATE(sales_date) BETWEEN DATE_SUB(DATE('{first}'), INTERVAL 370 DAY) AND {CE}
+                  AND item_outlet_name NOT IN ('Royal Leamington Spa','Leamington Retail','Leamington Spa')),
           sw AS (SELECT w.we, x.s,
                    SUM(IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 6 DAY) AND w.we, x.v,0)) cur,
                    COUNT(DISTINCT IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 6 DAY) AND w.we, x.id,NULL)) curtx,
@@ -1572,8 +1576,8 @@ def pull_eos_scorecard():
                    COUNT(DISTINCT IF(x.dd BETWEEN DATE_SUB(w.we,INTERVAL 370 DAY) AND DATE_SUB(w.we,INTERVAL 364 DAY), x.id,NULL)) lytx
                  FROM weeks w CROSS JOIN b x GROUP BY w.we, x.s)
           SELECT CAST(we AS STRING) we, ROUND(SUM(cur)) sales,
-                 ROUND(100*(SUM(IF(ly>0,cur,0))/NULLIF(SUM(IF(ly>0,ly,0)),0)-1),1) yoy_sales,
-                 ROUND(100*(SUM(IF(lytx>0,curtx,0))/NULLIF(SUM(IF(lytx>0,lytx,0)),0)-1),1) yoy_tx
+                 ROUND(100*(SUM(IF(cur>0 AND ly>0,cur,0))/NULLIF(SUM(IF(cur>0 AND ly>0,ly,0)),0)-1),1) yoy_sales,
+                 ROUND(100*(SUM(IF(cur>0 AND ly>0,curtx,0))/NULLIF(SUM(IF(cur>0 AND ly>0,lytx,0)),0)-1),1) yoy_tx
           FROM sw GROUP BY we""")
         for r in rows:
             w = r["we"]
