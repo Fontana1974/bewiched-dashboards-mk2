@@ -111,7 +111,7 @@ GRID = [
     ("Rate My Shift Health", "rms_pct", 100, "pct0"),
     ("Brew Crew Kudos Participation", "kudos_pct", 50, "pct0"),
     ("Social Media Engagement", None, None, "pct0"),
-    ("SPH Labour (incl holiday pay)", "sph", 50, "gbp1"),
+    ("SPH Labour (incl holiday pay)", "sph", 55, "gbp1"),
     ("Bench", None, 3, "num0"),
     ("F1 Score", "f1_avg", 280, "num1"),
     ("Brand Audit Score", "brand_audit", 4.6, "score2"),
