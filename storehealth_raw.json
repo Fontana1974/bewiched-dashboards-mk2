@@ -3,24 +3,24 @@
  "_basis": "Quarter-to-date (from 2026-04-01). NOT last week.",
  "rms": {
   "Corby": [
-   69,
-   3.435
+   70,
+   3.414
   ],
   "Glenvale Drive Thru": [
-   62,
+   63,
    3.016
   ],
   "Northampton": [
-   29,
-   4.69
+   30,
+   4.633
   ],
   "Kettering": [
    25,
    4.52
   ],
   "HOE Balsall Common": [
-   40,
-   4.925
+   42,
+   4.833
   ],
   "Northampton Drive-Thru": [
    44,
@@ -31,8 +31,8 @@
    4.333
   ],
   "Rugby": [
-   70,
-   4.929
+   72,
+   4.931
   ],
   "Market Harborough": [
    20,
@@ -75,16 +75,16 @@
    4.571
   ],
   "Billing Drive Thru": [
-   28,
-   4.821
+   30,
+   4.833
   ],
   "Olney": [
-   4,
-   4.0
+   5,
+   3.6
   ],
   "Attleborough": [
-   38,
-   4.658
+   39,
+   4.615
   ]
  },
  "google": {
@@ -133,11 +133,11 @@
    4.909
   ],
   "Rothwell": [
-   1,
+   2,
    5.0
   ],
   "Lower Heathcote": [
-   2,
+   4,
    5.0
   ],
   "Peterborough Fletton Quays": [
@@ -146,6 +146,10 @@
   ],
   "Rushden Lakes": [
    2,
+   5.0
+  ],
+  "Peterborough Bridge Street": [
+   1,
    5.0
   ]
  }

@@ -35,8 +35,8 @@
    "g_health": 2.83,
    "g_rag": "red",
    "g_stale": false,
-   "r_n": 38,
-   "r_avg": 4.66,
+   "r_n": 39,
+   "r_avg": 4.62,
    "r_rag": "green"
   },
   "Billing Drive Thru": {
@@ -46,8 +46,8 @@
    "g_health": 3.88,
    "g_rag": "green",
    "g_stale": false,
-   "r_n": 28,
-   "r_avg": 4.82,
+   "r_n": 30,
+   "r_avg": 4.83,
    "r_rag": "green"
   },
   "Burton Latimer": {
@@ -68,8 +68,8 @@
    "g_health": 3.4,
    "g_rag": "green",
    "g_stale": false,
-   "r_n": 69,
-   "r_avg": 3.44,
+   "r_n": 70,
+   "r_avg": 3.41,
    "r_rag": "red"
   },
   "Glenvale Drive Thru": {
@@ -79,7 +79,7 @@
    "g_health": 4.32,
    "g_rag": "green",
    "g_stale": false,
-   "r_n": 62,
+   "r_n": 63,
    "r_avg": 3.02,
    "r_rag": "red"
   },
@@ -88,8 +88,8 @@
    "g_health": null,
    "g_rag": "na",
    "g_stale": true,
-   "r_n": 40,
-   "r_avg": 4.92,
+   "r_n": 42,
+   "r_avg": 4.83,
    "r_rag": "green"
   },
   "Higham Ferrers": {
@@ -122,11 +122,11 @@
    "r_rag": "green"
   },
   "Lower Heathcote": {
-   "g_n": 2,
+   "g_n": 4,
    "g_avg": 5.0,
    "g_target": 8,
-   "g_health": 3.12,
-   "g_rag": "red",
+   "g_health": 3.75,
+   "g_rag": "green",
    "g_stale": false,
    "r_n": 26,
    "r_avg": 4.15,
@@ -148,8 +148,8 @@
    "g_health": null,
    "g_rag": "na",
    "g_stale": true,
-   "r_n": 29,
-   "r_avg": 4.69,
+   "r_n": 30,
+   "r_avg": 4.63,
    "r_rag": "green"
   },
   "Northampton Drive-Thru": {
@@ -170,15 +170,17 @@
    "g_health": 3.5,
    "g_rag": "green",
    "g_stale": false,
-   "r_n": 4,
-   "r_avg": 4.0,
-   "r_rag": "amber"
+   "r_n": 5,
+   "r_avg": 3.6,
+   "r_rag": "red"
   },
   "Peterborough Bridge Street": {
-   "g_n": null,
-   "g_health": null,
-   "g_rag": "na",
-   "g_stale": true,
+   "g_n": 1,
+   "g_avg": 5.0,
+   "g_target": 18,
+   "g_health": 2.64,
+   "g_rag": "red",
+   "g_stale": false,
    "r_n": 23,
    "r_avg": 4.7,
    "r_rag": "green"
@@ -195,10 +197,10 @@
    "r_rag": "amber"
   },
   "Rothwell": {
-   "g_n": 1,
+   "g_n": 2,
    "g_avg": 5.0,
    "g_target": 12,
-   "g_health": 2.71,
+   "g_health": 2.92,
    "g_rag": "red",
    "g_stale": false,
    "r_n": 17,
@@ -212,7 +214,7 @@
    "g_health": 2.9,
    "g_rag": "red",
    "g_stale": false,
-   "r_n": 70,
+   "r_n": 72,
    "r_avg": 4.93,
    "r_rag": "green"
   },
