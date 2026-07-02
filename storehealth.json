@@ -164,10 +164,10 @@
    "r_rag": "amber"
   },
   "Olney": {
-   "g_n": 4,
+   "g_n": 5,
    "g_avg": 5.0,
    "g_target": 10,
-   "g_health": 3.5,
+   "g_health": 3.75,
    "g_rag": "green",
    "g_stale": false,
    "r_n": 5,
