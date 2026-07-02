@@ -147,6 +147,8 @@ SID = dict(
     eos="1HimYAjZg4zlMQG91-KUefkeYMPvrU4ddVuO2IuERTqg",  # Bewiched EOS Scorecard Inputs (manual rows)
     npat_pnl="1RTsnnz5F9XIdkg4j8m8MiuKqeAvZaAWcndbFifNNLhM",  # Bewiched Ltd by-site monthly P&L (currently "Bewiched May 2026 P&L")
     employees="11QhNGGM5BIJrO1NOflso5I1VnSzlWGWcC5FbXJoLQgM",  # Employee List (headcount for Brew Crew Kudos participation)
+    maint_jobs="1sNuY1RSVZ4hV1tHSjB-q97V1Ey_53SdmJ2cvHfZiE20",   # Maintenance Jobs wb: reactive "Maintenance Jobs" + "Coffee Machine Services" tabs
+    maint_planned="14z4MWGcKH8AOg3240_IO7n4Apo2EZWfkT69JbQjc4zw", # "Bewiched - Planned Maintenance" (planned visit log, "Maintenance" tab)
     # Brew Crew Kudos contributors live in the F1 workbook (SID["f1"]) tab "BCKH"
 )
 
@@ -1167,6 +1169,29 @@ def pull_compliance():
 RUN_START = datetime.datetime.now().timestamp()
 GEN_LEFTOVER = {}
 
+def pull_maintenance():
+    """Maintenance dashboard feed (reactive jobs / planned visits / coffee servicing / audit
+    action plans). Sources are Google Sheets read live under the service account. Writes
+    maintenance.json for gen_maintenance.py. NON-FATAL: any source that 403s (not yet shared
+    with the SA) or errors leaves the section degraded and the run continues; the last-good
+    maintenance.json (committed seed) stays in place so the page still renders."""
+    try:
+        from gen_maintenance import compute_maintenance
+        reactive = sheet(SID["maint_jobs"],    "'Maintenance Jobs'!A1:H5000")
+        coffee   = sheet(SID["maint_jobs"],    "'Coffee Machine Services'!A1:E2000")
+        planned  = sheet(SID["maint_planned"], "'Maintenance'!A1:C3000")
+        audit    = sheet(SID["audit"],         "'Brand Audit Date (NEW24/25)'!A1:L4000")
+        out = compute_maintenance(reactive, coffee, planned, audit, CUR_END)
+        W("maintenance.json", out, ensure_ascii=False)
+        co = out["DATA"]["company"]["reactive"]
+        print("[pull] maintenance: %d reactive(90d) %d planned stores, %d coffee w/record (%d overdue), %d audit action-plans"
+              % (co["total"], out["DATA"]["company"]["planned"]["nstores"],
+                 out["CMS"]["nstores"], out["CMS"]["overdue"], out["audit_count"]))
+    except Exception as e:
+        print("[pull] maintenance SKIPPED (source unreadable by SA? share with %s) - %s"
+              % ("dashboards-bot@bewiched-coffee-368116.iam.gserviceaccount.com", e))
+
+
 def pull_eos_scorecard():
     """EOS Scorecard (Weekly + Quarterly) -> eos_scorecard.json (rendered by gen_eos_scorecard.py).
     LIVE  : YoY Sales / Transactional growth (BigQuery, QTD LFL).
@@ -1726,6 +1751,9 @@ def build():
     if os.path.exists(os.path.join(HERE, "gen_eos_scorecard.py")) and \
        os.path.exists(os.path.join(HERE, "eos_scorecard.json")):
         _run("gen_eos_scorecard.py")
+    if os.path.exists(os.path.join(HERE, "gen_maintenance.py")) and \
+       os.path.exists(os.path.join(HERE, "maintenance.json")):
+        _run("gen_maintenance.py")
     # B9 store sales + E patcher (LAST)
     _run("build_newsite_sales.py")
     _run("patch_newsite.py")
@@ -1811,6 +1839,7 @@ def pulls():
     pull_sl_raws()            # sl_*_raw.json (2)
     pull_txq_raws()           # txq_*_raw.json (2)
     pull_eos_scorecard()      # eos_scorecard.json (EOS Weekly+Quarterly scorecard)
+    pull_maintenance()        # maintenance.json (reactive/planned/coffee/audit)  [non-fatal]
 
 
 def main():
