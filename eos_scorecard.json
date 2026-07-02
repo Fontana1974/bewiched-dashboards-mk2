@@ -1,6 +1,6 @@
 {
  "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
- "generated": "02 Jul 2026, 10:01",
+ "generated": "02 Jul 2026, 10:27",
  "cur_end": "2026-06-28",
  "week_label": "w/c 22 Jun 2026",
  "quarter_label": "Q2 2026 (Apr–Jun)",
@@ -134,25 +134,25 @@
    "id": "food_gp_wk",
    "name": "Food GP%",
    "plan": 71,
-   "actual": 71.1,
+   "actual": 69.4,
    "unit": "%",
    "fmt": "pct1",
    "dir": "high",
    "source": "derived",
-   "detail": "Cost-of-Sales latest week (ending 2026-06-21), estate GP%",
-   "note": "PROXY: company food-specific GP% not yet sourced — weekly CoS estate GP% (posts a week in arrears)."
+   "detail": "Cost-of-Sales estate Gross Profit% (col Q), latest week ending 2026-06-29",
+   "note": "Estate Gross Profit% from the Cost-of-Sales sheet (col Q, sales-weighted across stores)."
   },
   {
    "id": "npat_wk",
    "name": "Net Profit After Tax (projected)",
    "plan": 18,
-   "actual": 10.0,
+   "actual": 7.2,
    "unit": "%",
    "fmt": "pct1",
    "dir": "high",
    "source": "derived",
-   "detail": "Weekly flex · baseline 7.9% · GP +2.1pp · labour +0.0pp",
-   "note": "Projected (GP + labour flex off the May 2026 P&L). NPAT% = baseline 7.9% + (estate GP% − May 2026 baseline) − (labour% − baseline). Baseline: product GP 66.1%, labour 33.9%, admin 24.3% (held), avg labour £19.53/hr. GP movement = estate-wide blended GP from the COS master tab (CoG basis; May 2026 baseline 73.96%, latest week 76.03%, QTD 74.21%). Labour flexes via planner actual CPH £57.7 ÷ baseline £57.7 (avg £19.53/hr ÷ live CPH). Weekly CPH = this week's planner CPH; QTD CPH £57.7 is hours-weighted from weekly_history.csv (13 weeks so far)."
+   "detail": "Weekly flex · baseline 7.9% · GP -0.7pp · labour +0.0pp",
+   "note": "Projected (GP + labour flex off the May 2026 P&L). NPAT% = baseline 7.9% + (estate GP% − May 2026 baseline) − (labour% − baseline). Baseline: product GP 66.1%, labour 33.9%, admin 24.3% (held), avg labour £19.53/hr. GP movement = estate Gross Profit% from the CoS sheet (col Q, sales-weighted; May 2026 baseline 70.11%, latest week 69.4%, QTD 69.98%). Labour flexes via planner actual CPH £57.7 ÷ baseline £57.7 (avg £19.53/hr ÷ live CPH). Weekly CPH = this week's planner CPH; QTD CPH £57.7 is hours-weighted from weekly_history.csv (13 weeks so far)."
   },
   {
    "id": "new_starter_health_wk",
@@ -294,25 +294,25 @@
    "id": "food_gp",
    "name": "Food GP%",
    "plan": 71,
-   "actual": 71.1,
+   "actual": 69.98,
    "unit": "%",
    "fmt": "pct1",
    "dir": "high",
    "source": "derived",
-   "detail": "Estate GP% from Cost of Sales (commercial stores)",
-   "note": "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."
+   "detail": "Estate Gross Profit% (col Q) from Cost of Sales, quarter-to-date (sales-weighted)",
+   "note": "Estate Gross Profit% from the Cost-of-Sales sheet (col Q, sales-weighted), quarter-to-date."
   },
   {
    "id": "npat",
    "name": "Net Profit After Tax (projected)",
    "plan": 18,
-   "actual": 8.1,
+   "actual": 7.8,
    "unit": "%",
    "fmt": "pct1",
    "dir": "high",
    "source": "derived",
-   "detail": "QTD flex · baseline 7.9% · GP +0.2pp · labour +0.0pp",
-   "note": "Projected (GP + labour flex off the May 2026 P&L). NPAT% = baseline 7.9% + (estate GP% − May 2026 baseline) − (labour% − baseline). Baseline: product GP 66.1%, labour 33.9%, admin 24.3% (held), avg labour £19.53/hr. GP movement = estate-wide blended GP from the COS master tab (CoG basis; May 2026 baseline 73.96%, latest week 76.03%, QTD 74.21%). Labour flexes via planner actual CPH £57.7 ÷ baseline £57.7 (avg £19.53/hr ÷ live CPH). Weekly CPH = this week's planner CPH; QTD CPH £57.7 is hours-weighted from weekly_history.csv (13 weeks so far)."
+   "detail": "QTD flex · baseline 7.9% · GP -0.1pp · labour +0.0pp",
+   "note": "Projected (GP + labour flex off the May 2026 P&L). NPAT% = baseline 7.9% + (estate GP% − May 2026 baseline) − (labour% − baseline). Baseline: product GP 66.1%, labour 33.9%, admin 24.3% (held), avg labour £19.53/hr. GP movement = estate Gross Profit% from the CoS sheet (col Q, sales-weighted; May 2026 baseline 70.11%, latest week 69.4%, QTD 69.98%). Labour flexes via planner actual CPH £57.7 ÷ baseline £57.7 (avg £19.53/hr ÷ live CPH). Weekly CPH = this week's planner CPH; QTD CPH £57.7 is hours-weighted from weekly_history.csv (13 weeks so far)."
   },
   {
    "id": "new_starter_health",
@@ -489,12 +489,88 @@
    "basis": "Cost-of-Sales latest week, per store (stores reporting CoS only)",
    "rows": [
     {
+     "store": "Northampton Drive-Thru",
+     "value": 69.7
+    },
+    {
+     "store": "Rushden Lakes",
+     "value": 66.9
+    },
+    {
+     "store": "Kettering",
+     "value": 71.0
+    },
+    {
+     "store": "Corby",
+     "value": 70.3
+    },
+    {
+     "store": "Peterborough Bridge Street",
+     "value": 70.4
+    },
+    {
+     "store": "Rugby",
+     "value": 70.4
+    },
+    {
+     "store": "Wellingborough",
+     "value": 71.8
+    },
+    {
+     "store": "Rothwell",
+     "value": 69.0
+    },
+    {
+     "store": "Northampton",
+     "value": 70.4
+    },
+    {
+     "store": "Wellingborough Train Station",
+     "value": 54.2
+    },
+    {
+     "store": "Higham Ferrers",
+     "value": 68.0
+    },
+    {
+     "store": "HOE Balsall Common",
+     "value": 70.1
+    },
+    {
+     "store": "Burton Latimer",
+     "value": 69.0
+    },
+    {
+     "store": "Peterborough Fletton Quays",
+     "value": 67.0
+    },
+    {
+     "store": "Lower Heathcote",
+     "value": 72.5
+    },
+    {
+     "store": "Market Harborough",
+     "value": 70.9
+    },
+    {
      "store": "Leamington Parade",
-     "value": 73.1
+     "value": 72.7
     },
     {
      "store": "Glenvale Drive Thru",
-     "value": 69.1
+     "value": 68.6
+    },
+    {
+     "store": "Olney",
+     "value": 71.5
+    },
+    {
+     "store": "Attleborough",
+     "value": 67.9
+    },
+    {
+     "store": "Billing Drive Thru",
+     "value": 67.8
     }
    ],
    "plan": null
@@ -1097,80 +1173,80 @@
   "atv_basis": "Last completed week sales ÷ transactions (per store)",
   "food_attach_per_store": [
    {
-    "store": "Glenvale Drive Thru",
-    "value": 24.0
-   },
-   {
     "store": "Northampton Drive-Thru",
     "value": 24.2
-   },
-   {
-    "store": "Attleborough",
-    "value": 35.2
    },
    {
     "store": "Market Harborough",
     "value": 29.4
    },
    {
-    "store": "Rushden Lakes",
-    "value": 25.6
-   },
-   {
-    "store": "HOE Balsall Common",
-    "value": 32.3
-   },
-   {
-    "store": "Leamington Parade",
-    "value": 25.1
-   },
-   {
-    "store": "Billing Drive Thru",
-    "value": 27.5
-   },
-   {
     "store": "Kettering",
     "value": 21.6
-   },
-   {
-    "store": "Peterborough Bridge Street",
-    "value": 29.4
-   },
-   {
-    "store": "Northampton",
-    "value": 26.0
-   },
-   {
-    "store": "Rugby",
-    "value": 23.4
-   },
-   {
-    "store": "Lower Heathcote",
-    "value": 21.4
-   },
-   {
-    "store": "Corby",
-    "value": 24.6
-   },
-   {
-    "store": "Wellingborough",
-    "value": 12.1
-   },
-   {
-    "store": "Olney",
-    "value": 22.8
    },
    {
     "store": "Rothwell",
     "value": 17.9
    },
    {
+    "store": "Billing Drive Thru",
+    "value": 27.5
+   },
+   {
+    "store": "Lower Heathcote",
+    "value": 21.4
+   },
+   {
+    "store": "HOE Balsall Common",
+    "value": 32.3
+   },
+   {
+    "store": "Rushden Lakes",
+    "value": 25.6
+   },
+   {
+    "store": "Glenvale Drive Thru",
+    "value": 24.0
+   },
+   {
     "store": "Burton Latimer",
     "value": 25.2
    },
    {
+    "store": "Wellingborough",
+    "value": 12.1
+   },
+   {
+    "store": "Rugby",
+    "value": 23.4
+   },
+   {
+    "store": "Corby",
+    "value": 24.6
+   },
+   {
+    "store": "Leamington Parade",
+    "value": 25.1
+   },
+   {
+    "store": "Peterborough Bridge Street",
+    "value": 29.4
+   },
+   {
+    "store": "Olney",
+    "value": 22.8
+   },
+   {
     "store": "Peterborough Fletton Quays",
     "value": 34.0
+   },
+   {
+    "store": "Attleborough",
+    "value": 35.2
+   },
+   {
+    "store": "Northampton",
+    "value": 26.0
    },
    {
     "store": "Higham Ferrers",
