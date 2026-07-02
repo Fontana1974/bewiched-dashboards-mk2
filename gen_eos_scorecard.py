@@ -168,6 +168,171 @@ flags_html = "".join("<li>%s</li>" % esc(f) for f in flags)
 WK = esc(D.get("week_label", ""))
 QL = esc(D.get("quarter_label", ""))
 
+# ============================ Metric detail tab (selector) ============================
+# Static, non-data config. Definitions = one-liner what-it-measures; CALCS = plain-terms formula.
+PS = D.get("per_store", {})
+DEFINITIONS = {
+    "YoY Sales Growth": "Like-for-like sales growth versus the same period last year.",
+    "YoY Transactional Growth": "Like-for-like transaction (order count) growth versus last year.",
+    "Google Health": "Volume and quality of Google reviews, blended into a 0–100 health score.",
+    "Rate My Shift Health": "Volume and score of Rate-My-Shift submissions, blended into a 0–100 health score.",
+    "Brew Crew Kudos Participation": "Share of employees who gave peer kudos in the period.",
+    "Social Media Engagement": "Engagement across Bewiched social channels (metric still to be defined).",
+    "SPH Labour (incl holiday pay)": "Sales generated per labour hour, including holiday pay.",
+    "Bench": "How many stores have a named, ready successor — management bench strength.",
+    "F1 Score": "Average F1 'race' total score across the estate — operational excellence.",
+    "Brand Audit Score": "Average brand-audit score out of 5.",
+    "Food GP%": "Gross-profit margin from Cost of Sales (food GP proxy).",
+    "Net Profit After Tax (projected)": "Projected net-profit margin after tax, flexed off the latest P&L.",
+    "New Starter Health": "Onboarding and retention health of new starters (metric still to be defined).",
+}
+CALCS = {
+    "YoY Sales Growth": "Σ this-period sales ÷ Σ same-period-last-year sales − 1, across stores trading in BOTH periods (like-for-like). New and closed sites are excluded.",
+    "YoY Transactional Growth": "Same like-for-like basis as sales, but using distinct order counts instead of value.",
+    "Google Health": "Average of (reviews ÷ 40) and (rating ÷ 4.6), each capped at 100%, ×100. The QTD volume divisor scales by the number of weeks in the quarter.",
+    "Rate My Shift Health": "Average of (submissions ÷ 70) and (average score ÷ 4.6), each capped at 100%, ×100. The QTD volume divisor scales by weeks in the quarter.",
+    "Brew Crew Kudos Participation": "Distinct employees who gave kudos (BCKH tab, matched by email to the Employee List) ÷ total employee headcount.",
+    "Social Media Engagement": "Not yet defined — awaiting the metric definition and target.",
+    "SPH Labour (incl holiday pay)": "Estate sales ÷ labour hours used (from the area planners, Section A), hours-weighted. QTD is hours-weighted across the quarter's weeks in weekly_history.csv.",
+    "Bench": "Count of stores with at least one named successor in the HRP 'Bench Manager' / pipeline columns (point-in-time). Green estate-wide when ≥ 3 stores have one.",
+    "F1 Score": "Average of each store's race Total Score. Weekly = last completed week's race; QTD = quarter-to-date average.",
+    "Brand Audit Score": "Estate average of store brand-audit scores logged in the period, out of 5.",
+    "Food GP%": "(Turnover − cost of goods) ÷ turnover from the Cost-of-Sales master (estate proxy; posts roughly one week in arrears).",
+    "Net Profit After Tax (projected)": "Baseline 7.9% (May P&L) + GP flex (estate GP% − baseline) − labour flex (labour% − baseline, via live CPH). A projection, not a booked figure.",
+    "New Starter Health": "Not yet defined — awaiting the metric definition and target.",
+}
+# metric name -> (history column, fmt) for the 13-week trend, reusing the GRID mapping
+HIST_COL = {name: (col, fm) for name, col, _pl, fm in GRID}
+
+def _hnum(x):
+    try: return float(x) if x not in (None, "") else None
+    except Exception: return None
+
+def _cellcls(v, plan, dirn):
+    if v is None or plan is None: return "tbc"
+    return ("green" if v >= plan else "red") if dirn == "high" else ("green" if v <= plan else "red")
+
+def trend_svg(name, plan, dirn):
+    col, fm = HIST_COL.get(name, (None, "num1"))
+    if not col:
+        return ('<div class="md-note">History building — this measure is not banked in the weekly '
+                'history yet (fills going forward).</div>')
+    series = [(_wshort(r.get("week_ending", "")), _hnum(r.get(col))) for r in _hist]
+    vals = [v for _, v in series if v is not None]
+    if not vals:
+        return '<div class="md-note">History building — no values banked for this measure yet.</div>'
+    n = len(series)
+    W, H, padL, padR, padT, padB = 660, 190, 46, 12, 14, 30
+    plotW = W - padL - padR; plotH = H - padT - padB
+    ref = ([plan] if plan is not None else [])
+    lo = min(vals + ref + [0]); hi = max(vals + ref)
+    if hi == lo: hi = lo + 1
+    def Y(v): return padT + plotH * (1 - (v - lo) / (hi - lo))
+    yB = Y(lo); bw = plotW / n
+    parts = ['<svg class="md-svg" viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg" role="img">' % (W, H)]
+    # baseline axis
+    parts.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="var(--line)"/>' % (padL, yB, W - padR, yB))
+    for lab, v in [("hi", hi), ("lo", lo)]:
+        yy = Y(hi) if lab == "hi" else Y(lo)
+        parts.append('<text x="%.1f" y="%.1f" font-size="9" fill="var(--muted)" text-anchor="end">%s</text>'
+                     % (padL - 5, yy + 3, esc(fmt_val(v, fm))))
+    # bars
+    for i, (lab, v) in enumerate(series):
+        x = padL + i * bw
+        cx = x + bw * 0.5
+        if v is None:
+            parts.append('<rect x="%.1f" y="%.1f" width="%.1f" height="3" fill="#e2d8cc"><title>%s: no data</title></rect>'
+                         % (x + bw * 0.2, yB - 3, bw * 0.6, esc(lab)))
+        else:
+            cls = _cellcls(v, plan, dirn)
+            fill = {"green": "var(--green)", "red": "var(--red)", "tbc": "var(--gold)"}[cls]
+            top = Y(v); ht = max(1.5, yB - top)
+            parts.append('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="2" fill="%s" opacity="0.9">'
+                         '<title>%s: %s</title></rect>'
+                         % (x + bw * 0.16, top, bw * 0.68, ht, fill, esc(lab), esc(fmt_val(v, fm))))
+        parts.append('<text x="%.1f" y="%.1f" font-size="8.5" fill="var(--muted)" text-anchor="middle">%s</text>'
+                     % (cx, H - padB + 12, esc(lab)))
+    # plan reference line
+    if plan is not None:
+        yp = Y(plan)
+        parts.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="var(--brown)" stroke-width="1.3" '
+                     'stroke-dasharray="5 4"/>' % (padL, yp, W - padR, yp))
+        parts.append('<text x="%.1f" y="%.1f" font-size="9" font-weight="700" fill="var(--brown)" '
+                     'text-anchor="start">plan %s</text>' % (W - padR - 54, yp - 4, esc(fmt_val(plan, fm))))
+    parts.append('</svg>')
+    return "".join(parts)
+
+def ministat(m, lab):
+    st = status(m); css = "tbc" if st in GREY else st
+    fm = m.get("fmt", "num1")
+    a = "TBC" if st == "tbc" else ("—" if st == "nodata" else fmt_val(m.get("actual"), fm))
+    p = fmt_val(m.get("plan"), fm) if m.get("plan") is not None else "—"
+    return ('<div class="md-stat %s"><div class="md-stat-lab">%s</div><div class="md-stat-big">%s</div>'
+            '<div class="md-stat-plan">plan %s</div><div class="md-stat-flag">%s</div></div>'
+            % (css, lab, a, p, STATUS_LAB[st]))
+
+def perstore_html(name, plan, dirn, fmt):
+    entry = PS.get(name)
+    if not entry or not entry.get("rows"):
+        return None
+    psplan = entry.get("plan")
+    if psplan is None: psplan = plan
+    rows = sorted(entry["rows"], key=lambda r: (r.get("value") is None, -(r.get("value") or 0)))
+    mx = max((abs(r["value"]) for r in rows if r.get("value") is not None), default=1) or 1
+    body = ""
+    for r in rows:
+        v = r.get("value"); cls = _cellcls(v, psplan, dirn)
+        vt = fmt_val(v, fmt)
+        chip = ('<span class="chip %s">%s</span>' % (cls, "ON" if cls == "green" else ("OFF" if cls == "red" else "—")))
+        w = max(2, min(100, abs(v) / mx * 100)) if v is not None else 0
+        barcol = {"green": "var(--green)", "red": "var(--red)", "tbc": "var(--gold)"}[cls]
+        bar = '<div class="md-bar"><i style="width:%.0f%%;background:%s"></i></div>' % (w, barcol)
+        body += ('<tr><td class="s">%s</td><td class="v">%s</td><td class="st">%s</td><td class="bar">%s</td></tr>'
+                 % (esc(r.get("store", "—")), vt, chip, bar))
+    basis = esc(entry.get("basis", ""))
+    plan_txt = fmt_val(psplan, fmt) if psplan is not None else "—"
+    return ('<div class="md-ps-basis">%s · store target <b>%s</b> · %d stores</div>'
+            '<table class="md-ps"><thead><tr><th>Store</th><th class="v">Value</th><th class="st">vs plan</th>'
+            '<th class="bar"></th></tr></thead><tbody>%s</tbody></table>' % (basis, plan_txt, len(rows), body))
+
+def company_only(name, qm):
+    fm = qm.get("fmt", "num1"); st = status(qm)
+    if qm.get("tbc"):
+        return '<div class="md-note">Not measured at store level — metric not yet defined.</div>'
+    big = "—" if qm.get("actual") is None else fmt_val(qm.get("actual"), fm)
+    return ('<div class="md-company"><div class="big">%s</div><div class="md-company-txt">'
+            'Company-level measure — not broken out per store. Figure shown is the quarter-to-date company value.'
+            '</div></div>' % big)
+
+md_options = ""
+md_details = ""
+for i, (wm, qm) in enumerate(zip(weekly, quarterly)):
+    name = wm["name"]; fm = wm.get("fmt", "num1"); dirn = wm.get("dir", "high")
+    plan = wm.get("plan")
+    owner = OWNERS.get(name) or "—"
+    md_options += '<option value="md-%d"%s>%s</option>' % (i, (" selected" if i == 0 else ""), esc(name))
+    definition = esc(DEFINITIONS.get(name, ""))
+    calc = esc(CALCS.get(name, ""))
+    plan_txt = fmt_val(plan, fm) if plan is not None else "not set (TBC)"
+    ps = perstore_html(name, plan, dirn, fm)
+    ps_block = ps if ps is not None else company_only(name, qm)
+    disp = "block" if i == 0 else "none"
+    md_details += (
+        '<div class="md-detail" id="md-%d" style="display:%s">' % (i, disp)
+        + '<div class="md-title">%s<span class="md-owner">Owner: <b>%s</b></span></div>' % (esc(name), esc(owner))
+        + '<div class="md-def">%s</div>' % definition
+        + '<div class="md-planline">Plan: <b>%s</b> · Owner: <b>%s</b> · Higher is better</div>' % (esc(plan_txt), esc(owner))
+        + '<div class="md-section-h">Current status</div>'
+        + '<div class="md-stats">%s%s</div>' % (ministat(wm, "This week"), ministat(qm, "Quarter to date"))
+        + '<div class="md-section-h">13-week trend</div>'
+        + trend_svg(name, plan, dirn)
+        + '<div class="md-section-h">Per-store breakdown</div>'
+        + ps_block
+        + '<div class="md-section-h">How it\'s calculated</div>'
+        + '<div class="md-calc">%s</div>' % calc
+        + '</div>'
+    )
+
 HTML = f"""<!DOCTYPE html>
 <html lang="en-GB">
 <head>
@@ -236,6 +401,41 @@ HTML = f"""<!DOCTYPE html>
   td.c-green{{background:var(--greenbg);color:var(--green);font-weight:700}}
   td.c-red{{background:var(--redbg);color:var(--red);font-weight:700}}
   td.c-tbc{{background:var(--greybg);color:#b9ad9f}}
+  /* metric detail tab */
+  .mdbar{{display:flex;align-items:center;gap:10px;flex-wrap:wrap}}
+  .mdsel{{font:inherit;font-size:14px;font-weight:700;color:var(--brown);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px;cursor:pointer}}
+  .md-wrap{{margin-top:14px}}
+  .md-detail{{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(80,50,30,.05)}}
+  .md-title{{font-size:19px;font-weight:800;color:var(--ink);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}}
+  .md-title .md-owner{{font-size:12px;font-weight:600;color:var(--muted)}} .md-title .md-owner b{{color:var(--brown);font-weight:800}}
+  .md-def{{font-size:13.5px;color:#5b4a3d;margin:7px 0 2px;line-height:1.5}}
+  .md-planline{{font-size:12.5px;color:var(--muted);margin:8px 0 2px}} .md-planline b{{color:var(--brown)}}
+  .md-section-h{{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:800;margin:18px 0 10px;border-top:1px solid var(--line);padding-top:13px}}
+  .md-stats{{display:flex;gap:12px;flex-wrap:wrap}}
+  .md-stat{{flex:1;min-width:160px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-left:6px solid var(--line);background:#fff}}
+  .md-stat.green{{border-left-color:var(--green);box-shadow:0 0 0 1px #cfe6d8}} .md-stat.red{{border-left-color:var(--red);box-shadow:0 0 0 1px #eccfca}} .md-stat.tbc{{border-left-color:#cfc4b5;background:var(--greybg)}}
+  .md-stat-lab{{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:800}}
+  .md-stat-big{{font-size:28px;font-weight:800;line-height:1.1;margin:2px 0}}
+  .md-stat.green .md-stat-big{{color:var(--green)}} .md-stat.red .md-stat-big{{color:var(--red)}} .md-stat.tbc .md-stat-big{{color:#b3a899}}
+  .md-stat-plan{{font-size:11.5px;color:#6f5d4e;font-weight:700}}
+  .md-stat-flag{{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:6px;color:var(--muted)}}
+  .md-note{{font-size:12.5px;color:var(--muted);font-style:italic;background:var(--greybg);border:1px solid var(--line);border-radius:10px;padding:11px 13px}}
+  .md-calc{{font-size:12.5px;color:#5b4a3d;line-height:1.55;background:#fbf7f1;border:1px solid var(--line);border-radius:10px;padding:11px 13px}}
+  .md-svg{{width:100%;max-width:680px;height:auto;display:block}}
+  .md-ps-basis{{font-size:11.5px;color:var(--muted);margin-bottom:8px}} .md-ps-basis b{{color:var(--brown)}}
+  table.md-ps{{width:100%;max-width:680px;border-collapse:collapse;font-size:12px}}
+  table.md-ps th,table.md-ps td{{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}}
+  table.md-ps th{{font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:700}}
+  table.md-ps td.s{{font-weight:600}}
+  table.md-ps td.v,table.md-ps th.v{{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;width:72px}}
+  table.md-ps td.st,table.md-ps th.st{{text-align:center;width:56px}}
+  table.md-ps td.bar{{width:180px}}
+  .md-ps .chip{{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800}}
+  .md-ps .chip.green{{background:var(--greenbg);color:var(--green)}} .md-ps .chip.red{{background:var(--redbg);color:var(--red)}} .md-ps .chip.tbc{{background:#e7e0d6;color:#9a8c7c}}
+  .md-bar{{height:9px;border-radius:5px;background:var(--greybg);overflow:hidden}} .md-bar > i{{display:block;height:100%}}
+  .md-company{{display:flex;gap:16px;align-items:center;background:var(--greybg);border:1px solid var(--line);border-radius:10px;padding:14px 16px}}
+  .md-company .big{{font-size:30px;font-weight:800;color:var(--brown);line-height:1}}
+  .md-company-txt{{font-size:12.5px;color:#5b4a3d;line-height:1.5}}
   footer{{color:var(--muted);font-size:12px;margin-top:26px;line-height:1.6}}
 </style>
 </head>
@@ -258,6 +458,7 @@ HTML = f"""<!DOCTYPE html>
     <button class="tab active" data-pane="weekly">Weekly <span class="cnt">{len(weekly)} measurables</span></button>
     <button class="tab" data-pane="quarterly">Quarterly <span class="cnt">{len(quarterly)} measurables</span></button>
     <button class="tab" data-pane="grid">Quarterly Scorecard <span class="cnt">{n_grid_weeks}-week grid</span></button>
+    <button class="tab" data-pane="detail">Metric detail <span class="cnt">any of {len(weekly)}</span></button>
   </div>
 
   <section class="pane active" id="pane-weekly">
@@ -284,6 +485,15 @@ HTML = f"""<!DOCTYPE html>
     <div class="legend"><span><span class="sw" style="background:var(--greenbg);border:1px solid #cfe6d8"></span>≥ plan</span><span><span class="sw" style="background:var(--redbg);border:1px solid #eccfca"></span>below plan</span><span><span class="sw" style="background:var(--greybg);border:1px solid var(--line)"></span>no data / not defined (Bench is point-in-time; Social Media &amp; New Starter are TBC; SPH &amp; Brand Audit fill going forward). Food GP% row shows the estate blended GP per week.</span></div>
   </section>
 
+  <section class="pane" id="pane-detail">
+    <div class="panehead mdbar">
+      <span class="lbl">Choose a measurable:</span>
+      <select id="mdsel" class="mdsel">{md_options}</select>
+      <span class="lbl">— definition, plan &amp; owner, weekly + QTD status, 13-week trend, and per-store breakdown.</span>
+    </div>
+    <div class="md-wrap">{md_details}</div>
+  </section>
+
   <div class="legend">
     <span><span class="sw" style="background:var(--greenbg);border:1px solid #cfe6d8"></span>actual ≥ plan (on plan)</span>
     <span><span class="sw" style="background:var(--redbg);border:1px solid #eccfca"></span>below plan (off plan)</span>
@@ -306,6 +516,17 @@ HTML = f"""<!DOCTYPE html>
       document.getElementById('pane-'+t.dataset.pane).classList.add('active');
     }});
   }});
+  (function(){{
+    var sel = document.getElementById('mdsel');
+    if(!sel) return;
+    function show(id){{
+      document.querySelectorAll('.md-detail').forEach(function(d){{d.style.display='none'}});
+      var el = document.getElementById(id);
+      if(el) el.style.display='block';
+    }}
+    sel.addEventListener('change', function(){{ show(sel.value); }});
+    show(sel.value);
+  }})();
 </script>
 </body>
 </html>"""

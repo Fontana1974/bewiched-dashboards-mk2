@@ -1571,6 +1571,58 @@ def pull_eos_scorecard():
         "Manual inputs sheet 'Bewiched EOS Scorecard Inputs' (ID %s) must be shared (Viewer) with dashboards-bot@%s.iam.gserviceaccount.com for the automated run to read it." % (SID["eos"], PROJECT),
     ] + flags
 
+    # ---- per-store breakdown arrays for the Metric detail tab (reuse pulls already computed) ----
+    # Keyed by metric NAME (matches gen_eos_scorecard.py). Store-level metrics only; company-only /
+    # manual metrics (NPAT, Social Media TBC, New Starter TBC, Kudos) are intentionally omitted so the
+    # renderer shows the company figure / "not store-level" rather than faking per-store detail.
+    per_store = {}
+    def _psrows(name, rows, basis, plan=None):
+        rows = [r for r in rows if r.get("value") is not None]
+        if rows:
+            per_store[name] = {"basis": basis, "rows": rows, "plan": plan}
+    # YoY sales / transactions — last completed week, like-for-like, per store
+    _psrows("YoY Sales Growth",
+            [{"store": st, "value": round(100 * (r["lw26"] / r["lw25"] - 1), 1)}
+             for st, r in rec.items() if (r.get("lw25") or 0) > 0 and (r.get("lw26") or 0) > 0],
+            "Last completed week vs 2025, like-for-like (per store)")
+    _psrows("YoY Transactional Growth",
+            [{"store": st, "value": round(100 * (r["tx26"] / r["tx25"] - 1), 1)}
+             for st, r in rec.items() if (r.get("tx25") or 0) > 0 and (r.get("tx26") or 0) > 0],
+            "Last completed week transactions vs 2025, like-for-like (per store)")
+    # Food GP% — Cost of Sales, per store (only stores reporting CoS)
+    _psrows("Food GP%",
+            [{"store": st, "value": round(v["gp_pct"], 1)} for st, v in cos.items() if v.get("gp_pct")],
+            "Cost-of-Sales latest week, per store (stores reporting CoS only)")
+    # SPH Labour — last completed week sales / planner hours used, per store
+    _psrows("SPH Labour (incl holiday pay)",
+            [{"store": st, "value": round(rec[st]["lw26"] / v["used_lastwk"], 1)}
+             for st, v in ovr.items() if v.get("used_lastwk") and rec.get(st, {}).get("lw26")],
+            "Last completed week sales ÷ planner hours used (per store)")
+    # Bench — named successors per store (point-in-time); per-store target = at least 1 named
+    _psrows("Bench",
+            [{"store": row[0], "value": sum(1 for i in range(6, 10) if len(row) > i and str(row[i]).strip())}
+             for row in benchj.get("rows", []) if row and row[0]],
+            "Named bench successors per store (green when ≥ 1)", plan=1)
+    # F1 Score — QTD average race Total Score, per store
+    _psrows("F1 Score",
+            [{"store": st, "value": round(v["race_qtd"]["score"], 1)} for st, v in fdet.items()
+             if v.get("race_qtd") and v["race_qtd"].get("score") is not None],
+            "QTD average race Total Score (per store)")
+    # Google Health — QTD blend (review volume & rating), per store
+    _psrows("Google Health",
+            [{"store": st, "value": round((min(nv[0] / (40 * weeks_q), 1) + min(nv[1] / 4.6, 1)) / 2 * 100, 1)}
+             for st, nv in sh.get("google", {}).items() if nv and nv[0]],
+            "QTD blend: review volume (÷%d) & rating (÷4.6), per store" % (40 * weeks_q))
+    # Rate My Shift Health — QTD blend (submission volume & score), per store
+    _psrows("Rate My Shift Health",
+            [{"store": st, "value": round((min(nv[0] / (70 * weeks_q), 1) + min(nv[1] / 4.6, 1)) / 2 * 100, 1)}
+             for st, nv in sh.get("rms", {}).items() if nv and nv[0]],
+            "QTD blend: submission volume (÷%d) & score (÷4.6), per store" % (70 * weeks_q))
+    # Brand Audit Score — QTD estate brand audit, per store
+    _psrows("Brand Audit Score",
+            [{"store": st, "value": round(r["audit_qtd"], 2)} for st, r in rec.items() if r.get("audit_qtd")],
+            "QTD brand audit score out of 5 (per store)")
+
     out = {
         "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); "
                   "rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
@@ -1582,6 +1634,7 @@ def pull_eos_scorecard():
         "config": {"binary": True},
         "weekly": weekly,
         "quarterly": quarterly,
+        "per_store": per_store,
         "flags": flags,
     }
     # ---- BACK-FILL prior weeks of the quarter into weekly_history.csv (idempotent; cell-level) ----
