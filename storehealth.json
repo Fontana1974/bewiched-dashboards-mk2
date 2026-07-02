@@ -219,10 +219,10 @@
    "r_rag": "green"
   },
   "Rushden Lakes": {
-   "g_n": 3,
-   "g_avg": 5.0,
+   "g_n": 4,
+   "g_avg": 4.0,
    "g_target": 49,
-   "g_health": 2.65,
+   "g_health": 2.2,
    "g_rag": "red",
    "g_stale": false,
    "r_n": 21,

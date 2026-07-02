@@ -4,87 +4,108 @@
  "stores": {
   "Northampton Drive-Thru": {
    "holding_pct": null,
-   "gp_pct": 69.71
+   "gp_pct": 69.71,
+   "gp_qtd": 70.16
   },
   "Rushden Lakes": {
    "holding_pct": null,
-   "gp_pct": 66.93
+   "gp_pct": 66.93,
+   "gp_qtd": 68.41
   },
   "Kettering": {
    "holding_pct": null,
-   "gp_pct": 70.95
+   "gp_pct": 70.95,
+   "gp_qtd": 72.0
   },
   "Corby": {
    "holding_pct": null,
-   "gp_pct": 70.32
+   "gp_pct": 70.32,
+   "gp_qtd": 69.58
   },
   "Peterborough Bridge Street": {
    "holding_pct": null,
-   "gp_pct": 70.38
+   "gp_pct": 70.38,
+   "gp_qtd": 71.04
   },
   "Rugby": {
    "holding_pct": null,
-   "gp_pct": 70.36
+   "gp_pct": 70.36,
+   "gp_qtd": 69.33
   },
   "Wellingborough": {
    "holding_pct": null,
-   "gp_pct": 71.83
+   "gp_pct": 71.83,
+   "gp_qtd": 71.48
   },
   "Rothwell": {
    "holding_pct": null,
-   "gp_pct": 68.96
+   "gp_pct": 68.96,
+   "gp_qtd": 68.79
   },
   "Northampton": {
    "holding_pct": null,
-   "gp_pct": 70.37
+   "gp_pct": 70.37,
+   "gp_qtd": 71.35
   },
   "Wellingborough Train Station": {
    "holding_pct": null,
-   "gp_pct": 54.25
+   "gp_pct": 54.25,
+   "gp_qtd": 68.11
   },
   "Higham Ferrers": {
    "holding_pct": null,
-   "gp_pct": 68.05
+   "gp_pct": 68.05,
+   "gp_qtd": 68.41
   },
   "HOE Balsall Common": {
    "holding_pct": null,
-   "gp_pct": 70.12
+   "gp_pct": 70.12,
+   "gp_qtd": 69.63
   },
   "Burton Latimer": {
    "holding_pct": null,
-   "gp_pct": 69.01
+   "gp_pct": 69.01,
+   "gp_qtd": 69.77
   },
   "Peterborough Fletton Quays": {
    "holding_pct": null,
-   "gp_pct": 67.0
+   "gp_pct": 67.0,
+   "gp_qtd": 68.27
   },
   "Lower Heathcote": {
    "holding_pct": null,
-   "gp_pct": 72.49
+   "gp_pct": 72.49,
+   "gp_qtd": 71.93
   },
   "Market Harborough": {
    "holding_pct": null,
-   "gp_pct": 70.86
+   "gp_pct": 70.86,
+   "gp_qtd": 72.74
   },
   "Leamington Parade": {
    "holding_pct": null,
-   "gp_pct": 72.66
+   "gp_pct": 72.66,
+   "gp_qtd": 73.55
   },
   "Glenvale Drive Thru": {
    "holding_pct": null,
-   "gp_pct": 68.59
+   "gp_pct": 68.59,
+   "gp_qtd": 68.86
   },
   "Olney": {
    "holding_pct": null,
-   "gp_pct": 71.51
+   "gp_pct": 71.51,
+   "gp_qtd": 70.16
   },
   "Attleborough": {
    "holding_pct": null,
-   "gp_pct": 67.93
+   "gp_pct": 67.93,
+   "gp_qtd": 68.19
   },
   "Billing Drive Thru": {
    "holding_pct": null,
-   "gp_pct": 67.81
+   "gp_pct": 67.81,
+   "gp_qtd": 67.51
   }
  },
  "_estate_gp_basis": "Master COS Input col Q Gross Profit%, sales-weighted: Σ(Sales×GP)/ΣSales",
