@@ -5,10 +5,19 @@
 #  - Coaching (Customer Service): live from the 'CS and Br %' summary (Monthly=MTD, Quarter=QTD).
 #  - Coaching (Barista), Remote audit, RTW: rendered where available, flagged where a feed/period is missing.
 # Handles zero-data periods gracefully (renders '—' + a flag, never fabricates).
-import json
+import json, datetime as _dt
 RAW = json.load(open("compliance_raw.json"))
 CUR_END = RAW.get("cur_end", "")
-PERIODS = {"qtd": "QTD · Apr–Jun", "mtd": "MTD · Jun", "wtd": "WTD · prev wk"}
+def _periods(iso):
+    # Quarter-to-date + month-to-date labels derived from cur_end (roll automatically each quarter/month).
+    try:
+        d = _dt.date.fromisoformat(iso)
+    except Exception:
+        return {"qtd": "QTD · quarter to date", "mtd": "MTD · month to date", "wtd": "WTD · prev wk"}
+    qs = ((d.month - 1) // 3) * 3 + 1
+    mab = lambda m: _dt.date(2000, m, 1).strftime("%b")
+    return {"qtd": "QTD · %s–%s" % (mab(qs), mab(qs + 2)), "mtd": "MTD · %s" % mab(d.month), "wtd": "WTD · prev wk"}
+PERIODS = _periods(CUR_END)
 STORES = ["Glenvale Drive Thru", "Leamington Parade"]
 
 def rag(p):

@@ -160,6 +160,21 @@ if os.path.exists(_hp):
     except Exception:
         _hist = []
 _hist = sorted(_hist, key=lambda r: r.get("week_ending", ""))
+# Window the grid + all metric-detail trends to the CURRENT calendar quarter only, so on the first
+# run of a new quarter (e.g. Q3 from 1 Jul) prior-quarter rows in weekly_history.csv are kept on file
+# for the record but NOT shown/counted. quarter_start comes from run_weekly; fall back to deriving it
+# from cur_end so the gen is robust even against an older JSON.
+def _qstart_iso():
+    qs = D.get("quarter_start")
+    if qs: return qs
+    try:
+        _d = dt.date.fromisoformat(D.get("cur_end", ""))
+        return dt.date(_d.year, ((_d.month - 1) // 3) * 3 + 1, 1).isoformat()
+    except Exception:
+        return ""
+_QSTART_ISO = _qstart_iso()
+if _QSTART_ISO:
+    _hist = [r for r in _hist if r.get("week_ending", "") >= _QSTART_ISO]
 def _wshort(iso):
     try:
         d = dt.date.fromisoformat(iso); return "%d/%-m" % (d.day, d.month)
@@ -616,7 +631,7 @@ for i, (wm, qm) in enumerate(zip(weekly, quarterly)):
     else:
         ps_block = ps_section(name, plan, dirn, fm, qm)   # weekly + QTD sub-tables (period selector)
         extras = yoy_extras_html() if name == "YoY Sales Growth" else ""   # ATV + food-attach, YoY view only
-        detail = ('<div class="md-section-h">13-week trend</div>'
+        detail = ('<div class="md-section-h">This quarter, week by week</div>'
                   + trend_svg(name, plan, dirn)
                   + '<div class="md-section-h">Per-store breakdown</div>'
                   + ps_block + extras)

@@ -1753,6 +1753,7 @@ def pull_eos_scorecard():
                   "rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
         "generated": NOW_UK.strftime("%d %b %Y, %H:%M"),
         "cur_end": CUR_END.isoformat(),
+        "quarter_start": QSTART.isoformat(),   # current calendar-quarter start; gen filters the grid/trends to this
         "week_label": wlabel(LASTWK_MON),
         "quarter_label": qlabel,
         "manual_sheet_id": SID["eos"],

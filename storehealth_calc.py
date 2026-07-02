@@ -35,7 +35,7 @@ for s in stores:
         gtxt="%d/%d %.2f* -> %.2f %s"%(n,tgt,avg,h,grag(h))
     else:
         rec["g_n"]=None; rec["g_health"]=None; rec["g_rag"]="na"; rec["g_stale"]=True
-        gtxt="stale feed (no Q2 data)"
+        gtxt="stale feed (no recent data)"
     if s in rms_canon:
         n,avg=rms_canon[s]; rec["r_n"]=n; rec["r_avg"]=round(avg,2); rec["r_rag"]=rrag(avg)
         rtxt="%d %.2f -> %s"%(n,avg,rrag(avg))

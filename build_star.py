@@ -122,7 +122,7 @@ METHOD=("Grow composite, pillars aligned to the four tabs (Sales · Commercial �
  "target, linear to 0 at last) + brand audit /5(4.0/4.5/5.0) + wastage %(5/3/1, lower better). People & Customer = RMS "
  "health(1.66/3.32/5.0) + RTW%(0/80/100) + Google health. GROW TARGET = 4.6★ (below = OFF TARGET).")
 
-ship=compute(TARGET_STAR); ship["_method"]=METHOD; ship["_window"]="quarter-to-date · Q2 2026 (rebuilt weekly)"; ship["_rescaled"]=RESCALE
+ship=compute(TARGET_STAR); ship["_method"]=METHOD; ship["_window"]="quarter-to-date · current quarter (rebuilt weekly)"; ship["_rescaled"]=RESCALE
 json.dump(ship,open("star_rating.json","w"),indent=1,ensure_ascii=False)
 alt=compute(3.0)  # legacy 0/3/5 basis, for comparison
 print(f"=== SHIPPED (RESCALE target->4.6) ===")
