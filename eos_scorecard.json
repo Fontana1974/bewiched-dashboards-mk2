@@ -1,6 +1,6 @@
 {
  "_about": "Bewiched EOS Scorecard data. Written by run_weekly.py pull_eos_scorecard(); rendered by gen_eos_scorecard.py. Live = BigQuery; derived = other feeds; manual = inputs sheet.",
- "generated": "01 Jul 2026, 15:47",
+ "generated": "02 Jul 2026, 07:39",
  "cur_end": "2026-06-28",
  "week_label": "w/c 22 Jun 2026",
  "quarter_label": "Q2 2026 (Apr–Jun)",
@@ -197,24 +197,24 @@
    "id": "google_health_qtd",
    "name": "Google Health",
    "plan": 100,
-   "actual": 72.7,
+   "actual": 73.0,
    "unit": "%",
    "fmt": "pct0",
    "dir": "high",
    "source": "derived",
-   "detail": "236 reviews (÷520) · 4.86★ (÷4.6) QTD",
+   "detail": "239 reviews (÷520) · 4.87★ (÷4.6) QTD",
    "note": "Blend: avg of QTD reviews÷(40×13 wks) and avg rating÷4.6, each capped 100%."
   },
   {
    "id": "rms_health_qtd",
    "name": "Rate My Shift Health",
    "plan": 100,
-   "actual": 87.2,
+   "actual": 87.5,
    "unit": "%",
    "fmt": "pct0",
    "dir": "high",
    "source": "derived",
-   "detail": "741 submissions (÷910) · 4.28★ (÷4.6) QTD",
+   "detail": "747 submissions (÷910) · 4.27★ (÷4.6) QTD",
    "note": "Blend: avg of QTD submissions÷(70×13 wks) and avg score÷4.6, each capped 100%."
   },
   {

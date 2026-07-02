@@ -40,10 +40,10 @@
    "r_rag": "green"
   },
   "Billing Drive Thru": {
-   "g_n": 27,
+   "g_n": 28,
    "g_avg": 5.0,
    "g_target": 49,
-   "g_health": 3.88,
+   "g_health": 3.93,
    "g_rag": "green",
    "g_stale": false,
    "r_n": 30,
@@ -73,13 +73,13 @@
    "r_rag": "red"
   },
   "Glenvale Drive Thru": {
-   "g_n": 39,
-   "g_avg": 4.667,
+   "g_n": 40,
+   "g_avg": 4.675,
    "g_target": 49,
-   "g_health": 4.32,
+   "g_health": 4.38,
    "g_rag": "green",
    "g_stale": false,
-   "r_n": 63,
+   "r_n": 66,
    "r_avg": 3.02,
    "r_rag": "red"
   },
@@ -117,7 +117,7 @@
    "g_health": 3.77,
    "g_rag": "green",
    "g_stale": false,
-   "r_n": 141,
+   "r_n": 143,
    "r_avg": 4.68,
    "r_rag": "green"
   },
@@ -148,8 +148,8 @@
    "g_health": null,
    "g_rag": "na",
    "g_stale": true,
-   "r_n": 30,
-   "r_avg": 4.63,
+   "r_n": 31,
+   "r_avg": 4.64,
    "r_rag": "green"
   },
   "Northampton Drive-Thru": {
@@ -219,10 +219,10 @@
    "r_rag": "green"
   },
   "Rushden Lakes": {
-   "g_n": 2,
+   "g_n": 3,
    "g_avg": 5.0,
    "g_target": 49,
-   "g_health": 2.6,
+   "g_health": 2.65,
    "g_rag": "red",
    "g_stale": false,
    "r_n": 21,
