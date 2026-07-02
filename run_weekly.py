@@ -443,18 +443,35 @@ def pull_f1():
         quali_arr = None
         if qrows:
             qd, q = qrows[-1]
-            quali_arr = [fnum(q[4]), fnum(q[5]), fnum(q[6]), fnum(q[7]), fnum(q[8]),
-                         fnum(q[14]), fnum(q[17]), qd.isoformat()]
+            # The 'Qualifying' tab column order DIFFERS from 'The Race': Hello=4 Goodbye=5
+            # HowAreYou=6 WorkingTheQueue=7 Total=8 QueueAverage=14 QualiRank=17. Emit quali_arr in
+            # the SAME positional order the F1 tables render (mirrors race_arr):
+            # [QueueAvg, Hello, Goodbye, HowAreYou, WTQ, Total, Rank, date]. (Previously it was emitted
+            # in the sheet's native order, so the render read Hello as the queue, Total as WTQ, etc.,
+            # and blank cells showed n/a on the Qualifying detail table.)
+            quali_arr = [fnum(q[14]), fnum(q[4]), fnum(q[5]), fnum(q[6]), fnum(q[7]),
+                         fnum(q[8]), fnum(q[17]), qd.isoformat()]
         qtd = [x for x in rows if x[0] >= QSTART and fnum(x[1][18]) > 0]
         def avg(idx, src=qtd):
             xs = [fnum(x[1][idx]) for x in src]
             return round(sum(xs) / len(xs), 2) if xs else None
-        race_qtd = {"n": len(qtd), "score": avg(18), "queue": avg(4), "wtq": avg(8),
-                    "hello": avg(5), "goodbye": avg(6), "howareyou": avg(7)}
+        def pct(v): return None if v is None else round(v * 100, 1)
+        # RACE QTD table reads queue_s / qcall (=Working The Queue %) / hello|goodbye|howareyou.
+        # The sheet holds greetings as 0-1 fractions, so store them as PERCENTAGES (were rendering ~1%).
+        race_qtd = {"n": len(qtd), "score": avg(18),
+                    "queue_s": avg(4), "qcall": pct(avg(8)),
+                    "hello": pct(avg(5)), "goodbye": pct(avg(6)), "howareyou": pct(avg(7)),
+                    "queue": avg(4), "wtq": avg(8)}
         qqtd = [x for x in qrows if x[0] >= QSTART]
-        quali_qtd = {"n": len(qqtd),
-                     "rank": round(sum(fnum(x[1][17]) for x in qqtd) / len(qqtd), 2) if qqtd else None,
-                     "queue": round(sum(fnum(x[1][14]) for x in qqtd) / len(qqtd), 2) if qqtd else None}
+        def qavg(idx):   # average over Qualifying rows, skipping blank cells (penalty rows leave greetings/queue empty)
+            xs = [fnum(x[1][idx]) for x in qqtd if len(x[1]) > idx and x[1][idx] not in (None, "")]
+            return round(sum(xs) / len(xs), 2) if xs else None
+        # QUALI QTD table reads the same keys. Use Qualifying column indices (Queue=14 WTQ=7
+        # Hello=4 Goodbye=5 HowAreYou=6 Rank=17); greetings/qcall as %.
+        quali_qtd = {"n": len(qqtd), "rank": qavg(17),
+                     "queue_s": qavg(14), "qcall": pct(qavg(7)),
+                     "hello": pct(qavg(4)), "goodbye": pct(qavg(5)), "howareyou": pct(qavg(6)),
+                     "queue": qavg(14)}
         last6 = [fnum(x[1][30]) for x in rows[-6:]][::-1]
         fd[st] = {"race": race_arr, "quali": quali_arr,
                   "race_qtd": race_qtd, "quali_qtd": quali_qtd, "last6": last6}
