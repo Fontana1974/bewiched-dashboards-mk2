@@ -219,7 +219,7 @@ DEFINITIONS = {
     "Bench": "How many stores have a named, ready successor — management bench strength.",
     "F1 Score": "Average F1 'race' total score across the estate — operational excellence. Lower is better (target ≤220).",
     "Brand Audit Score": "Average brand-audit score out of 5.",
-    "Food GP%": "Gross-profit margin from Cost of Sales (food GP proxy).",
+    "Food GP%": "Estate gross-profit margin from the Cost-of-Sales sheet (authoritative Gross Profit%, col Q).",
     "Net Profit After Tax (projected)": "Projected net-profit margin after tax, flexed off the latest P&L.",
     "New Starter Health": "Onboarding and retention health of new starters (metric still to be defined).",
 }
@@ -234,7 +234,7 @@ CALCS = {
     "Bench": "Count of stores with at least one named successor in the HRP 'Bench Manager' / pipeline columns (point-in-time). Green estate-wide when ≥ 3 stores have one.",
     "F1 Score": "Average of each store's race Total Score. Weekly = last completed week's race; QTD = quarter-to-date average. LOWER IS BETTER on this scale — green at or below the target of ≤220, red above.",
     "Brand Audit Score": "Estate average of store brand-audit scores logged in the period, out of 5.",
-    "Food GP%": "(Turnover − cost of goods) ÷ turnover from the Cost-of-Sales master (estate proxy; posts roughly one week in arrears).",
+    "Food GP%": "The Cost-of-Sales sheet's own Gross Profit% (col Q), which nets off all cost-of-sales — sales-weighted across stores for the estate figure. Posts roughly one week in arrears.",
     "Net Profit After Tax (projected)": "Baseline 7.9% (May P&L) + GP flex (estate GP% − baseline) − labour flex (labour% − baseline, via live CPH). A projection, not a booked figure.",
     "New Starter Health": "Not yet defined — awaiting the metric definition and target.",
 }

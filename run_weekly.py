@@ -534,67 +534,77 @@ def pull_cph_targets():
 
 
 def pull_cos():
-    """B4 — Cost of Sales 'Master COS Input': latest row per store, Stock holding% (G=6),
-    Gross Profit% (Q=16) -> cos_metrics.json."""
+    """B4 — Cost of Sales 'Master COS Input' (sheet 1doPNL5…). AUTHORITATIVE Gross Profit% is
+    col Q — the sheet's own GP after ALL cost-of-sales (≈3–4pp below a naive (Sales−CoG)/Sales,
+    which only nets off col I 'Cost of Goods'). Estate GP = SALES-WEIGHTED col Q; per-store GP =
+    latest col Q per store (all stores). Cols: date=idx1(B), store=idx2(C), holding%=idx6(G),
+    Sales=idx7(H), Gross Profit=idx16(Q). -> cos_metrics.json."""
     rows = sheet(SID["cos"], "'Master COS Input'!A1:R20000")
-    label = {"Glenvale DT": "Glenvale Drive Thru", "Leamington Parade": "Leamington Parade"}
-    latest = {}                       # store -> (holding, gp, weeklabel)
-    # REAL layout: A blank, B=Date, C=Store, F=Stock Holding £, G=Stock holding%, Q=Gross Profit%.
-    # (The store is in col C / idx 2 — reading r[0] was always the empty col A, so nothing matched.)
-    for r in rows:
-        if len(r) < 3 or not r[2]: continue
-        st = label.get(str(r[2]).strip()) or normalize(r[2])
-        if st not in COMMERCIAL_STORES: continue
-        gc = r[6] if len(r) > 6 else ""          # col G = Stock holding%
-        qc = r[16] if len(r) > 16 else ""         # col Q = Gross Profit%
-        if gc is None or str(gc).strip() == "":   # in-progress week (sales in, stock count not done) -> skip
-            continue
-        g = fnum(gc)
-        q = fnum(qc) if qc not in (None, "") else None
-        wk = r[1] if len(r) > 1 else ""           # col B = week-ending date (serial when unformatted)
-        wk = serial_to_iso(wk) or wk if isinstance(wk, (int, float)) else wk
-        latest[st] = (round(g * 100, 1) if g and g < 2 else round(g, 1),
-                      (round(q * 100, 2) if q and q < 2 else round(q, 2)) if q is not None else None,
-                      wk)
-    # estate-wide blended GP% (Cost-of-Goods basis: (ΣSales-ΣCoG)/ΣSales) by date window, for the NPAT model.
-    # Cols: date=idx1, Sales=idx7, Cost of Goods=idx8.
+    # short COS store labels unique to this sheet -> canonical (the global _MAP covers the rest)
+    COS_ALIAS = {"drive thru": "Northampton Drive-Thru", "station": "Wellingborough Train Station",
+                 "heathcote": "Lower Heathcote", "billing": "Billing Drive Thru",
+                 "lakes": "Rushden Lakes", "glenvale dt": "Glenvale Drive Thru"}
+    def cos_store(v):
+        s = str(v).strip()
+        return COS_ALIAS.get(s.lower()) or normalize(s)
+    def gpfrac(v):
+        """Parse col Q 'Gross Profit' -> fraction 0..1 (tolerate '70.8#%', '68,71%'); None if junk."""
+        if v in (None, ""): return None
+        if isinstance(v, (int, float)):
+            x = float(v)
+        else:
+            t = str(v).replace("#", "").replace("%", "").replace(",", ".").strip()
+            try: x = float(t)
+            except Exception: return None
+        if x > 2: x = x / 100.0
+        return x if 0.3 < x < 1.2 else None
     QSTART_S = (QSTART - EPOCH).days
     MAY1_S = (datetime.date(CUR_END.year, 5, 1) - EPOCH).days
     MAY31_S = (datetime.date(CUR_END.year, 5, 31) - EPOCH).days
-    agg = {}
+    agg = {}            # date-serial -> [Σsales, Σ(sales*gp)]  (sales-weighted col Q)
+    latest = {}         # store -> (holding%, gp%, date-serial)
     for r in rows:
-        if len(r) < 9 or not isinstance(r[1], (int, float)): continue
+        if len(r) < 17 or not isinstance(r[1], (int, float)): continue
         sales = r[7] if isinstance(r[7], (int, float)) else None
-        if not sales or sales <= 0: continue
-        ds = int(r[1]); cog = fnum(r[8]) if isinstance(r[8], (int, float)) else 0.0
-        a = agg.setdefault(ds, [0.0, 0.0]); a[0] += sales; a[1] += cog
+        gp = gpfrac(r[16])                                   # col Q = authoritative Gross Profit
+        if not sales or sales <= 0 or gp is None: continue
+        ds = int(r[1])
+        a = agg.setdefault(ds, [0.0, 0.0]); a[0] += sales; a[1] += sales * gp
+        st = cos_store(r[2]) if len(r) > 2 and r[2] not in (None, "") else None
+        if st:
+            hc = fnum(r[6]) if len(r) > 6 and r[6] not in (None, "") else None
+            hold = (round(hc * 100, 1) if hc and hc < 2 else round(hc, 1)) if hc is not None else None
+            if st not in latest or ds >= latest[st][2]:
+                latest[st] = (hold, round(gp * 100, 2), ds)
     def _egp(filt):
-        ts = tc = 0.0
-        for ds, (sa, co) in agg.items():
-            if filt(ds): ts += sa; tc += co
-        return round((ts - tc) / ts * 100, 2) if ts else None
+        ts = tw = 0.0
+        for ds, (sa, gw) in agg.items():
+            if filt(ds): ts += sa; tw += gw
+        return round(tw / ts * 100, 2) if ts else None
     maxd = max(agg) if agg else None
-    out = {"_source": "Cost of Sales sheet %s 'Master COS Input' — latest week per store "
-                      "(Stock holding%% col G, Gross Profit%% col Q)" % SID["cos"],
+    out = {"_source": "Cost of Sales sheet %s 'Master COS Input' — AUTHORITATIVE Gross Profit%% (col Q), "
+                      "sales-weighted for estate; latest col Q per store." % SID["cos"],
            "_pulled": CUR_END.isoformat(), "stores": {},
-           "_estate_gp_basis": "Master COS Input, all stores, (ΣSales-ΣCoG)/ΣSales",
+           "_estate_gp_basis": "Master COS Input col Q Gross Profit%, sales-weighted: Σ(Sales×GP)/ΣSales",
            "estate_gp_wk": _egp(lambda d: d == maxd) if maxd else None,
            "estate_gp_qtd": _egp(lambda d: d >= QSTART_S),
            "estate_gp_may": _egp(lambda d: MAY1_S <= d <= MAY31_S),
            "estate_gp_wk_date": serial_to_iso(maxd) if maxd else None,
+           "_week": serial_to_iso(maxd) if maxd else "",
            "estate_gp_by_week": {}}
-    # per-week estate GP (week-ending Sunday) for the quarterly-scorecard grid back-fill
+    # per-week estate GP (week-ending Sunday), sales-weighted col Q, for the grid back-fill
     wagg = {}
-    for ds, (sa, co) in agg.items():
+    for ds, (sa, gw) in agg.items():
         dd = serial_to_date(ds)
         if not dd: continue
-        we = (dd - datetime.timedelta(days=(dd.weekday() + 1) % 7)).isoformat()   # map to week-ending Sunday
-        a = wagg.setdefault(we, [0.0, 0.0]); a[0] += sa; a[1] += co
-    out["estate_gp_by_week"] = {we: round((sa - co) / sa * 100, 2) for we, (sa, co) in wagg.items() if sa}
-    for st, (h, gp, wk) in latest.items():
-        out["_week"] = str(wk); out["stores"][st] = {"holding_pct": h, "gp_pct": gp}
+        we = (dd - datetime.timedelta(days=(dd.weekday() + 1) % 7)).isoformat()   # week-ending Sunday
+        a = wagg.setdefault(we, [0.0, 0.0]); a[0] += sa; a[1] += gw
+    out["estate_gp_by_week"] = {we: round(gw / sa * 100, 2) for we, (sa, gw) in wagg.items() if sa}
+    for st, (h, gp, ds) in latest.items():
+        out["stores"][st] = {"holding_pct": h, "gp_pct": gp}
     W("cos_metrics.json", out, indent=1)
-    print("[pull] cos: %d stores; estate GP wk %s / qtd %s / may %s" % (len(latest), out.get("estate_gp_wk"), out.get("estate_gp_qtd"), out.get("estate_gp_may")))
+    print("[pull] cos: %d stores; estate GP wk %s / qtd %s / may %s (authoritative col Q, sales-weighted)"
+          % (len(latest), out.get("estate_gp_wk"), out.get("estate_gp_qtd"), out.get("estate_gp_may")))
 
 
 def pull_smt():
@@ -1289,8 +1299,11 @@ def pull_eos_scorecard():
     n_hist_q = len(q_prior) + 1          # quarter weeks contributing (incl current)
     au = [r["audit_qtd"] for r in rec.values() if r.get("audit_qtd")]
     ba = round(sum(au) / len(au), 2) if au else None
-    gps = [v["gp_pct"] for v in cos.values() if v.get("gp_pct")]
-    fg = round(sum(gps) / len(gps), 1) if gps else None
+    # Food GP% = AUTHORITATIVE estate Gross Profit% from the CoS sheet (col Q, sales-weighted) — the same
+    # figure the grid and NPAT flex use, so GP is consistent everywhere. Weekly = latest CoS week, QTD = QTD.
+    cosj_gp = jload("cos_metrics.json")
+    fg_wk = cosj_gp.get("estate_gp_wk")
+    fg_qtd = cosj_gp.get("estate_gp_qtd")
     # ---- derived weekly: YoY sales/tx, last completed week vs same week last year (LFL) ----
     # LFL = trading in BOTH the current week and the same week last year (excludes new sites AND closed sites);
     # rec already omits the closed "Royal Leamington Spa" (normalize() maps it to None).
@@ -1371,9 +1384,9 @@ def pull_eos_scorecard():
     B = dict(turn=633064.53, cogs=428931.11, labour=214300.18, admin=154051.31, npat=7.9,
              gp_prod=66.1, labour_pct=33.85, admin_pct=24.33, cph_base=57.7, hourly=19.53)
     cosj = jload("cos_metrics.json")
-    gp_may = cosj.get("estate_gp_may") or 73.96     # CoS estate GP (CoG basis) for the P&L baseline month — frozen anchor
-    gp_wk_live = cosj.get("estate_gp_wk")           # latest complete week, estate-wide (Master COS)
-    gp_qtd_live = cosj.get("estate_gp_qtd")         # quarter-to-date, estate-wide
+    gp_may = cosj.get("estate_gp_may") or 70.1      # CoS estate GP (AUTHORITATIVE col Q, sales-weighted), May anchor
+    gp_wk_live = cosj.get("estate_gp_wk")           # latest week, estate-wide col Q (Master COS)
+    gp_qtd_live = cosj.get("estate_gp_qtd")         # quarter-to-date, estate-wide col Q
     npat_src = "derived"
     try:
         prows = sheet(SID["npat_pnl"], "A1:AB300")
@@ -1421,7 +1434,7 @@ def pull_eos_scorecard():
         return "%s · baseline %.1f%% · GP %+.1fpp · labour %+.1fpp" % (tag, B["npat"], gp_c, lab_c)
     npat_note = ("Projected (GP + labour flex off the %s P&L). NPAT%% = baseline %.1f%% + (estate GP%% − %s baseline) "
                  "− (labour%% − baseline). Baseline: product GP %.1f%%, labour %.1f%%, admin %.1f%% (held), avg labour £%.2f/hr. "
-                 "GP movement = estate-wide blended GP from the COS master tab (CoG basis; %s baseline %.2f%%, latest week %s%%, QTD %s%%). "
+                 "GP movement = estate Gross Profit%% from the CoS sheet (col Q, sales-weighted; %s baseline %.2f%%, latest week %s%%, QTD %s%%). "
                  "Labour flexes via planner actual CPH £%.1f ÷ baseline £%.1f (avg £%.2f/hr ÷ live CPH). Weekly CPH = this week\'s "
                  "planner CPH; QTD CPH £%.1f is hours-weighted from weekly_history.csv (%d week%s so far)."
                  % (NPAT_MONTH, B["npat"], NPAT_MONTH, B["gp_prod"], B["labour_pct"], B["admin_pct"], B["hourly"],
@@ -1510,9 +1523,9 @@ def pull_eos_scorecard():
         metric("brand_audit_wk", "Brand Audit Score", 4.6, audit_lastwk, "", "score2", "derived",
                ("Audits logged last week, estate avg (%d audits)" % audit_lastwk_n) if audit_lastwk_n else "No brand audits logged last week",
                "Last completed week's audits. Brand audits are periodic — tile stays awaiting in weeks with none; the QTD tile is the reliable one."),
-        metric("food_gp_wk", "Food GP%", 71, fg, "%", "pct1", "derived",
-               ("Cost-of-Sales latest week (ending %s), estate GP%%" % cos_week) if cos_week else "Estate GP% from Cost of Sales",
-               "PROXY: company food-specific GP% not yet sourced — weekly CoS estate GP% (posts a week in arrears)."),
+        metric("food_gp_wk", "Food GP%", 71, fg_wk, "%", "pct1", "derived",
+               ("Cost-of-Sales estate Gross Profit%% (col Q), latest week ending %s" % cos_week) if cos_week else "Estate Gross Profit% (col Q) from Cost of Sales",
+               "Estate Gross Profit% from the Cost-of-Sales sheet (col Q, sales-weighted across stores)."),
         metric("npat_wk", "Net Profit After Tax (projected)", 18, npat_wk, "%", "pct1", npat_src,
                _npat_detail("Weekly flex", npat_wk_gp, npat_wk_lab),
                npat_note),
@@ -1549,9 +1562,9 @@ def pull_eos_scorecard():
         metric("brand_audit", "Brand Audit Score", 4.6, ba, "", "score2", "derived",
                "Estate average brand audit (QTD), out of 5",
                "Auto-derived from the Brand Audit sheet (quarter-to-date); override in the inputs sheet if needed."),
-        metric("food_gp", "Food GP%", 71, fg, "%", "pct1", "derived",
-               "Estate GP% from Cost of Sales (commercial stores)",
-               "PROXY: company food-specific GP% not yet sourced — using CoS estate GP%. Override in the inputs sheet."),
+        metric("food_gp", "Food GP%", 71, fg_qtd, "%", "pct1", "derived",
+               "Estate Gross Profit% (col Q) from Cost of Sales, quarter-to-date (sales-weighted)",
+               "Estate Gross Profit% from the Cost-of-Sales sheet (col Q, sales-weighted), quarter-to-date."),
         metric("npat", "Net Profit After Tax (projected)", 18, npat_qtd, "%", "pct1", npat_src,
                _npat_detail("QTD flex", npat_qtd_gp, npat_qtd_lab),
                npat_note),
